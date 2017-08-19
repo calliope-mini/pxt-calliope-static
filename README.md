@@ -14,3 +14,5 @@ Install a simple web server and run it.
 npm install -g http-server
 http-server -c-1 pxt-calliope-static/release
 ```
+Open Editor: [`http://127.0.0.1:8080`](http://127.0.0.1:8080).
+
