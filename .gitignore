@@ -1,0 +1,5 @@
+.DS_Store
+.idea
+*.iml
+.vscode/.BROWSE.VC.DB-shm
+.vscode/.BROWSE.VC.DB-wal

@@ -1,0 +1,56 @@
+CACHE MANIFEST
+
+CACHE:
+/semantic.js
+/main.js
+/typescript.js
+/marked/marked.min.js
+/highlight.js/highlight.pack.js
+/lzma/lzma_worker-min.js
+/jquery.js
+/pxtlib.js
+/pxtblocks.js
+/pxtwinrt.js
+/pxteditor.js
+/pxtsim.js
+/semantic.css
+/custom.css
+/icons.css
+/fonts/icons.woff2
+
+
+
+# blockly
+/blockly/blockly_compressed.js
+/blockly/blocks_compressed.js
+/blockly/msg/js/en.js
+/blockly/media/sprites.png
+/blockly/media/click.mp3
+/blockly/media/disconnect.wav
+/blockly/media/delete.mp3
+
+# monaco
+/vs/loader.js
+/vs/base/worker/workerMain.js
+/vs/basic-languages/src/bat.js
+/vs/basic-languages/src/cpp.js
+/vs/editor/editor.main.css
+/vs/editor/editor.main.js
+/vs/editor/editor.main.nls.js
+/vs/language/json/jsonMode.js
+/vs/language/json/jsonWorker.js
+/vs/language/typescript/lib/typescriptServices.js
+/vs/language/typescript/src/mode.js
+/vs/language/typescript/src/worker.js
+/monacoworker.js
+
+# ai
+https://az416426.vo.msecnd.net/scripts/a/ai.0.js
+
+/worker.js
+# ver Sat Aug 19 2017 17:31:02 GMT+0200 (CEST)
+
+/target.js
+  
+NETWORK:
+*
