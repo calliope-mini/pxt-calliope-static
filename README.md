@@ -7,10 +7,10 @@ PXT as a static web page. You can download and run in a local web server.
 ## Example
 Clone the repisitory.
 ```
-git clone https://github.com/calliope-mini/pxt-calliope
+git clone https://github.com/calliope-mini/pxt-calliope-static
 ```
 Install a simple web server and run it.
 ```
 npm install -g http-server
-http-server -c-1 pxt-calliope/release
+http-server -c-1 pxt-calliope-static/release
 ```
