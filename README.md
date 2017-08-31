@@ -5,7 +5,7 @@ PXT as a static web page. You can download and run in a local web server.
 > This is an interesting alternative for single-user offline use of the editor.
 
 ## Example
-Clone the repisitory.
+Clone the repository.
 ```
 git clone https://github.com/calliope-mini/pxt-calliope-static
 ```
