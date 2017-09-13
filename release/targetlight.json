@@ -8,8 +8,8 @@
   "cloud": {
     "workspace": false,
     "packages": true,
-    "sharing": true,
-    "publishing": true,
+    "sharing": false,
+    "publishing": false,
     "preferredPackages": [],
     "githubPackages": true
   },
