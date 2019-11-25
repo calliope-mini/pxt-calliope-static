@@ -3,37 +3,42 @@ CACHE MANIFEST
 CACHE:
 /semantic.js
 /main.js
+/pxtapp.js
 /typescript.js
 /marked/marked.min.js
 /highlight.js/highlight.pack.js
-/lzma/lzma_worker-min.js
 /jquery.js
 /pxtlib.js
-/pxtblocks.js
+/pxtcompiler.js
+/pxtpy.js
+/pxtblockly.js
 /pxtwinrt.js
 /pxteditor.js
 /pxtsim.js
+/pxtembed.js
+/pxtworker.js
+/pxtweb.js
+/blockly.css
 /semantic.css
-/custom.css
-/icons.css
-/fonts/icons.woff2
+/rtlsemantic.css
 
 
+/editor.js
+/fieldeditors.js
 
 # blockly
-/blockly/blockly_compressed.js
-/blockly/blocks_compressed.js
-/blockly/msg/js/en.js
 /blockly/media/sprites.png
 /blockly/media/click.mp3
 /blockly/media/disconnect.wav
 /blockly/media/delete.mp3
 
-# monaco
+# monaco; keep in sync with webapp/public/index.html
 /vs/loader.js
 /vs/base/worker/workerMain.js
 /vs/basic-languages/src/bat.js
 /vs/basic-languages/src/cpp.js
+/vs/basic-languages/src/python.js
+/vs/basic-languages/src/markdown.js
 /vs/editor/editor.main.css
 /vs/editor/editor.main.js
 /vs/editor/editor.main.nls.js
@@ -42,13 +47,32 @@ CACHE:
 /vs/language/typescript/lib/typescriptServices.js
 /vs/language/typescript/src/mode.js
 /vs/language/typescript/src/worker.js
-/monacoworker.js
+
+# charts
+/smoothie/smoothie_compressed.js
+/images/Bars_black.gif
+
+# gifjs
+/gifjs/gif.js
 
 # ai
-https://az416426.vo.msecnd.net/scripts/a/ai.0.js
+/ai.0.js
 
 /worker.js
-# ver Mon Sep 18 2017 16:11:54 GMT+0200 (CEST)
+/monacoworker.js
+
+# ver Sun Nov 17 2019 10:47:49 GMT+0100 (GMT+01:00)
+
+# target
+/docs\static\Calliopeminieditor.svg
+/docs\static\Logo_Calliope_Woman.svg
+/docs\static\Logo_Calliope_Woman.svg
+/docs\static\Calliopeminieditor.svg
+/docs\static\icons\apple-touch-icon.png
+/docs\static\icons\apple-touch-icon.png
+/docs\static\Microsoft-logo_rgb_c-gray-square.png
+/docs\static\Microsoft-logo_rgb_c-white.png
+/docs\static\hero.png
 
 /target.js
   

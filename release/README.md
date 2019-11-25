@@ -1,0 +1,1 @@
+pxt-calliope-static

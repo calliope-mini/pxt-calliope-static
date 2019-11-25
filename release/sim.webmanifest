@@ -1,8 +1,9 @@
 {
   "lang": "en",
   "dir": "ltr",
-  "name": "mini.pxt.io",
-  "short_name": " calliope",
+  "name": "makecode.microbit.org",
+  "short_name": "mini",
+  "background_color": "#FAFAFA",
   "icons": [
     {
       "src": "./static/icons/android-chrome-36x36.png",
@@ -52,7 +53,13 @@
   ],
   "scope": "/",
   "start_url": "/",
-  "display": "standalone",
-  "orientation": "landscape",
-  "theme_color": "#ffffff"
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "theme_color": "#ffffff",
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.samsung.microbit"
+    }
+  ]
 }

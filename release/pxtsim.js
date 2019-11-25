@@ -1,12 +1,83 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+// Helpers designed to help to make a simulator accessible.
+var pxsim;
+(function (pxsim) {
+    var accessibility;
+    (function (accessibility) {
+        var liveRegion;
+        function makeFocusable(elem) {
+            elem.setAttribute("focusable", "true");
+            elem.setAttribute("tabindex", "0");
+        }
+        accessibility.makeFocusable = makeFocusable;
+        function enableKeyboardInteraction(elem, handlerKeyDown, handlerKeyUp) {
+            if (handlerKeyDown) {
+                elem.addEventListener('keydown', function (e) {
+                    var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+                    if (charCode === 32 || charCode === 13) {
+                        handlerKeyDown();
+                    }
+                });
+            }
+            if (handlerKeyUp) {
+                elem.addEventListener('keyup', function (e) {
+                    var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+                    if (charCode === 32 || charCode === 13) {
+                        handlerKeyUp();
+                    }
+                });
+            }
+        }
+        accessibility.enableKeyboardInteraction = enableKeyboardInteraction;
+        function setAria(elem, role, label) {
+            if (role && !elem.hasAttribute("role")) {
+                elem.setAttribute("role", role);
+            }
+            if (label && !elem.hasAttribute("aria-label")) {
+                elem.setAttribute("aria-label", label);
+            }
+        }
+        accessibility.setAria = setAria;
+        function setLiveContent(value) {
+            if (!liveRegion) {
+                var style = "position: absolute !important;" +
+                    "display: block;" +
+                    "visibility: visible;" +
+                    "overflow: hidden;" +
+                    "width: 1px;" +
+                    "height: 1px;" +
+                    "margin: -1px;" +
+                    "border: 0;" +
+                    "padding: 0;" +
+                    "clip: rect(0 0 0 0);";
+                liveRegion = document.createElement("div");
+                liveRegion.setAttribute("role", "status");
+                liveRegion.setAttribute("aria-live", "polite");
+                liveRegion.setAttribute("aria-hidden", "false");
+                liveRegion.setAttribute("style", style);
+                document.body.appendChild(liveRegion);
+            }
+            if (liveRegion.textContent !== value) {
+                liveRegion.textContent = value;
+            }
+        }
+        accessibility.setLiveContent = setLiveContent;
+    })(accessibility = pxsim.accessibility || (pxsim.accessibility = {}));
+})(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
     var GROUND_COLOR = "blue";
     var POWER_COLOR = "red";
+    var POWER5V_COLOR = "orange";
     ;
     ;
     ;
@@ -28,39 +99,52 @@ var pxsim;
         var ends = [wire.start, wire.end];
         var endIsGround = ends.map(function (e) { return e === "ground"; });
         var endIsThreeVolt = ends.map(function (e) { return e === "threeVolt"; });
+        var endIsFiveVolt = ends.map(function (e) { return e === "fiveVolt"; });
         var endIsBot = ends.map(function (e) { return isOnBreadboardBottom(e); });
         var hasGround = arrAny(endIsGround);
         var hasThreeVolt = arrAny(endIsThreeVolt);
+        var hasFiveVolt = arrAny(endIsFiveVolt);
         var hasBot = arrAny(endIsBot);
         return {
             topGround: hasGround && !hasBot,
             topThreeVolt: hasThreeVolt && !hasBot,
+            topFiveVolt: hasFiveVolt && !hasBot,
             bottomGround: hasGround && hasBot,
             bottomThreeVolt: hasThreeVolt && hasBot,
+            bottomFiveVolt: hasFiveVolt && hasBot,
             singleGround: hasGround,
-            singleThreeVolt: hasThreeVolt
+            singleThreeVolt: hasThreeVolt,
+            singleFiveVolt: hasFiveVolt
         };
     }
     function mergePowerUsage(powerUsages) {
         var finalPowerUsage = powerUsages.reduce(function (p, n) { return ({
             topGround: p.topGround || n.topGround,
             topThreeVolt: p.topThreeVolt || n.topThreeVolt,
+            topFiveVolt: p.topFiveVolt || n.topFiveVolt,
             bottomGround: p.bottomGround || n.bottomGround,
             bottomThreeVolt: p.bottomThreeVolt || n.bottomThreeVolt,
+            bottomFiveVolt: p.bottomFiveVolt || n.bottomFiveVolt,
             singleGround: n.singleGround ? p.singleGround === null : p.singleGround,
             singleThreeVolt: n.singleThreeVolt ? p.singleThreeVolt === null : p.singleThreeVolt,
+            singleFiveVolt: n.singleFiveVolt ? p.singleFiveVolt === null : p.singleFiveVolt,
         }); }, {
             topGround: false,
             topThreeVolt: false,
+            topFiveVolt: false,
             bottomGround: false,
             bottomThreeVolt: false,
+            bottomFiveVolt: false,
             singleGround: null,
             singleThreeVolt: null,
+            singleFiveVolt: null
         });
         if (finalPowerUsage.singleGround)
             finalPowerUsage.topGround = finalPowerUsage.bottomGround = false;
         if (finalPowerUsage.singleThreeVolt)
             finalPowerUsage.topThreeVolt = finalPowerUsage.bottomThreeVolt = false;
+        if (finalPowerUsage.singleFiveVolt)
+            finalPowerUsage.topFiveVolt = finalPowerUsage.bottomFiveVolt = false;
         return finalPowerUsage;
     }
     function copyDoubleArray(a) {
@@ -79,7 +163,7 @@ var pxsim;
     }
     function readPin(arg) {
         pxsim.U.assert(!!arg, "Invalid pin: " + arg);
-        var pin = /^([A-Z]\w+)Pin\.(P\d+)$/.exec(arg);
+        var pin = /^(\w+)\.\s*(?:[a-z]*)?([A-Z][A-Z\d_]+)$/.exec(arg);
         return pin ? pin[2] : undefined;
     }
     pxsim.readPin = readPin;
@@ -101,21 +185,24 @@ var pxsim;
     function isConnectedToBB(pin) {
         return pin.orientation === "-Z" && pin.style === "male";
     }
-    var Allocator = (function () {
+    var Allocator = /** @class */ (function () {
         function Allocator(opts) {
             this.availablePowerPins = {
                 top: {
-                    threeVolt: pxsim.mkRange(26, 51).map(function (n) { return { type: "breadboard", row: "+", col: "" + n }; }),
-                    ground: pxsim.mkRange(26, 51).map(function (n) { return { type: "breadboard", row: "-", col: "" + n }; }),
+                    fiveVolt: pxsim.mkRange(26, 51).map(function (n) { return ({ type: "breadboard", row: "+", col: "" + n }); }),
+                    threeVolt: pxsim.mkRange(26, 51).map(function (n) { return ({ type: "breadboard", row: "+", col: "" + n }); }),
+                    ground: pxsim.mkRange(26, 51).map(function (n) { return ({ type: "breadboard", row: "-", col: "" + n }); }),
                 },
                 bottom: {
-                    threeVolt: pxsim.mkRange(1, 26).map(function (n) { return { type: "breadboard", row: "+", col: "" + n }; }),
-                    ground: pxsim.mkRange(1, 26).map(function (n) { return { type: "breadboard", row: "-", col: "" + n }; }),
+                    fiveVolt: pxsim.mkRange(1, 26).map(function (n) { return ({ type: "breadboard", row: "+", col: "" + n }); }),
+                    threeVolt: pxsim.mkRange(1, 26).map(function (n) { return ({ type: "breadboard", row: "+", col: "" + n }); }),
+                    ground: pxsim.mkRange(1, 26).map(function (n) { return ({ type: "breadboard", row: "-", col: "" + n }); }),
                 },
             };
             this.opts = opts;
         }
         Allocator.prototype.allocPartIRs = function (def, name, bbFit) {
+            var _this = this;
             var partIRs = [];
             var mkIR = function (def, name, instPins, partParams) {
                 var pinIRs = [];
@@ -127,7 +214,10 @@ var pxsim;
                     }
                     else {
                         var instIdx = pinDef.target.pinInstantiationIdx;
-                        pxsim.U.assert(!!instPins && instPins[instIdx] !== undefined, "No pin found for PinInstantiationIdx: " + instIdx + ". (Is the part missing an ArguementRole or \"trackArgs=\" annotations?)");
+                        if (!(!!instPins && instPins[instIdx] !== undefined)) {
+                            console.log("error: parts no pin found for PinInstantiationIdx: " + instIdx + ". (Is the part missing an ArgumentRole or \"trackArgs=\" annotations?)");
+                            return undefined;
+                        }
                         pinTarget = instPins[instIdx];
                     }
                     var pinLoc = def.visual.pinLocations[i];
@@ -158,34 +248,49 @@ var pxsim;
                     bbFit: bbFit
                 };
             };
-            if (def.instantiation.kind === "singleton") {
-                partIRs.push(mkIR(def, name));
-            }
-            else if (def.instantiation.kind === "function") {
-                var fnAlloc_1 = def.instantiation;
-                var fnNm_1 = fnAlloc_1.fullyQualifiedName;
-                var callsitesTrackedArgs = this.opts.fnArgs[fnNm_1];
-                pxsim.U.assert(!!callsitesTrackedArgs && !!callsitesTrackedArgs.length, "Failed to read pin(s) from callsite for: " + fnNm_1);
-                callsitesTrackedArgs.forEach(function (fnArgsStr) {
-                    var fnArgsSplit = fnArgsStr.split(",");
-                    pxsim.U.assert(fnArgsSplit.length === fnAlloc_1.argumentRoles.length, "Mismatch between number of arguments at callsite (function name: " + fnNm_1 + ") vs number of argument roles in part definition (part: " + name + ").");
-                    var instPins = [];
-                    var paramArgs = {};
-                    fnArgsSplit.forEach(function (arg, idx) {
-                        var role = fnAlloc_1.argumentRoles[idx];
-                        if (role.partParameter !== undefined) {
-                            paramArgs[role.partParameter] = arg;
+            // support for multiple possible instantions
+            var instantiations = def.instantiations || [];
+            if (def.instantiation)
+                instantiations.push(def.instantiation);
+            instantiations.forEach(function (instantiation) {
+                if (instantiation.kind === "singleton") {
+                    partIRs.push(mkIR(def, name));
+                }
+                else if (instantiation.kind === "function") {
+                    var fnAlloc_1 = instantiation;
+                    var fnNms_1 = fnAlloc_1.fullyQualifiedName.split(',');
+                    var callsitesTrackedArgsHash_1 = {};
+                    fnNms_1.forEach(function (fnNm) { if (_this.opts.fnArgs[fnNm])
+                        _this.opts.fnArgs[fnNm].forEach(function (targetArg) { callsitesTrackedArgsHash_1[targetArg] = 1; }); });
+                    var callsitesTrackedArgs = Object.keys(callsitesTrackedArgsHash_1);
+                    if (!(!!callsitesTrackedArgs && !!callsitesTrackedArgs.length)) {
+                        console.log("error: parts failed to read pin(s) from callsite for: " + fnNms_1);
+                        return undefined;
+                    }
+                    callsitesTrackedArgs.forEach(function (fnArgsStr) {
+                        var fnArgsSplit = fnArgsStr.split(",");
+                        if (fnArgsSplit.length != fnAlloc_1.argumentRoles.length) {
+                            console.log("error: parts mismatch between number of arguments at callsite (function name: " + fnNms_1 + ") vs number of argument roles in part definition (part: " + name + ").");
+                            return;
                         }
-                        if (role.pinInstantiationIdx !== undefined) {
-                            var instIdx = role.pinInstantiationIdx;
-                            var pin = readPin(arg);
-                            instPins[instIdx] = pin;
-                        }
+                        var instPins = [];
+                        var paramArgs = {};
+                        fnArgsSplit.forEach(function (arg, idx) {
+                            var role = fnAlloc_1.argumentRoles[idx];
+                            if (role.partParameter !== undefined) {
+                                paramArgs[role.partParameter] = arg;
+                            }
+                            if (role.pinInstantiationIdx !== undefined) {
+                                var instIdx = role.pinInstantiationIdx;
+                                var pin = readPin(arg);
+                                instPins[instIdx] = pin;
+                            }
+                        });
+                        partIRs.push(mkIR(def, name, instPins, paramArgs));
                     });
-                    partIRs.push(mkIR(def, name, instPins, paramArgs));
-                });
-            }
-            return partIRs;
+                }
+            });
+            return partIRs.filter(function (ir) { return !!ir; });
         };
         Allocator.prototype.computePartDimensions = function (def, name) {
             var pinLocs = def.visual.pinLocations;
@@ -231,6 +336,7 @@ var pxsim;
             var extraSpace = totalColumnsCount - totalSpaceNeeded;
             if (extraSpace <= 0) {
                 console.log("Not enough breadboard space!");
+                //TODO
             }
             var padding = Math.floor(extraSpace / (partsCount - 1 + 2));
             var partSpacing = padding; //Math.floor(extraSpace/(partsCount-1));
@@ -312,6 +418,9 @@ var pxsim;
                 else if (end === "threeVolt") {
                     color = POWER_COLOR;
                 }
+                else if (end === "fiveVolt") {
+                    color = POWER5V_COLOR;
+                }
                 else if (typeof pin.def.colorGroup === "number") {
                     if (groupToColor[pin.def.colorGroup]) {
                         color = groupToColor[pin.def.colorGroup];
@@ -334,7 +443,7 @@ var pxsim;
         };
         Allocator.prototype.allocLocation = function (location, opts) {
             var _this = this;
-            if (location === "ground" || location === "threeVolt") {
+            if (location === "ground" || location === "threeVolt" || location == "fiveVolt") {
                 //special case if there is only a single ground or three volt pin in the whole build
                 if (location === "ground" && this.powerUsage.singleGround) {
                     var boardGroundPin = this.getBoardGroundPin();
@@ -343,6 +452,10 @@ var pxsim;
                 else if (location === "threeVolt" && this.powerUsage.singleThreeVolt) {
                     var boardThreeVoltPin = this.getBoardThreeVoltPin();
                     return { type: "dalboard", pin: boardThreeVoltPin };
+                }
+                else if (location === "fiveVolt" && this.powerUsage.singleFiveVolt) {
+                    var boardFiveVoltPin = this.getBoardFiveVoltPin();
+                    return { type: "dalboard", pin: boardFiveVoltPin };
                 }
                 pxsim.U.assert(!!opts.referenceBBPin);
                 var nearestCoord = this.opts.getBBCoord(opts.referenceBBPin);
@@ -354,6 +467,7 @@ var pxsim;
                 });
                 if (!firstTopAndBot[0] || !firstTopAndBot[1]) {
                     console.debug("No more available \"" + location + "\" locations!");
+                    //TODO
                 }
                 var nearTop = pxsim.visuals.findClosestCoordIdx(nearestCoord, firstTopAndBot) == 0;
                 var barPins = void 0;
@@ -364,6 +478,9 @@ var pxsim;
                     else if (location === "threeVolt") {
                         barPins = this.availablePowerPins.top.threeVolt;
                     }
+                    else if (location === "fiveVolt") {
+                        barPins = this.availablePowerPins.top.fiveVolt;
+                    }
                 }
                 else {
                     if (location === "ground") {
@@ -371,6 +488,9 @@ var pxsim;
                     }
                     else if (location === "threeVolt") {
                         barPins = this.availablePowerPins.bottom.threeVolt;
+                    }
+                    else if (location === "fiveVolt") {
+                        barPins = this.availablePowerPins.bottom.fiveVolt;
                     }
                 }
                 var pinCoords = barPins.map(function (rowCol) {
@@ -407,28 +527,42 @@ var pxsim;
                 //it must be a MicrobitPin
                 pxsim.U.assert(typeof location === "string", "Unknown location type: " + location);
                 var mbPin = location;
-                var boardPin = this.opts.boardDef.gpioPinMap[mbPin];
-                pxsim.U.assert(!!boardPin, "Unknown pin: " + location);
+                var boardPin = this.opts.boardDef.gpioPinMap[mbPin] || mbPin;
+                if (!boardPin) {
+                    console.debug("unknown pin location for " + mbPin);
+                    return undefined;
+                }
                 return { type: "dalboard", pin: boardPin };
             }
         };
         Allocator.prototype.getBoardGroundPin = function () {
-            var boardGround = this.opts.boardDef.groundPins[0] || null;
-            if (!boardGround) {
-                console.log("No available ground pin on board!");
+            var pin = this.opts.boardDef.groundPins && this.opts.boardDef.groundPins[0] || null;
+            if (!pin) {
+                console.debug("No available ground pin on board!");
+                //TODO
             }
-            return boardGround;
+            return pin;
         };
         Allocator.prototype.getBoardThreeVoltPin = function () {
-            var threeVoltPin = this.opts.boardDef.threeVoltPins[0] || null;
-            if (!threeVoltPin) {
-                console.log("No available 3.3V pin on board!");
+            var pin = this.opts.boardDef.threeVoltPins && this.opts.boardDef.threeVoltPins[0] || null;
+            if (!pin) {
+                console.debug("No available 3.3V pin on board!");
+                //TODO
             }
-            return threeVoltPin;
+            return pin;
+        };
+        Allocator.prototype.getBoardFiveVoltPin = function () {
+            var pin = this.opts.boardDef.fiveVoltPins && this.opts.boardDef.fiveVoltPins[0] || null;
+            if (!pin) {
+                console.debug("No available 5V pin on board!");
+                //TODO
+            }
+            return pin;
         };
         Allocator.prototype.allocPowerWires = function (powerUsage) {
             var boardGroundPin = this.getBoardGroundPin();
             var threeVoltPin = this.getBoardThreeVoltPin();
+            var fiveVoltPin = this.getBoardFiveVoltPin();
             var topLeft = { type: "breadboard", row: "-", col: "26" };
             var botLeft = { type: "breadboard", row: "-", col: "1" };
             var topRight = { type: "breadboard", row: "-", col: "50" };
@@ -444,6 +578,7 @@ var pxsim;
             }
             var groundWires = [];
             var threeVoltWires = [];
+            var fiveVoltWires = [];
             if (powerUsage.bottomGround && powerUsage.topGround) {
                 //bb top - <==> bb bot -
                 groundWires.push({
@@ -476,6 +611,14 @@ var pxsim;
                     color: POWER_COLOR,
                 });
             }
+            else if (powerUsage.bottomFiveVolt && powerUsage.bottomGround) {
+                //bb top + <==> bb bot +
+                fiveVoltWires.push({
+                    start: this.allocLocation("fiveVolt", { referenceBBPin: top }),
+                    end: this.allocLocation("fiveVolt", { referenceBBPin: bot }),
+                    color: POWER5V_COLOR,
+                });
+            }
             if (powerUsage.topThreeVolt) {
                 //board + <==> bb top +
                 threeVoltWires.push({
@@ -489,7 +632,23 @@ var pxsim;
                 threeVoltWires.push({
                     start: this.allocLocation("threeVolt", { referenceBBPin: bot }),
                     end: { type: "dalboard", pin: threeVoltPin },
+                    color: POWER5V_COLOR,
+                });
+            }
+            if (powerUsage.topFiveVolt && !powerUsage.topThreeVolt) {
+                //board + <==> bb top +
+                fiveVoltWires.push({
+                    start: this.allocLocation("fiveVolt", { referenceBBPin: top }),
+                    end: { type: "dalboard", pin: fiveVoltPin },
                     color: POWER_COLOR,
+                });
+            }
+            else if (powerUsage.bottomFiveVolt && !powerUsage.bottomThreeVolt) {
+                //board + <==> bb bot +
+                fiveVoltWires.push({
+                    start: this.allocLocation("fiveVolt", { referenceBBPin: bot }),
+                    end: { type: "dalboard", pin: fiveVoltPin },
+                    color: POWER5V_COLOR,
                 });
             }
             var assembly = [];
@@ -497,18 +656,24 @@ var pxsim;
                 assembly.push({ wireIndices: groundWires.map(function (w, i) { return i; }) });
             var numGroundWires = groundWires.length;
             if (threeVoltWires.length > 0)
-                assembly.push({ wireIndices: threeVoltWires.map(function (w, i) { return i + numGroundWires; }) });
+                assembly.push({
+                    wireIndices: threeVoltWires.map(function (w, i) { return i + numGroundWires; })
+                });
+            if (fiveVoltWires.length > 0)
+                assembly.push({
+                    wireIndices: threeVoltWires.map(function (w, i) { return i + numGroundWires + threeVoltWires.length; })
+                });
             return {
-                wires: groundWires.concat(threeVoltWires),
+                wires: groundWires.concat(threeVoltWires).concat(fiveVoltWires),
                 assembly: assembly
             };
         };
         Allocator.prototype.allocWire = function (wireIR) {
             var _this = this;
             var ends = [wireIR.start, wireIR.end];
-            var endIsPower = ends.map(function (e) { return e === "ground" || e === "threeVolt"; });
+            var endIsPower = ends.map(function (e) { return e === "ground" || e === "threeVolt" || e === "fiveVolt"; });
             //allocate non-power first so we know the nearest pin for the power end
-            var endInsts = ends.map(function (e, idx) { return !endIsPower[idx] ? _this.allocLocation(e, {}) : null; });
+            var endInsts = ends.map(function (e, idx) { return !endIsPower[idx] ? _this.allocLocation(e, {}) : undefined; });
             //allocate power pins closest to the other end of the wire
             endInsts = endInsts.map(function (e, idx) {
                 if (e)
@@ -519,6 +684,9 @@ var pxsim;
                 });
                 return l;
             });
+            // one of the pins is not accessible
+            if (!endInsts[0] || !endInsts[1])
+                return undefined;
             return { start: endInsts[0], end: endInsts[1], color: wireIR.color };
         };
         Allocator.prototype.allocPart = function (ir) {
@@ -555,8 +723,6 @@ var pxsim;
                 .map(function (partName) { return { name: partName, def: _this.opts.partDefs[partName] }; })
                 .filter(function (d) { return !!d.def; });
             if (partNmAndDefs.length > 0) {
-                var partNmsList = partNmAndDefs.map(function (p) { return p.name; });
-                var partDefsList = partNmAndDefs.map(function (p) { return p.def; });
                 var dimensions_1 = partNmAndDefs.map(function (nmAndPart) { return _this.computePartDimensions(nmAndPart.def, nmAndPart.name); });
                 var partIRs_1 = [];
                 partNmAndDefs.forEach(function (nmAndDef, idx) {
@@ -573,6 +739,8 @@ var pxsim;
                 var partsAndWires = partsAndWireIRs.map(function (irs, idx) {
                     var part = _this.allocPart(irs);
                     var wires = irs.wires.map(function (w) { return _this.allocWire(w); });
+                    if (wires.some(function (w) { return !w; }))
+                        return undefined;
                     var pinIdxToWireIdx = [];
                     irs.wires.forEach(function (wIR, idx) {
                         pinIdxToWireIdx[wIR.pinIdx] = idx;
@@ -588,21 +756,26 @@ var pxsim;
                         wires: wires,
                         assembly: assembly
                     };
-                });
-                var all = [basicWires].concat(partsAndWires);
+                }).filter(function (p) { return !!p; });
+                var all = [basicWires].concat(partsAndWires)
+                    .filter(function (pw) { return pw.assembly && pw.assembly.length; }); // only keep steps with something to do
                 // hide breadboard if not used
-                var requiresBreadboard = all.some(function (r) {
+                var hideBreadboard = !all.some(function (r) {
                     return (r.part && r.part.breadboardConnections && r.part.breadboardConnections.length > 0)
                         || r.wires && r.wires.some(function (w) { return (w.end.type == "breadboard" && w.end.style != "croc") || (w.start.type == "breadboard" && w.start.style != "croc"); });
                 });
                 return {
                     partsAndWires: all,
-                    requiresBreadboard: requiresBreadboard
+                    wires: [],
+                    parts: [],
+                    hideBreadboard: hideBreadboard
                 };
             }
             else {
                 return {
-                    partsAndWires: []
+                    partsAndWires: [],
+                    wires: [],
+                    parts: []
                 };
             }
         };
@@ -615,7 +788,7 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 /// <reference path="../localtypings/vscode-debug-protocol.d.ts" />
 /**
- * Heavily adapted from https://github.com/Microsoft/vscode-debugadapter-node
+ * Heavily adapted from https://github.com/microsoft/vscode-debugadapter-node
  * and altered to run in a browser and communcate via JSON over a websocket
  * rather than through stdin and stdout
  */
@@ -623,7 +796,7 @@ var pxsim;
 (function (pxsim) {
     var protocol;
     (function (protocol) {
-        var Message = (function () {
+        var Message = /** @class */ (function () {
             function Message(type) {
                 this.seq = 0;
                 this.type = type;
@@ -631,36 +804,38 @@ var pxsim;
             return Message;
         }());
         protocol.Message = Message;
-        var Response = (function (_super) {
+        var Response = /** @class */ (function (_super) {
             __extends(Response, _super);
             function Response(request, message) {
-                _super.call(this, 'response');
-                this.request_seq = request.seq;
-                this.command = request.command;
+                var _this = _super.call(this, 'response') || this;
+                _this.request_seq = request.seq;
+                _this.command = request.command;
                 if (message) {
-                    this.success = false;
-                    this.message = message;
+                    _this.success = false;
+                    _this.message = message;
                 }
                 else {
-                    this.success = true;
+                    _this.success = true;
                 }
+                return _this;
             }
             return Response;
         }(Message));
         protocol.Response = Response;
-        var Event = (function (_super) {
+        var Event = /** @class */ (function (_super) {
             __extends(Event, _super);
             function Event(event, body) {
-                _super.call(this, 'event');
-                this.event = event;
+                var _this = _super.call(this, 'event') || this;
+                _this.event = event;
                 if (body) {
-                    this.body = body;
+                    _this.body = body;
                 }
+                return _this;
             }
             return Event;
         }(Message));
         protocol.Event = Event;
-        var Source = (function () {
+        var Source = /** @class */ (function () {
             function Source(name, path, id, origin, data) {
                 if (id === void 0) { id = 0; }
                 this.name = name;
@@ -676,7 +851,7 @@ var pxsim;
             return Source;
         }());
         protocol.Source = Source;
-        var Scope = (function () {
+        var Scope = /** @class */ (function () {
             function Scope(name, reference, expensive) {
                 if (expensive === void 0) { expensive = false; }
                 this.name = name;
@@ -686,7 +861,7 @@ var pxsim;
             return Scope;
         }());
         protocol.Scope = Scope;
-        var StackFrame = (function () {
+        var StackFrame = /** @class */ (function () {
             function StackFrame(i, nm, src, ln, col) {
                 if (ln === void 0) { ln = 0; }
                 if (col === void 0) { col = 0; }
@@ -699,7 +874,7 @@ var pxsim;
             return StackFrame;
         }());
         protocol.StackFrame = StackFrame;
-        var Thread = (function () {
+        var Thread = /** @class */ (function () {
             function Thread(id, name) {
                 this.id = id;
                 if (name) {
@@ -712,7 +887,7 @@ var pxsim;
             return Thread;
         }());
         protocol.Thread = Thread;
-        var Variable = (function () {
+        var Variable = /** @class */ (function () {
             function Variable(name, value, ref, indexedVariables, namedVariables) {
                 if (ref === void 0) { ref = 0; }
                 this.name = name;
@@ -728,7 +903,7 @@ var pxsim;
             return Variable;
         }());
         protocol.Variable = Variable;
-        var Breakpoint = (function () {
+        var Breakpoint = /** @class */ (function () {
             function Breakpoint(verified, line, column, source) {
                 this.verified = verified;
                 var e = this;
@@ -745,7 +920,7 @@ var pxsim;
             return Breakpoint;
         }());
         protocol.Breakpoint = Breakpoint;
-        var Module = (function () {
+        var Module = /** @class */ (function () {
             function Module(id, name) {
                 this.id = id;
                 this.name = name;
@@ -753,7 +928,7 @@ var pxsim;
             return Module;
         }());
         protocol.Module = Module;
-        var CompletionItem = (function () {
+        var CompletionItem = /** @class */ (function () {
             function CompletionItem(label, start, length) {
                 if (length === void 0) { length = 0; }
                 this.label = label;
@@ -763,112 +938,119 @@ var pxsim;
             return CompletionItem;
         }());
         protocol.CompletionItem = CompletionItem;
-        var StoppedEvent = (function (_super) {
+        var StoppedEvent = /** @class */ (function (_super) {
             __extends(StoppedEvent, _super);
             function StoppedEvent(reason, threadId, exception_text) {
                 if (exception_text === void 0) { exception_text = null; }
-                _super.call(this, 'stopped');
-                this.body = {
+                var _this = _super.call(this, 'stopped') || this;
+                _this.body = {
                     reason: reason,
                     threadId: threadId
                 };
                 if (exception_text) {
-                    var e = this;
+                    var e = _this;
                     e.body.text = exception_text;
                 }
+                return _this;
             }
             return StoppedEvent;
         }(Event));
         protocol.StoppedEvent = StoppedEvent;
-        var ContinuedEvent = (function (_super) {
+        var ContinuedEvent = /** @class */ (function (_super) {
             __extends(ContinuedEvent, _super);
             function ContinuedEvent(threadId, allThreadsContinued) {
-                _super.call(this, 'continued');
-                this.body = {
+                var _this = _super.call(this, 'continued') || this;
+                _this.body = {
                     threadId: threadId
                 };
                 if (typeof allThreadsContinued === 'boolean') {
-                    this.body.allThreadsContinued = allThreadsContinued;
+                    _this.body.allThreadsContinued = allThreadsContinued;
                 }
+                return _this;
             }
             return ContinuedEvent;
         }(Event));
         protocol.ContinuedEvent = ContinuedEvent;
-        var InitializedEvent = (function (_super) {
+        var InitializedEvent = /** @class */ (function (_super) {
             __extends(InitializedEvent, _super);
             function InitializedEvent() {
-                _super.call(this, 'initialized');
+                return _super.call(this, 'initialized') || this;
             }
             return InitializedEvent;
         }(Event));
         protocol.InitializedEvent = InitializedEvent;
-        var TerminatedEvent = (function (_super) {
+        var TerminatedEvent = /** @class */ (function (_super) {
             __extends(TerminatedEvent, _super);
             function TerminatedEvent(restart) {
-                _super.call(this, 'terminated');
+                var _this = _super.call(this, 'terminated') || this;
                 if (typeof restart === 'boolean') {
-                    var e = this;
+                    var e = _this;
                     e.body = {
                         restart: restart
                     };
                 }
+                return _this;
             }
             return TerminatedEvent;
         }(Event));
         protocol.TerminatedEvent = TerminatedEvent;
-        var OutputEvent = (function (_super) {
+        var OutputEvent = /** @class */ (function (_super) {
             __extends(OutputEvent, _super);
             function OutputEvent(output, category, data) {
                 if (category === void 0) { category = 'console'; }
-                _super.call(this, 'output');
-                this.body = {
+                var _this = _super.call(this, 'output') || this;
+                _this.body = {
                     category: category,
                     output: output
                 };
                 if (data !== undefined) {
-                    this.body.data = data;
+                    _this.body.data = data;
                 }
+                return _this;
             }
             return OutputEvent;
         }(Event));
         protocol.OutputEvent = OutputEvent;
-        var ThreadEvent = (function (_super) {
+        var ThreadEvent = /** @class */ (function (_super) {
             __extends(ThreadEvent, _super);
             function ThreadEvent(reason, threadId) {
-                _super.call(this, 'thread');
-                this.body = {
+                var _this = _super.call(this, 'thread') || this;
+                _this.body = {
                     reason: reason,
                     threadId: threadId
                 };
+                return _this;
             }
             return ThreadEvent;
         }(Event));
         protocol.ThreadEvent = ThreadEvent;
-        var BreakpointEvent = (function (_super) {
+        var BreakpointEvent = /** @class */ (function (_super) {
             __extends(BreakpointEvent, _super);
             function BreakpointEvent(reason, breakpoint) {
-                _super.call(this, 'breakpoint');
-                this.body = {
+                var _this = _super.call(this, 'breakpoint') || this;
+                _this.body = {
                     reason: reason,
                     breakpoint: breakpoint
                 };
+                return _this;
             }
             return BreakpointEvent;
         }(Event));
         protocol.BreakpointEvent = BreakpointEvent;
-        var ModuleEvent = (function (_super) {
+        var ModuleEvent = /** @class */ (function (_super) {
             __extends(ModuleEvent, _super);
             function ModuleEvent(reason, module) {
-                _super.call(this, 'module');
-                this.body = {
+                var _this = _super.call(this, 'module') || this;
+                _this.body = {
                     reason: reason,
                     module: module
                 };
+                return _this;
             }
             return ModuleEvent;
         }(Event));
         protocol.ModuleEvent = ModuleEvent;
-        var ProtocolServer = (function () {
+        var ProtocolServer = /** @class */ (function () {
             function ProtocolServer() {
                 this._pendingRequests = {};
             }
@@ -941,14 +1123,15 @@ var pxsim;
             return ProtocolServer;
         }());
         protocol.ProtocolServer = ProtocolServer;
-        var DebugSession = (function (_super) {
+        var DebugSession = /** @class */ (function (_super) {
             __extends(DebugSession, _super);
             function DebugSession() {
-                _super.apply(this, arguments);
-                this._debuggerLinesStartAt1 = false;
-                this._debuggerColumnsStartAt1 = false;
-                this._clientLinesStartAt1 = true;
-                this._clientColumnsStartAt1 = true;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._debuggerLinesStartAt1 = false;
+                _this._debuggerColumnsStartAt1 = false;
+                _this._clientLinesStartAt1 = true;
+                _this._clientColumnsStartAt1 = true;
+                return _this;
             }
             DebugSession.prototype.shutdown = function () {
             };
@@ -1266,19 +1449,20 @@ var pxsim;
     var util;
     (function (util) {
         function injectPolyphils() {
-            // Polyfill for Uint8Array.slice for IE and Safari
-            // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.slice
-            // TODO: Move this polyfill to a more appropriate file. It is left here for now because moving it causes a crash in IE; see PXT issue #1301.
-            if (!Uint8Array.prototype.slice) {
-                Object.defineProperty(Uint8Array.prototype, 'slice', {
-                    value: Array.prototype.slice,
-                    writable: true,
-                    enumerable: true
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+            if (!String.prototype.startsWith) {
+                Object.defineProperty(String.prototype, 'startsWith', {
+                    value: function (search, pos) {
+                        if (search === undefined || search == null)
+                            return false;
+                        pos = !pos || pos < 0 ? 0 : +pos;
+                        return this.substring(pos, pos + search.length) === search;
+                    }
                 });
             }
             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill
-            if (!Uint8Array.prototype.fill) {
-                Object.defineProperty(Uint8Array.prototype, 'fill', {
+            if (!Array.prototype.fill) {
+                Object.defineProperty(Array.prototype, 'fill', {
                     writable: true,
                     enumerable: true,
                     value: function (value) {
@@ -1314,9 +1498,181 @@ var pxsim;
                     }
                 });
             }
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
+            if (!Array.prototype.find) {
+                Object.defineProperty(Array.prototype, 'find', {
+                    writable: true,
+                    enumerable: true,
+                    value: function (predicate) {
+                        // 1. Let O be ? ToObject(this value).
+                        if (this == null) {
+                            throw new TypeError('"this" is null or not defined');
+                        }
+                        var o = Object(this);
+                        // 2. Let len be ? ToLength(? Get(O, "length")).
+                        var len = o.length >>> 0;
+                        // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+                        if (typeof predicate !== 'function') {
+                            throw new TypeError('predicate must be a function');
+                        }
+                        // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+                        var thisArg = arguments[1];
+                        // 5. Let k be 0.
+                        var k = 0;
+                        // 6. Repeat, while k < len
+                        while (k < len) {
+                            // a. Let Pk be ! ToString(k).
+                            // b. Let kValue be ? Get(O, Pk).
+                            // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+                            // d. If testResult is true, return kValue.
+                            var kValue = o[k];
+                            if (predicate.call(thisArg, kValue, k, o)) {
+                                return kValue;
+                            }
+                            // e. Increase k by 1.
+                            k++;
+                        }
+                        // 7. Return undefined.
+                        return undefined;
+                    },
+                });
+            }
+            // Polyfill for Uint8Array.slice for IE and Safari
+            // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.slice
+            // TODO: Move this polyfill to a more appropriate file. It is left here for now because moving it causes a crash in IE; see PXT issue #1301.
+            if (!Uint8Array.prototype.slice) {
+                Object.defineProperty(Uint8Array.prototype, 'slice', {
+                    value: Array.prototype.slice,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint16Array.prototype.slice) {
+                Object.defineProperty(Uint16Array.prototype, 'slice', {
+                    value: Array.prototype.slice,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint32Array.prototype.slice) {
+                Object.defineProperty(Uint32Array.prototype, 'slice', {
+                    value: Array.prototype.slice,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.fill
+            if (!Uint8Array.prototype.fill) {
+                Object.defineProperty(Uint8Array.prototype, 'fill', {
+                    value: Array.prototype.fill,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint16Array.prototype.fill) {
+                Object.defineProperty(Uint16Array.prototype, 'fill', {
+                    value: Array.prototype.fill,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint32Array.prototype.fill) {
+                Object.defineProperty(Uint32Array.prototype, 'fill', {
+                    value: Array.prototype.fill,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.some
+            if (!Uint8Array.prototype.some) {
+                Object.defineProperty(Uint8Array.prototype, 'some', {
+                    value: Array.prototype.some,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint16Array.prototype.some) {
+                Object.defineProperty(Uint16Array.prototype, 'some', {
+                    value: Array.prototype.some,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint32Array.prototype.some) {
+                Object.defineProperty(Uint32Array.prototype, 'some', {
+                    value: Array.prototype.some,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.reverse
+            if (!Uint8Array.prototype.reverse) {
+                Object.defineProperty(Uint8Array.prototype, 'reverse', {
+                    value: Array.prototype.reverse,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint16Array.prototype.reverse) {
+                Object.defineProperty(Uint16Array.prototype, 'reverse', {
+                    value: Array.prototype.reverse,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            if (!Uint32Array.prototype.reverse) {
+                Object.defineProperty(Uint32Array.prototype, 'reverse', {
+                    value: Array.prototype.reverse,
+                    writable: true,
+                    enumerable: true
+                });
+            }
+            // Inject Math imul polyfill
+            if (!Math.imul) {
+                // for explanations see:
+                // http://stackoverflow.com/questions/3428136/javascript-integer-math-incorrect-results (second answer)
+                // (but the code below doesn't come from there; I wrote it myself)
+                // TODO use Math.imul if available
+                Math.imul = function (a, b) {
+                    var ah = (a >>> 16) & 0xffff;
+                    var al = a & 0xffff;
+                    var bh = (b >>> 16) & 0xffff;
+                    var bl = b & 0xffff;
+                    // the shift by 0 fixes the sign on the high part
+                    // the final |0 converts the unsigned value into a signed value
+                    return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0) | 0);
+                };
+            }
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#Polyfill
+            if (typeof Object.assign != 'function') {
+                // Must be writable: true, enumerable: false, configurable: true
+                Object.defineProperty(Object, "assign", {
+                    value: function assign(target, varArgs) {
+                        'use strict';
+                        if (target == null) {
+                            throw new TypeError('Cannot convert undefined or null to object');
+                        }
+                        var to = Object(target);
+                        for (var index = 1; index < arguments.length; index++) {
+                            var nextSource = arguments[index];
+                            if (nextSource != null) {
+                                for (var nextKey in nextSource) {
+                                    // Avoid bugs when hasOwnProperty is shadowed
+                                    if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                                        to[nextKey] = nextSource[nextKey];
+                                    }
+                                }
+                            }
+                        }
+                        return to;
+                    },
+                    writable: true,
+                    configurable: true
+                });
+            }
         }
         util.injectPolyphils = injectPolyphils;
-        var Lazy = (function () {
+        var Lazy = /** @class */ (function () {
             function Lazy(_func) {
                 this._func = _func;
                 this._evaluated = false;
@@ -1374,7 +1730,7 @@ var pxsim;
         function pathJoin() {
             var paths = [];
             for (var _i = 0; _i < arguments.length; _i++) {
-                paths[_i - 0] = arguments[_i];
+                paths[_i] = arguments[_i];
             }
             var result = "";
             paths.forEach(function (path) {
@@ -1387,6 +1743,16 @@ var pxsim;
             return result;
         }
         util.pathJoin = pathJoin;
+        function toArray(a) {
+            if (Array.isArray(a)) {
+                return a;
+            }
+            var r = [];
+            for (var i = 0; i < a.length; ++i)
+                r.push(a[i]);
+            return r;
+        }
+        util.toArray = toArray;
     })(util = pxsim.util || (pxsim.util = {}));
 })(pxsim || (pxsim = {}));
 /// <reference path="./debugProtocol.ts" />
@@ -1408,7 +1774,7 @@ var pxsim;
         return r;
     }
     pxsim.getWarningMessage = getWarningMessage;
-    var BreakpointMap = (function () {
+    var BreakpointMap = /** @class */ (function () {
         function BreakpointMap(breakpoints) {
             var _this = this;
             this.fileMap = {};
@@ -1467,69 +1833,152 @@ var pxsim;
         return BreakpointMap;
     }());
     pxsim.BreakpointMap = BreakpointMap;
-    function getBreakpointMsg(s, brkId) {
-        function valToJSON(v) {
-            switch (typeof v) {
-                case "string":
-                case "number":
-                case "boolean":
-                    return v;
-                case "function":
-                    return { text: "(function)" };
-                case "undefined":
+    function valToJSON(v, heap) {
+        switch (typeof v) {
+            case "string":
+            case "number":
+            case "boolean":
+                return v;
+            case "function":
+                return {
+                    text: "(function)",
+                    type: "function",
+                };
+            case "undefined":
+                return null;
+            case "object":
+                if (!v)
                     return null;
-                case "object":
-                    if (!v)
-                        return null;
-                    if (v instanceof pxsim.RefObject)
-                        return { id: v.id };
-                    return { text: "(object)" };
-                default:
-                    throw new Error();
-            }
+                if (v instanceof pxsim.RefObject) {
+                    if (heap)
+                        heap[v.id] = v;
+                    var preview = pxsim.RefObject.toDebugString(v);
+                    var type = preview.startsWith('[') ? "array" : preview;
+                    return {
+                        id: v.id,
+                        preview: preview,
+                        hasFields: v.fields !== null || preview.startsWith('['),
+                        type: type,
+                    };
+                }
+                if (v._width && v._height) {
+                    return {
+                        text: v._width + 'x' + v._height,
+                        type: "image",
+                    };
+                }
+                return {
+                    text: "(object)",
+                    type: "object",
+                };
+            default:
+                throw new Error();
         }
-        function frameVars(frame) {
+    }
+    function dumpHeap(v, heap, fields, filters) {
+        function frameVars(frame, fields) {
             var r = {};
             for (var _i = 0, _a = Object.keys(frame); _i < _a.length; _i++) {
                 var k = _a[_i];
-                if (/___\d+$/.test(k)) {
-                    r[k] = valToJSON(frame[k]);
+                // skip members starting with __
+                if (!/^__/.test(k) && /___\d+$/.test(k) && (!filters || filters.indexOf(k) !== -1)) {
+                    r[k.replace(/___\d+$/, '')] = valToJSON(frame[k], heap);
                 }
+            }
+            if (frame.fields && fields) {
+                // Fields of an object.
+                for (var _b = 0, fields_1 = fields; _b < fields_1.length; _b++) {
+                    var k = fields_1[_b];
+                    k = k.substring(k.lastIndexOf(".") + 1);
+                    r[k] = valToJSON(evalGetter(frame.vtable.iface[k], frame), heap);
+                }
+            }
+            if (frame.fields) {
+                for (var _c = 0, _d = Object.keys(frame.fields).filter(function (field) { return !field.startsWith('_'); }); _c < _d.length; _c++) {
+                    var k = _d[_c];
+                    r[k.replace(/___\d+$/, '')] = valToJSON(frame.fields[k], heap);
+                }
+            }
+            else if (Array.isArray(frame.data)) {
+                // This is an Array.
+                frame.data.forEach(function (element, index) {
+                    r[index] = valToJSON(element, heap);
+                });
             }
             return r;
         }
-        var r = {
+        return frameVars(v, fields);
+    }
+    pxsim.dumpHeap = dumpHeap;
+    function evalGetter(fn, target) {
+        // This function evaluates a getter, and we assume it doesn't have any side effects.
+        var parentFrame = {};
+        // We create a dummy stack frame
+        var stackFrame = {
+            pc: 0,
+            arg0: target,
+            fn: fn,
+            parent: parentFrame
+        };
+        // And we evaluate the getter
+        while (stackFrame.fn) {
+            stackFrame = stackFrame.fn(stackFrame);
+        }
+        return stackFrame.retval;
+    }
+    function getBreakpointMsg(s, brkId, userGlobals) {
+        var heap = {};
+        var msg = {
             type: "debugger",
             subtype: "breakpoint",
             breakpointId: brkId,
-            globals: frameVars(pxsim.runtime.globals),
-            stackframes: []
+            globals: dumpHeap(pxsim.runtime.globals, heap, undefined, userGlobals),
+            stackframes: [],
         };
         while (s != null) {
-            var info = s.fn ? s.fn.info : null;
+            var info = getInfoForFrame(s, heap);
             if (info)
-                r.stackframes.push({
-                    locals: frameVars(s),
-                    funcInfo: info,
-                    breakpointId: s.lastBrkId
-                });
+                msg.stackframes.push(info);
             s = s.parent;
         }
-        return r;
+        return { msg: msg, heap: heap };
     }
     pxsim.getBreakpointMsg = getBreakpointMsg;
-    var SimDebugSession = (function (_super) {
+    function getInfoForFrame(s, heap) {
+        var info = s.fn ? s.fn.info : null;
+        if (info) {
+            var argInfo = {
+                thisParam: valToJSON(s.argL, heap),
+                params: []
+            };
+            if (info.argumentNames) {
+                var args = info.argumentNames;
+                argInfo.params = args.map(function (paramName, index) { return ({
+                    name: paramName,
+                    value: valToJSON(s["arg" + index], heap)
+                }); });
+            }
+            return {
+                locals: dumpHeap(s, heap),
+                funcInfo: info,
+                breakpointId: s.lastBrkId,
+                arguments: argInfo
+            };
+        }
+        return undefined;
+    }
+    var SimDebugSession = /** @class */ (function (_super) {
         __extends(SimDebugSession, _super);
         function SimDebugSession(container) {
-            var _this = this;
-            _super.call(this);
+            var _this = _super.call(this) || this;
             var options = {
                 onDebuggerBreakpoint: function (b) { return _this.onDebuggerBreakpoint(b); },
                 onDebuggerWarning: function (w) { return _this.onDebuggerWarning(w); },
                 onDebuggerResume: function () { return _this.onDebuggerResume(); },
                 onStateChanged: function (s) { return _this.onStateChanged(s); }
             };
-            this.driver = new pxsim.SimulatorDriver(container, options);
+            _this.driver = new pxsim.SimulatorDriver(container, options);
+            return _this;
         }
         SimDebugSession.prototype.runCode = function (js, parts, fnArgs, breakpoints, board) {
             this.breakpoints = breakpoints;
@@ -1537,7 +1986,11 @@ var pxsim;
                 this.fixBreakpoints();
             }
             this.sendEvent(new pxsim.protocol.InitializedEvent());
-            this.driver.run(js, { parts: parts, fnArgs: fnArgs, boardDefinition: board });
+            this.driver.run(js, {
+                parts: parts,
+                fnArgs: fnArgs,
+                boardDefinition: board
+            });
         };
         SimDebugSession.prototype.stopSimulator = function (unload) {
             if (unload === void 0) { unload = false; }
@@ -1637,7 +2090,8 @@ var pxsim;
             this.lastBreak = breakMsg;
             this.state = new StoppedState(this.lastBreak, this.breakpoints, this.projectDir);
             if (breakMsg.exceptionMessage) {
-                this.sendEvent(new pxsim.protocol.StoppedEvent("exception", SimDebugSession.THREAD_ID, breakMsg.exceptionMessage));
+                var message = breakMsg.exceptionMessage.replace(/___\d+/g, '');
+                this.sendEvent(new pxsim.protocol.StoppedEvent("exception", SimDebugSession.THREAD_ID, message));
             }
             else {
                 this.sendEvent(new pxsim.protocol.StoppedEvent("breakpoint", SimDebugSession.THREAD_ID));
@@ -1659,7 +2113,8 @@ var pxsim;
                 case pxsim.SimulatorState.Stopped:
                     this.sendEvent(new pxsim.protocol.TerminatedEvent());
                     break;
-                case pxsim.SimulatorState.Unloaded:
+                //case SimulatorState.Unloaded:
+                //case SimulatorState.Pending:
                 default:
             }
         };
@@ -1686,7 +2141,7 @@ var pxsim;
      * expects requests to be made in the order:
      *      Frames -> Scopes -> Variables
      */
-    var StoppedState = (function () {
+    var StoppedState = /** @class */ (function () {
         function StoppedState(_message, _map, _dir) {
             this._message = _message;
             this._map = _map;
@@ -1708,7 +2163,6 @@ var pxsim;
         StoppedState.prototype.getFrames = function () {
             var _this = this;
             return this._message.stackframes.map(function (s, i) {
-                ;
                 var bp = _this._map.getById(s.breakpointId);
                 if (bp) {
                     _this._frames[s.breakpointId] = s;
@@ -1793,42 +2247,83 @@ var pxsim;
 /// <reference path="../localtypings/pxtparts.d.ts"/>
 var pxsim;
 (function (pxsim) {
+    function print(delay) {
+        if (delay === void 0) { delay = 0; }
+        function p() {
+            try {
+                window.print();
+            }
+            catch (e) {
+                // oops
+            }
+        }
+        if (delay)
+            setTimeout(p, delay);
+        else
+            p();
+    }
+    pxsim.print = print;
     var Embed;
     (function (Embed) {
         function start() {
             window.addEventListener("message", receiveMessage, false);
-            var frameid = window.location.hash.slice(1);
-            pxsim.Runtime.postMessage({ type: 'ready', frameid: frameid });
+            Embed.frameid = window.location.hash.slice(1);
+            initAppcache();
+            pxsim.Runtime.postMessage({ type: 'ready', frameid: Embed.frameid });
         }
         Embed.start = start;
         function receiveMessage(event) {
             var origin = event.origin; // || (<any>event).originalEvent.origin;
             // TODO: test origins
             var data = event.data || {};
-            var type = data.type || '';
+            var type = data.type;
             if (!type)
                 return;
-            switch (type || '') {
-                case 'run':
+            switch (type) {
+                case "run":
                     run(data);
                     break;
-                case 'stop':
+                case "instructions":
+                    pxsim.instructions.renderInstructions(data);
+                    break;
+                case "stop":
                     stop();
                     break;
-                case 'mute':
+                case "mute":
                     mute(data.mute);
                     break;
-                case 'custom':
+                case "stopsound":
+                    stopSound();
+                    break;
+                case "print":
+                    print();
+                    break;
+                case 'recorder':
+                    recorder(data);
+                    break;
+                case "screenshot":
+                    pxsim.Runtime.postScreenshotAsync(data).done();
+                    break;
+                case "custom":
                     if (pxsim.handleCustomMessage)
                         pxsim.handleCustomMessage(data);
                     break;
                 case 'pxteditor':
                     break; //handled elsewhere
                 case 'debugger':
-                    if (runtime) {
+                    if (runtime)
                         runtime.handleDebuggerMsg(data);
-                    }
                     break;
+                case 'simulator':
+                    var simData = data;
+                    switch (simData.command) {
+                        case "focus":
+                            tickEvent("simulator.focus", { timestamp: simData.timestamp });
+                            break;
+                        case "blur":
+                            tickEvent("simulator.blur", { timestamp: simData.timestamp });
+                            break;
+                    }
                 default:
                     queue(data);
                     break;
@@ -1849,12 +2344,14 @@ var pxsim;
             stop();
             if (msg.mute)
                 mute(msg.mute);
-            runtime = new pxsim.Runtime(msg.code);
-            runtime.id = msg.id;
+            if (msg.localizedStrings)
+                pxsim.localization.setLocalizedStrings(msg.localizedStrings);
+            runtime = new pxsim.Runtime(msg);
             runtime.board.initAsync(msg)
                 .done(function () {
                 runtime.run(function (v) {
                     pxsim.dumpLivePointers();
+                    pxsim.Runtime.postMessage({ type: "toplevelcodefinished" });
                 });
             });
         }
@@ -1862,13 +2359,81 @@ var pxsim;
         function mute(mute) {
             pxsim.AudioContextManager.mute(mute);
         }
+        function stopSound() {
+            pxsim.AudioContextManager.stopAll();
+        }
         function queue(msg) {
             if (!runtime || runtime.dead) {
                 return;
             }
             runtime.board.receiveMessage(msg);
         }
+        function recorder(rec) {
+            if (!runtime)
+                return;
+            switch (rec.action) {
+                case "start":
+                    runtime.startRecording(rec.width);
+                    break;
+                case "stop":
+                    runtime.stopRecording();
+                    break;
+            }
+        }
     })(Embed = pxsim.Embed || (pxsim.Embed = {}));
+    /**
+     * Log an event to the parent editor (allowSimTelemetry must be enabled in target)
+     * @param id The id of the event
+     * @param data Any custom values associated with this event
+     */
+    function tickEvent(id, data) {
+        postMessageToEditor({
+            type: "pxtsim",
+            action: "event",
+            tick: id,
+            data: data
+        });
+    }
+    pxsim.tickEvent = tickEvent;
+    /**
+     * Log an error to the parent editor (allowSimTelemetry must be enabled in target)
+     * @param cat The category of the error
+     * @param msg The error message
+     * @param data Any custom values associated with this event
+     */
+    function reportError(cat, msg, data) {
+        postMessageToEditor({
+            type: "pxtsim",
+            action: "event",
+            tick: "error",
+            category: cat,
+            message: msg,
+            data: data
+        });
+    }
+    pxsim.reportError = reportError;
+    function postMessageToEditor(message) {
+        if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+            window.parent.postMessage(message, "*");
+        }
+    }
+    function initAppcache() {
+        if (typeof window !== 'undefined' && window.applicationCache) {
+            if (window.applicationCache.status === window.applicationCache.UPDATEREADY)
+                reload();
+            window.applicationCache.addEventListener("updateready", function () {
+                if (window.applicationCache.status === window.applicationCache.UPDATEREADY)
+                    reload();
+            });
+        }
+    }
+    function reload() {
+        // Continuously send message just in case the editor isn't ready to handle it yet
+        setInterval(function () {
+            pxsim.Runtime.postMessage({ type: "simulator", command: "reload" });
+        }, 3000);
+    }
+    pxsim.reload = reload;
 })(pxsim || (pxsim = {}));
 pxsim.util.injectPolyphils();
 if (typeof window !== 'undefined') {
@@ -1876,20 +2441,19 @@ if (typeof window !== 'undefined') {
         pxsim.Embed.start();
     });
 }
-/// <reference path="../typings/globals/bluebird/index.d.ts"/>
 var pxsim;
 (function (pxsim) {
     var instructions;
     (function (instructions) {
         var LOC_LBL_SIZE = 10;
         var QUANT_LBL_SIZE = 30;
-        var QUANT_LBL = function (q) { return (q + "x"); };
+        var QUANT_LBL = function (q) { return q + "x"; };
         var WIRE_QUANT_LBL_SIZE = 20;
         var LBL_VERT_PAD = 3;
         var LBL_RIGHT_PAD = 5;
         var LBL_LEFT_PAD = 5;
-        var REQ_WIRE_HEIGHT = 45;
-        var REQ_CMP_HEIGHT = 55;
+        var REQ_WIRE_HEIGHT = 40;
+        var REQ_CMP_HEIGHT = 50;
         var REQ_CMP_SCALE = 0.5 * 3;
         var ORIENTATION = "portrait";
         var PPI = 96.0;
@@ -1913,20 +2477,13 @@ var pxsim;
         var NUM_FONT = 80;
         var NUM_MARGIN = 10;
         var FRONT_PAGE_BOARD_WIDTH = 400;
-        var PART_SCALAR = 2.3;
+        var PART_SCALAR = 1.7;
         var PARTS_BOARD_SCALE = 0.17;
         var PARTS_BB_SCALE = 0.25;
         var PARTS_CMP_SCALE = 0.3;
         var PARTS_WIRE_SCALE = 0.23;
         var BACK_PAGE_BOARD_WIDTH = PANEL_WIDTH - PANEL_PADDING * 1.5;
         var STYLE = "\n            .instr-panel {\n                margin: " + PANEL_MARGIN + "px;\n                padding: " + PANEL_PADDING + "px;\n                border-width: " + BORDER_WIDTH + "px;\n                border-color: " + BORDER_COLOR + ";\n                border-style: solid;\n                border-radius: " + BORDER_RADIUS + "px;\n                display: inline-block;\n                width: " + PANEL_WIDTH + "px;\n                height: " + PANEL_HEIGHT + "px;\n                position: relative;\n                overflow: hidden;\n                page-break-inside: avoid;\n            }\n            .board-svg {\n                margin: 0 auto;\n                display: block;\n                position: absolute;\n                bottom: " + BOARD_BOT + "px;\n                left: " + BOARD_LEFT + "px;\n            }\n            .panel-num-outer {\n                position: absolute;\n                left: " + -BORDER_WIDTH + "px;\n                top: " + -BORDER_WIDTH + "px;\n                width: " + NUM_BOX_SIZE + "px;\n                height: " + NUM_BOX_SIZE + "px;\n                border-width: " + BORDER_WIDTH + "px;\n                border-style: solid;\n                border-color: " + BORDER_COLOR + ";\n                border-radius: " + BORDER_RADIUS + "px 0 " + BORDER_RADIUS + "px 0;\n            }\n            .panel-num {\n                margin: " + NUM_MARGIN + "px 0;\n                text-align: center;\n                font-size: " + NUM_FONT + "px;\n            }\n            .cmp-div {\n                display: inline-block;\n            }\n            .reqs-div {\n                margin-left: " + (PANEL_PADDING + NUM_BOX_SIZE) + "px;\n                margin-top: 5px;\n            }\n            .partslist-wire,\n            .partslist-cmp {\n                margin: 10px;\n            }\n            .partslist-wire {\n                display: inline-block;\n            }\n            ";
-        function addClass(el, cls) {
-            //TODO move to library
-            if (el.classList)
-                el.classList.add(cls);
-            else if (el.className.indexOf(cls) < 0)
-                el.className += " " + cls;
-        }
         function mkTxt(p, txt, size) {
             var el = pxsim.svg.elt("text");
             var x = p[0], y = p[1];
@@ -1936,7 +2493,8 @@ var pxsim;
         }
         function mkBoardImgSvg(def) {
             var boardView = pxsim.visuals.mkBoardView({
-                visual: def
+                visual: def.visual,
+                boardDef: def
             });
             return boardView.getView();
         }
@@ -2012,7 +2570,7 @@ var pxsim;
                 var txtH = size / txtAspectRatio[1];
                 var _b = [elDims.l + elDims.w / 2, elDims.t - LBL_VERT_PAD - txtH / 2], cx = _b[0], y = _b[1];
                 var lbl = pxsim.visuals.mkTxt(cx, y, size, 0, opts.top, xOff, yOff);
-                pxsim.svg.addClass(lbl, "cmp-lbl");
+                pxsim.U.addClass(lbl, "cmp-lbl");
                 svgEl.appendChild(lbl);
                 var len = txtW * opts.top.length;
                 updateT(y - txtH / 2);
@@ -2025,7 +2583,7 @@ var pxsim;
                 var txtH = size / txtAspectRatio[1];
                 var _c = [elDims.l + elDims.w / 2, elDims.t + elDims.h + LBL_VERT_PAD + txtH / 2], cx = _c[0], y = _c[1];
                 var lbl = pxsim.visuals.mkTxt(cx, y, size, 0, opts.bot, xOff, yOff);
-                pxsim.svg.addClass(lbl, "cmp-lbl");
+                pxsim.U.addClass(lbl, "cmp-lbl");
                 svgEl.appendChild(lbl);
                 var len = txtW * opts.bot.length;
                 updateB(y + txtH / 2);
@@ -2039,7 +2597,7 @@ var pxsim;
                 var len = txtW * opts.right.length;
                 var _d = [elDims.l + elDims.w + LBL_RIGHT_PAD + len / 2, elDims.t + elDims.h / 2], cx = _d[0], cy = _d[1];
                 var lbl = pxsim.visuals.mkTxt(cx, cy, size, 0, opts.right, xOff, yOff);
-                pxsim.svg.addClass(lbl, "cmp-lbl");
+                pxsim.U.addClass(lbl, "cmp-lbl");
                 svgEl.appendChild(lbl);
                 updateT(cy - txtH / 2);
                 updateR(cx + len / 2);
@@ -2052,7 +2610,7 @@ var pxsim;
                 var len = txtW * opts.left.length;
                 var _e = [elDims.l - LBL_LEFT_PAD - len / 2, elDims.t + elDims.h / 2], cx = _e[0], cy = _e[1];
                 var lbl = pxsim.visuals.mkTxt(cx, cy, size, 0, opts.left, xOff, yOff);
-                pxsim.svg.addClass(lbl, "cmp-lbl");
+                pxsim.U.addClass(lbl, "cmp-lbl");
                 svgEl.appendChild(lbl);
                 updateT(cy - txtH / 2);
                 updateL(cx - len / 2);
@@ -2146,10 +2704,11 @@ var pxsim;
             };
             var boardHost = new pxsim.visuals.BoardHost(pxsim.visuals.mkBoardView({
                 visual: opts.boardDef.visual,
+                boardDef: opts.boardDef,
                 wireframe: opts.wireframe
             }), opts);
             var view = boardHost.getView();
-            pxsim.svg.addClass(view, "board-svg");
+            pxsim.U.addClass(view, "board-svg");
             //set smiley
             //HACK
             // let img = board.board.displayCmp.image;
@@ -2166,9 +2725,9 @@ var pxsim;
         function drawSteps(board, step, props) {
             var view = board.getView();
             if (step > 0) {
-                pxsim.svg.addClass(view, "grayed");
+                pxsim.U.addClass(view, "grayed");
             }
-            var _loop_1 = function(i) {
+            var _loop_1 = function (i) {
                 var cmps = props.stepToCmps[i];
                 if (cmps) {
                     cmps.forEach(function (partInst) {
@@ -2177,7 +2736,7 @@ var pxsim;
                         if (i === step) {
                             //highlight locations pins
                             partInst.breadboardConnections.forEach(function (bbLoc) { return board.highlightBreadboardPin(bbLoc); });
-                            pxsim.svg.addClass(cmp.element, "notgrayed");
+                            pxsim.U.addClass(cmp.element, "notgrayed");
                         }
                     });
                 }
@@ -2185,6 +2744,8 @@ var pxsim;
                 if (wires) {
                     wires.forEach(function (w) {
                         var wire = board.addWire(w);
+                        if (!wire)
+                            return;
                         //last step
                         if (i === step) {
                             //location highlights
@@ -2195,7 +2756,7 @@ var pxsim;
                                 board.highlightBoardPin(w.start.pin);
                             }
                             if (w.end.type == "breadboard") {
-                                var lbls = board.highlightBreadboardPin(w.end);
+                                board.highlightBreadboardPin(w.end);
                             }
                             else {
                                 board.highlightBoardPin(w.end.pin);
@@ -2213,13 +2774,13 @@ var pxsim;
         function mkPanel() {
             //panel
             var panel = document.createElement("div");
-            addClass(panel, "instr-panel");
+            pxsim.U.addClass(panel, "instr-panel");
             return panel;
         }
         function mkPartsPanel(props) {
             var panel = mkPanel();
             // board and breadboard
-            var boardImg = mkBoardImgSvg(props.boardDef.visual);
+            var boardImg = mkBoardImgSvg(props.boardDef);
             var board = wrapSvg(boardImg, { left: QUANT_LBL(1), leftSize: QUANT_LBL_SIZE, cmpScale: PARTS_BOARD_SCALE });
             panel.appendChild(board);
             var bbRaw = mkBBSvg();
@@ -2238,20 +2799,21 @@ var pxsim;
                     leftSize: QUANT_LBL_SIZE,
                     cmpScale: PARTS_CMP_SCALE,
                 });
-                addClass(cmp, "partslist-cmp");
+                pxsim.U.addClass(cmp, "partslist-cmp");
                 panel.appendChild(cmp);
             });
             // wires
             props.allWireColors.forEach(function (clr) {
                 var quant = props.colorToWires[clr].length;
+                var style = props.boardDef.pinStyles[clr] || "female";
                 var cmp = mkCmpDiv("wire", {
                     left: QUANT_LBL(quant),
                     leftSize: WIRE_QUANT_LBL_SIZE,
                     wireClr: clr,
                     cmpScale: PARTS_WIRE_SCALE,
-                    crocClips: props.boardDef.useCrocClips
+                    crocClips: style == "croc"
                 });
-                addClass(cmp, "partslist-wire");
+                pxsim.U.addClass(cmp, "partslist-wire");
                 panel.appendChild(cmp);
             });
             return panel;
@@ -2264,16 +2826,16 @@ var pxsim;
             panel.appendChild(board.getView());
             //number
             var numDiv = document.createElement("div");
-            addClass(numDiv, "panel-num-outer");
-            addClass(numDiv, "noselect");
+            pxsim.U.addClass(numDiv, "panel-num-outer");
+            pxsim.U.addClass(numDiv, "noselect");
             panel.appendChild(numDiv);
             var num = document.createElement("div");
-            addClass(num, "panel-num");
+            pxsim.U.addClass(num, "panel-num");
             num.textContent = (step + 1) + "";
             numDiv.appendChild(num);
             // add requirements
             var reqsDiv = document.createElement("div");
-            addClass(reqsDiv, "reqs-div");
+            pxsim.U.addClass(reqsDiv, "reqs-div");
             panel.appendChild(reqsDiv);
             var wires = (props.stepToWires[step] || []);
             var mkLabel = function (loc) {
@@ -2285,6 +2847,10 @@ var pxsim;
                     return loc.pin;
             };
             wires.forEach(function (w) {
+                var croc = false;
+                if (w.end.type == "dalboard") {
+                    croc = props.boardDef.pinStyles[w.end.pin] == "croc";
+                }
                 var cmp = mkCmpDiv("wire", {
                     top: mkLabel(w.end),
                     topSize: LOC_LBL_SIZE,
@@ -2292,9 +2858,9 @@ var pxsim;
                     botSize: LOC_LBL_SIZE,
                     wireClr: w.color,
                     cmpHeight: REQ_WIRE_HEIGHT,
-                    crocClips: props.boardDef.useCrocClips
+                    crocClips: croc
                 });
-                addClass(cmp, "cmp-div");
+                pxsim.U.addClass(cmp, "cmp-div");
                 reqsDiv.appendChild(cmp);
             });
             var cmps = (props.stepToCmps[step] || []);
@@ -2325,7 +2891,7 @@ var pxsim;
                         cmpHeight: REQ_CMP_HEIGHT,
                         cmpScale: scale
                     });
-                    addClass(cmp, "cmp-div");
+                    pxsim.U.addClass(cmp, "cmp-div");
                     reqsDiv.appendChild(cmp);
                 });
             });
@@ -2340,20 +2906,29 @@ var pxsim;
         }
         function mkFinalPanel(props) {
             var panel = mkPanel();
-            addClass(panel, "back-panel");
+            pxsim.U.addClass(panel, "back-panel");
             var board = mkBlankBoardAndBreadboard(props, BACK_PAGE_BOARD_WIDTH, false);
             board.addAll(props.allAlloc);
             panel.appendChild(board.getView());
             return panel;
         }
-        function renderParts(options) {
-            var COMP_CODE = "";
-            pxsim.runtime = new pxsim.Runtime(COMP_CODE);
+        function renderParts(container, options) {
+            if (!options.boardDef.pinStyles)
+                options.boardDef.pinStyles = {};
+            if (options.configData)
+                pxsim.setConfigData(options.configData.cfg, options.configData.cfgKey);
+            var msg = {
+                type: "run",
+                code: "",
+                boardDefinition: options.boardDef,
+                partDefinitions: options.partDefinitions
+            };
+            pxsim.runtime = new pxsim.Runtime(msg);
             pxsim.runtime.board = null;
-            pxsim.initCurrentRuntime();
+            pxsim.initCurrentRuntime(msg); // TODO it seems Runtime() ctor already calls this?
             var style = document.createElement("style");
-            document.head.appendChild(style);
             style.textContent += STYLE;
+            document.head.appendChild(style);
             var cmpDefs = options.partDefinitions;
             //props
             var dummyBreadboard = new pxsim.visuals.Breadboard({});
@@ -2368,101 +2943,172 @@ var pxsim;
             var frontPanel = updateFrontPanel(props);
             //all required parts
             var partsPanel = mkPartsPanel(props);
-            document.body.appendChild(partsPanel);
+            container.appendChild(partsPanel);
             //steps
             for (var s = 0; s <= props.lastStep; s++) {
                 var p = mkStepPanel(s, props);
-                document.body.appendChild(p);
+                container.appendChild(p);
             }
             //final
-            var finalPanel = mkFinalPanel(props);
-            document.body.appendChild(finalPanel);
+            //let finalPanel = mkFinalPanel(props);
+            //container.appendChild(finalPanel);
+            if (options.print)
+                pxsim.print(2000);
         }
         instructions.renderParts = renderParts;
+        function renderInstructions(msg) {
+            document.getElementById("proj-title").innerText = msg.options.name || "";
+            renderParts(document.body, msg.options);
+        }
+        instructions.renderInstructions = renderInstructions;
     })(instructions = pxsim.instructions || (pxsim.instructions = {}));
 })(pxsim || (pxsim = {}));
 // APIs for language/runtime support (records, locals, function values)
 var pxsim;
 (function (pxsim) {
     pxsim.quiet = false;
-    function check(cond) {
+    function check(cond, msg) {
+        if (msg === void 0) { msg = "sim: check failed"; }
         if (!cond) {
             debugger;
-            throw new Error("sim: check failed");
+            throw new Error(msg);
         }
     }
     pxsim.check = check;
-    var refObjId = 1;
-    var liveRefObjs = {};
-    var stringLiterals;
-    var stringRefCounts = {};
-    var refCounting = true;
-    function noRefCounting() {
-        refCounting = false;
+    pxsim.title = "";
+    var cfgKey = {};
+    var cfg = {};
+    function getConfig(id) {
+        if (cfg.hasOwnProperty(id + ""))
+            return cfg[id + ""];
+        return null;
     }
-    pxsim.noRefCounting = noRefCounting;
-    var RefObject = (function () {
+    pxsim.getConfig = getConfig;
+    function getConfigKey(id) {
+        if (cfgKey.hasOwnProperty(id))
+            return cfgKey[id];
+        return null;
+    }
+    pxsim.getConfigKey = getConfigKey;
+    function getAllConfigKeys() {
+        return Object.keys(cfgKey);
+    }
+    pxsim.getAllConfigKeys = getAllConfigKeys;
+    function setConfigKey(key, id) {
+        cfgKey[key] = id;
+    }
+    pxsim.setConfigKey = setConfigKey;
+    function setConfig(id, val) {
+        cfg[id] = val;
+    }
+    pxsim.setConfig = setConfig;
+    function setConfigData(cfg_, cfgKey_) {
+        cfg = cfg_;
+        cfgKey = cfgKey_;
+    }
+    pxsim.setConfigData = setConfigData;
+    function getConfigData() {
+        return { cfg: cfg, cfgKey: cfgKey };
+    }
+    pxsim.getConfigData = getConfigData;
+    function setTitle(t) {
+        pxsim.title = t;
+    }
+    pxsim.setTitle = setTitle;
+    var RefObject = /** @class */ (function () {
         function RefObject() {
-            this.id = refObjId++;
-            this.refcnt = 1;
-            liveRefObjs[this.id + ""] = this;
+            if (pxsim.runtime)
+                this.id = pxsim.runtime.registerLiveObject(this);
+            else
+                this.id = 0;
         }
         RefObject.prototype.destroy = function () { };
+        RefObject.prototype.scan = function (mark) {
+            throw pxsim.U.userError("scan not implemented");
+        };
+        RefObject.prototype.gcKey = function () { throw pxsim.U.userError("gcKey not implemented"); };
+        RefObject.prototype.gcSize = function () { throw pxsim.U.userError("gcSize not implemented"); };
+        RefObject.prototype.gcIsStatic = function () { return false; };
         RefObject.prototype.print = function () {
-            console.log("RefObject id:" + this.id + " refs:" + this.refcnt);
+            if (pxsim.runtime && pxsim.runtime.refCountingDebug)
+                console.log("RefObject id:" + this.id);
+        };
+        // render a debug preview string
+        RefObject.prototype.toDebugString = function () {
+            return "(object)";
+        };
+        RefObject.toAny = function (o) {
+            if (o && o.toAny)
+                return o.toAny();
+            return o;
+        };
+        RefObject.toDebugString = function (o) {
+            if (o === null)
+                return "null";
+            if (o === undefined)
+                return "undefined;";
+            if (o.vtable && o.vtable.name)
+                return o.vtable.name;
+            if (o.toDebugString)
+                return o.toDebugString();
+            if (typeof o == "string")
+                return JSON.stringify(o);
+            return o.toString();
         };
         return RefObject;
     }());
     pxsim.RefObject = RefObject;
-    function noLeakTracking(r) {
-        delete liveRefObjs[r.id + ""];
-    }
-    pxsim.noLeakTracking = noLeakTracking;
-    var FnWrapper = (function () {
-        function FnWrapper(func, caps, a0, a1, a2, cb) {
+    var FnWrapper = /** @class */ (function () {
+        function FnWrapper(func, caps, args) {
             this.func = func;
             this.caps = caps;
-            this.a0 = a0;
-            this.a1 = a1;
-            this.a2 = a2;
-            this.cb = cb;
+            this.args = args;
         }
         return FnWrapper;
     }());
     pxsim.FnWrapper = FnWrapper;
-    var RefRecord = (function (_super) {
+    var RefRecord = /** @class */ (function (_super) {
         __extends(RefRecord, _super);
         function RefRecord() {
-            _super.apply(this, arguments);
-            this.fields = [];
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.fields = {};
+            return _this;
         }
+        RefRecord.prototype.scan = function (mark) {
+            for (var _i = 0, _a = Object.keys(this.fields); _i < _a.length; _i++) {
+                var k = _a[_i];
+                mark(k, this.fields[k]);
+            }
+        };
+        RefRecord.prototype.gcKey = function () { return this.vtable.name; };
+        RefRecord.prototype.gcSize = function () { return this.vtable.numFields + 1; };
         RefRecord.prototype.destroy = function () {
-            var refmask = this.vtable.refmask;
-            for (var i = 0; i < refmask.length; ++i)
-                if (refmask[i])
-                    decr(this.fields[i]);
             this.fields = null;
             this.vtable = null;
         };
-        RefRecord.prototype.isRef = function (idx) {
-            check(0 <= idx && idx < this.fields.length);
-            return !!this.vtable.refmask[idx];
-        };
         RefRecord.prototype.print = function () {
-            console.log("RefInstance id:" + this.id + " (" + this.vtable.name + ") len:" + this.fields.length);
+            if (pxsim.runtime && pxsim.runtime.refCountingDebug)
+                console.log("RefRecord id:" + this.id + " (" + this.vtable.name + ")");
         };
         return RefRecord;
     }(RefObject));
     pxsim.RefRecord = RefRecord;
-    var RefAction = (function (_super) {
+    var RefAction = /** @class */ (function (_super) {
         __extends(RefAction, _super);
         function RefAction() {
-            _super.apply(this, arguments);
-            this.fields = [];
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.fields = [];
+            return _this;
         }
+        RefAction.prototype.scan = function (mark) {
+            for (var i = 0; i < this.fields.length; ++i)
+                mark("_cap" + i, this.fields[i]);
+        };
+        RefAction.prototype.gcKey = function () { return pxsim.functionName(this.func); };
+        RefAction.prototype.gcSize = function () { return this.fields.length + 3; };
         RefAction.prototype.isRef = function (idx) {
             check(0 <= idx && idx < this.fields.length);
-            return idx < this.reflen;
+            return idx < this.len;
         };
         RefAction.prototype.ldclo = function (n) {
             n >>= 2;
@@ -2470,92 +3116,148 @@ var pxsim;
             return this.fields[n];
         };
         RefAction.prototype.destroy = function () {
-            for (var i = 0; i < this.reflen; ++i)
-                decr(this.fields[i]);
             this.fields = null;
             this.func = null;
         };
         RefAction.prototype.print = function () {
-            console.log("RefAction id:" + this.id + " refs:" + this.refcnt + " len:" + this.fields.length);
+            if (pxsim.runtime && pxsim.runtime.refCountingDebug)
+                console.log("RefAction id:" + this.id + " len:" + this.fields.length);
         };
         return RefAction;
     }(RefObject));
     pxsim.RefAction = RefAction;
     var pxtcore;
     (function (pxtcore) {
-        function mkAction(reflen, len, fn) {
+        function seedAddRandom(num) {
+            // nothing yet
+        }
+        pxtcore.seedAddRandom = seedAddRandom;
+        function mkAction(len, fn) {
             var r = new RefAction();
-            r.reflen = reflen;
+            r.len = len;
             r.func = fn;
             for (var i = 0; i < len; ++i)
                 r.fields.push(null);
             return r;
         }
         pxtcore.mkAction = mkAction;
-        function runAction3(a, a0, a1, a2) {
+        function runAction(a, args) {
             var cb = pxsim.getResume();
             if (a instanceof RefAction) {
-                pxtrt.incr(a);
-                cb(new FnWrapper(a.func, a.fields, a0, a1, a2, function () {
-                    pxtrt.decr(a);
-                }));
+                cb(new FnWrapper(a.func, a.fields, args));
             }
             else {
                 // no-closure case
-                cb(new FnWrapper(a, null, a0, a1, a2, null));
+                cb(new FnWrapper(a, null, args));
             }
         }
-        pxtcore.runAction3 = runAction3;
-        function runAction2(a, a0, a1) {
-            runAction3(a, a0, a1, null);
+        pxtcore.runAction = runAction;
+        var counters = {};
+        // TODO move this somewhere else, so it can be invoked also on data coming from hardware
+        function processPerfCounters(msg) {
+            var r = "";
+            var addfmtr = function (s, len) {
+                r += s.length >= len ? s : ("              " + s).slice(-len);
+            };
+            var addfmtl = function (s, len) {
+                r += s.length >= len ? s : (s + "                         ").slice(0, len);
+            };
+            var addnum = function (n) { return addfmtr("" + Math.round(n), 6); };
+            var addstats = function (numstops, us) {
+                addfmtr(Math.round(us) + "", 8);
+                r += " /";
+                addnum(numstops);
+                r += " =";
+                addnum(us / numstops);
+            };
+            for (var _i = 0, _a = msg.split(/\n/); _i < _a.length; _i++) {
+                var line = _a[_i];
+                if (!line)
+                    continue;
+                if (!/^\d/.test(line))
+                    continue;
+                var fields = line.split(/,/);
+                var pi = counters[fields[2]];
+                if (!pi)
+                    counters[fields[2]] = pi = { stops: 0, us: 0, meds: [] };
+                addfmtl(fields[2], 25);
+                var numstops = parseInt(fields[0]);
+                var us = parseInt(fields[1]);
+                addstats(numstops, us);
+                r += " |";
+                addstats(numstops - pi.stops, us - pi.us);
+                r += " ~";
+                var med = parseInt(fields[3]);
+                addnum(med);
+                if (pi.meds.length > 10)
+                    pi.meds.shift();
+                pi.meds.push(med);
+                var mm = pi.meds.slice();
+                mm.sort(function (a, b) { return a - b; });
+                var ubermed = mm[mm.length >> 1];
+                r += " ~~";
+                addnum(ubermed);
+                pi.stops = numstops;
+                pi.us = us;
+                r += "\n";
+            }
+            console.log(r);
         }
-        pxtcore.runAction2 = runAction2;
-        function runAction1(a, v) {
-            runAction3(a, v, null, null);
+        function dumpPerfCounters() {
+            if (!pxsim.runtime || !pxsim.runtime.perfCounters)
+                return;
+            var csv = "calls,us,name\n";
+            for (var _i = 0, _a = pxsim.runtime.perfCounters; _i < _a.length; _i++) {
+                var p = _a[_i];
+                p.lastFew.sort();
+                var median = p.lastFew[p.lastFew.length >> 1];
+                csv += p.numstops + "," + p.value + "," + p.name + "," + median + "\n";
+            }
+            processPerfCounters(csv);
+            // console.log(csv)
         }
-        pxtcore.runAction1 = runAction1;
-        function runAction0(a) {
-            runAction3(a, null, null, null);
-        }
-        pxtcore.runAction0 = runAction0;
+        pxtcore.dumpPerfCounters = dumpPerfCounters;
     })(pxtcore = pxsim.pxtcore || (pxsim.pxtcore = {}));
-    var RefLocal = (function (_super) {
-        __extends(RefLocal, _super);
-        function RefLocal() {
-            _super.apply(this, arguments);
-            this.v = 0;
-        }
-        RefLocal.prototype.print = function () {
-            console.log("RefLocal id:" + this.id + " refs:" + this.refcnt + " v:" + this.v);
-        };
-        return RefLocal;
-    }(RefObject));
-    pxsim.RefLocal = RefLocal;
-    var RefRefLocal = (function (_super) {
+    var RefRefLocal = /** @class */ (function (_super) {
         __extends(RefRefLocal, _super);
         function RefRefLocal() {
-            _super.apply(this, arguments);
-            this.v = null;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.v = null;
+            return _this;
         }
+        RefRefLocal.prototype.scan = function (mark) {
+            mark("*", this.v);
+        };
+        RefRefLocal.prototype.gcKey = function () { return "LOC"; };
+        RefRefLocal.prototype.gcSize = function () { return 2; };
         RefRefLocal.prototype.destroy = function () {
-            decr(this.v);
         };
         RefRefLocal.prototype.print = function () {
-            console.log("RefRefLocal id:" + this.id + " refs:" + this.refcnt + " v:" + this.v);
+            if (pxsim.runtime && pxsim.runtime.refCountingDebug)
+                console.log("RefRefLocal id:" + this.id + " v:" + this.v);
         };
         return RefRefLocal;
     }(RefObject));
     pxsim.RefRefLocal = RefRefLocal;
-    var RefMap = (function (_super) {
+    var RefMap = /** @class */ (function (_super) {
         __extends(RefMap, _super);
         function RefMap() {
-            _super.apply(this, arguments);
-            this.vtable = 42;
-            this.data = [];
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.vtable = pxsim.mkMapVTable();
+            _this.data = [];
+            return _this;
         }
+        RefMap.prototype.scan = function (mark) {
+            for (var _i = 0, _a = this.data; _i < _a.length; _i++) {
+                var d = _a[_i];
+                mark(d.key, d.val);
+            }
+        };
+        RefMap.prototype.gcKey = function () { return "{...}"; };
+        RefMap.prototype.gcSize = function () { return this.data.length * 2 + 4; };
         RefMap.prototype.findIdx = function (key) {
             for (var i = 0; i < this.data.length; ++i) {
-                if (this.data[i].key >> 1 == key)
+                if (this.data[i].key == key)
                     return i;
             }
             return -1;
@@ -2563,22 +3265,25 @@ var pxsim;
         RefMap.prototype.destroy = function () {
             _super.prototype.destroy.call(this);
             for (var i = 0; i < this.data.length; ++i) {
-                if (this.data[i].key & 1) {
-                    decr(this.data[i].val);
-                }
                 this.data[i].val = 0;
             }
             this.data = [];
         };
         RefMap.prototype.print = function () {
-            console.log("RefMap id:" + this.id + " refs:" + this.refcnt + " size:" + this.data.length);
+            if (pxsim.runtime && pxsim.runtime.refCountingDebug)
+                console.log("RefMap id:" + this.id + " size:" + this.data.length);
+        };
+        RefMap.prototype.toAny = function () {
+            var r = {};
+            this.data.forEach(function (d) {
+                r[d.key] = RefObject.toAny(d.val);
+            });
+            return r;
         };
         return RefMap;
     }(RefObject));
     pxsim.RefMap = RefMap;
     function num(v) {
-        if (v === undefined)
-            return 0;
         return v;
     }
     function ref(v) {
@@ -2586,92 +3291,40 @@ var pxsim;
             return null;
         return v;
     }
-    function decr(v) {
-        if (!refCounting)
-            return;
-        if (v instanceof RefObject) {
-            var o = v;
-            check(o.refcnt > 0);
-            if (--o.refcnt == 0) {
-                delete liveRefObjs[o.id + ""];
-                o.destroy();
-            }
-        }
-        else if (typeof v == "string") {
-            if (stringLiterals && !stringLiterals.hasOwnProperty(v)) {
-                stringRefDelta(v, -1);
-            }
-        }
-        else if (!v) {
-        }
-        else if (typeof v == "function") {
-        }
-        else {
-            throw new Error("bad decr");
-        }
-    }
-    pxsim.decr = decr;
-    function setupStringLiterals(strings) {
-        // reset
-        liveRefObjs = {};
-        stringRefCounts = {};
-        // and set up strings
-        strings[""] = 1;
-        strings["true"] = 1;
-        strings["false"] = 1;
-        // comment out next line to disable string ref counting
-        stringLiterals = strings;
-    }
-    pxsim.setupStringLiterals = setupStringLiterals;
-    function stringRefDelta(s, n) {
-        if (!stringRefCounts.hasOwnProperty(s))
-            stringRefCounts[s] = 0;
-        var r = (stringRefCounts[s] += n);
-        if (r == 0)
-            delete stringRefCounts[s];
-        else
-            check(r > 0);
-        return r;
-    }
-    function initString(v) {
-        if (!v || !stringLiterals)
-            return v;
-        if (typeof v == "string" && !stringLiterals.hasOwnProperty(v))
-            stringRefDelta(v, 1);
-        return v;
-    }
-    pxsim.initString = initString;
-    function incr(v) {
-        if (!refCounting)
-            return v;
-        if (v instanceof RefObject) {
-            var o = v;
-            check(o.refcnt > 0);
-            o.refcnt++;
-        }
-        else if (stringLiterals && typeof v == "string" && !stringLiterals.hasOwnProperty(v)) {
-            var k = stringRefDelta(v, 1);
-            check(k > 1);
-        }
-        return v;
-    }
-    pxsim.incr = incr;
     function dumpLivePointers() {
-        if (!refCounting)
-            return;
-        Object.keys(liveRefObjs).forEach(function (k) {
-            liveRefObjs[k].print();
-        });
-        Object.keys(stringRefCounts).forEach(function (k) {
-            var n = stringRefCounts[k];
-            console.log("Live String:", JSON.stringify(k), "refcnt=", n);
-        });
+        if (pxsim.runtime)
+            pxsim.runtime.dumpLivePointers();
     }
     pxsim.dumpLivePointers = dumpLivePointers;
-    var pxtcore;
+    var numops;
+    (function (numops) {
+        function toString(v) {
+            if (v === null)
+                return "null";
+            else if (v === undefined)
+                return "undefined";
+            return v.toString();
+        }
+        numops.toString = toString;
+        function toBoolDecr(v) {
+            return !!v;
+        }
+        numops.toBoolDecr = toBoolDecr;
+        function toBool(v) {
+            return !!v;
+        }
+        numops.toBool = toBool;
+    })(numops = pxsim.numops || (pxsim.numops = {}));
+    var langsupp;
+    (function (langsupp) {
+        function toInt(v) { return (v | 0); } // TODO
+        langsupp.toInt = toInt;
+        function toFloat(v) { return v; }
+        langsupp.toFloat = toFloat;
+        function ignore(v) { return v; }
+        langsupp.ignore = ignore;
+    })(langsupp = pxsim.langsupp || (pxsim.langsupp = {}));
     (function (pxtcore) {
-        pxtcore.incr = pxsim.incr;
-        pxtcore.decr = pxsim.decr;
         function ptrOfLiteral(v) {
             return v;
         }
@@ -2680,10 +3333,6 @@ var pxsim;
             dumpLivePointers();
         }
         pxtcore.debugMemLeaks = debugMemLeaks;
-        function allocate() {
-            pxsim.U.userError("allocate() called in simulator");
-        }
-        pxtcore.allocate = allocate;
         function templateHash() {
             return 0;
         }
@@ -2692,11 +3341,48 @@ var pxsim;
             return 0;
         }
         pxtcore.programHash = programHash;
+        function programName() {
+            return pxsim.title;
+        }
+        pxtcore.programName = programName;
+        function programSize() {
+            return 0;
+        }
+        pxtcore.programSize = programSize;
+        function afterProgramPage() {
+            return 0;
+        }
+        pxtcore.afterProgramPage = afterProgramPage;
+        function getConfig(key, defl) {
+            var r = pxsim.getConfig(key);
+            if (r == null)
+                return defl;
+            return r;
+        }
+        pxtcore.getConfig = getConfig;
+        // these shouldn't generally be called when compiled for simulator
+        // provide implementation to silence warnings and as future-proofing
+        function toInt(n) { return n >> 0; }
+        pxtcore.toInt = toInt;
+        function toUInt(n) { return n >>> 0; }
+        pxtcore.toUInt = toUInt;
+        function toDouble(n) { return n; }
+        pxtcore.toDouble = toDouble;
+        function toFloat(n) { return n; }
+        pxtcore.toFloat = toFloat;
+        function fromInt(n) { return n; }
+        pxtcore.fromInt = fromInt;
+        function fromUInt(n) { return n; }
+        pxtcore.fromUInt = fromUInt;
+        function fromDouble(n) { return n; }
+        pxtcore.fromDouble = fromDouble;
+        function fromFloat(n) { return n; }
+        pxtcore.fromFloat = fromFloat;
+        function fromBool(n) { return !!n; }
+        pxtcore.fromBool = fromBool;
     })(pxtcore = pxsim.pxtcore || (pxsim.pxtcore = {}));
     var pxtrt;
     (function (pxtrt) {
-        pxtrt.incr = pxsim.incr;
-        pxtrt.decr = pxsim.decr;
         function toInt8(v) {
             return ((v & 0xff) << 24) >> 24;
         }
@@ -2709,6 +3395,10 @@ var pxsim;
             return v | 0;
         }
         pxtrt.toInt32 = toInt32;
+        function toUInt32(v) {
+            return v >>> 0;
+        }
+        pxtrt.toUInt32 = toUInt32;
         function toUInt8(v) {
             return v & 0xff;
         }
@@ -2726,8 +3416,8 @@ var pxsim;
         }
         pxtrt.nullFix = nullFix;
         function nullCheck(v) {
-            if (!v)
-                pxsim.U.userError("Using null value.");
+            if (v === null || v === undefined)
+                pxsim.U.userError("Dereferencing null/undefined value.");
         }
         pxtrt.nullCheck = nullCheck;
         function panic(code) {
@@ -2735,12 +3425,10 @@ var pxsim;
         }
         pxtrt.panic = panic;
         function stringToBool(s) {
-            pxtrt.decr(s);
             return s ? 1 : 0;
         }
         pxtrt.stringToBool = stringToBool;
         function ptrToBool(v) {
-            pxtrt.decr(v);
             return v ? 1 : 0;
         }
         pxtrt.ptrToBool = ptrToBool;
@@ -2750,58 +3438,14 @@ var pxsim;
             return s;
         }
         pxtrt.emptyToNull = emptyToNull;
-        function ldfld(r, idx) {
-            nullCheck(r);
-            check(!r.isRef(idx));
-            var v = num(r.fields[idx]);
-            pxtrt.decr(r);
-            return v;
-        }
-        pxtrt.ldfld = ldfld;
-        function stfld(r, idx, v) {
-            nullCheck(r);
-            check(!r.isRef(idx));
-            r.fields[idx] = v;
-            pxtrt.decr(r);
-        }
-        pxtrt.stfld = stfld;
-        function ldfldRef(r, idx) {
-            nullCheck(r);
-            check(r.isRef(idx));
-            var v = pxtrt.incr(ref(r.fields[idx]));
-            pxtrt.decr(r);
-            return v;
-        }
-        pxtrt.ldfldRef = ldfldRef;
-        function stfldRef(r, idx, v) {
-            nullCheck(r);
-            check(r.isRef(idx));
-            pxtrt.decr(r.fields[idx]);
-            r.fields[idx] = v;
-            pxtrt.decr(r);
-        }
-        pxtrt.stfldRef = stfldRef;
-        function ldloc(r) {
-            return r.v;
-        }
-        pxtrt.ldloc = ldloc;
         function ldlocRef(r) {
-            return pxtrt.incr(r.v);
+            return (r.v);
         }
         pxtrt.ldlocRef = ldlocRef;
-        function stloc(r, v) {
-            r.v = v;
-        }
-        pxtrt.stloc = stloc;
         function stlocRef(r, v) {
-            pxtrt.decr(r.v);
             r.v = v;
         }
         pxtrt.stlocRef = stlocRef;
-        function mkloc() {
-            return new RefLocal();
-        }
-        pxtrt.mkloc = mkloc;
         function mklocRef() {
             return new RefRefLocal();
         }
@@ -2824,86 +3468,93 @@ var pxsim;
         }
         pxtrt.mkMap = mkMap;
         function mapGet(map, key) {
-            var i = map.findIdx(key);
-            if (i < 0) {
-                pxtrt.decr(map);
-                return 0;
-            }
-            var r = map.data[i].val;
-            pxtrt.decr(map);
-            return r;
+            return mapGetByString(map, pxtrt.mapKeyNames[key]);
         }
         pxtrt.mapGet = mapGet;
-        function mapGetRef(map, key) {
-            var i = map.findIdx(key);
-            if (i < 0) {
-                pxtrt.decr(map);
-                return 0;
-            }
-            var r = pxtrt.incr(map.data[i].val);
-            pxtrt.decr(map);
-            return r;
-        }
-        pxtrt.mapGetRef = mapGetRef;
         function mapSet(map, key, val) {
-            var i = map.findIdx(key);
-            if (i < 0) {
-                map.data.push({
-                    key: key << 1,
-                    val: val
-                });
-            }
-            else {
-                if (map.data[i].key & 1) {
-                    pxtrt.decr(map.data[i].val);
-                    map.data[i].key = key << 1;
-                }
-                map.data[i].val = val;
-            }
-            pxtrt.decr(map);
+            return mapSetByString(map, pxtrt.mapKeyNames[key], val);
         }
         pxtrt.mapSet = mapSet;
-        function mapSetRef(map, key, val) {
+        function mapGetByString(map, key) {
+            key += "";
+            if (map instanceof RefRecord) {
+                var r = map;
+                return r.fields[key];
+            }
+            var i = map.findIdx(key);
+            if (i < 0) {
+                return undefined;
+            }
+            return (map.data[i].val);
+        }
+        pxtrt.mapGetByString = mapGetByString;
+        function mapDeleteByString(map, key) {
+            if (!(map instanceof RefMap))
+                pxtrt.panic(923);
+            var i = map.findIdx(key);
+            if (i >= 0)
+                map.data.splice(i, 1);
+            return true;
+        }
+        pxtrt.mapDeleteByString = mapDeleteByString;
+        pxtrt.mapSetGeneric = mapSetByString;
+        pxtrt.mapGetGeneric = mapGetByString;
+        function mapSetByString(map, key, val) {
+            key += "";
+            if (map instanceof RefRecord) {
+                var r = map;
+                r.fields[key] = val;
+                return;
+            }
             var i = map.findIdx(key);
             if (i < 0) {
                 map.data.push({
-                    key: (key << 1) | 1,
-                    val: val
+                    key: key,
+                    val: val,
                 });
             }
             else {
-                if (map.data[i].key & 1) {
-                    pxtrt.decr(map.data[i].val);
-                }
-                else {
-                    map.data[i].key = (key << 1) | 1;
-                }
                 map.data[i].val = val;
             }
-            pxtrt.decr(map);
         }
-        pxtrt.mapSetRef = mapSetRef;
+        pxtrt.mapSetByString = mapSetByString;
+        function keysOf(v) {
+            var r = new pxsim.RefCollection();
+            if (v instanceof RefMap)
+                for (var _i = 0, _a = v.data; _i < _a.length; _i++) {
+                    var k = _a[_i];
+                    r.push(k.key);
+                }
+            return r;
+        }
+        pxtrt.keysOf = keysOf;
     })(pxtrt = pxsim.pxtrt || (pxsim.pxtrt = {}));
-    var pxtcore;
     (function (pxtcore) {
         function mkClassInstance(vtable) {
             check(!!vtable.methods);
-            check(!!vtable.refmask);
             var r = new RefRecord();
             r.vtable = vtable;
-            var len = vtable.refmask.length;
-            for (var i = 0; i < len; ++i)
-                r.fields.push(0);
             return r;
         }
         pxtcore.mkClassInstance = mkClassInstance;
+        function switch_eq(a, b) {
+            if (a == b) {
+                return true;
+            }
+            return false;
+        }
+        pxtcore.switch_eq = switch_eq;
+        function typeOf(obj) {
+            return typeof obj;
+        }
+        pxtcore.typeOf = typeOf;
     })(pxtcore = pxsim.pxtcore || (pxsim.pxtcore = {}));
     var thread;
     (function (thread) {
         thread.panic = pxtrt.panic;
         function pause(ms) {
             var cb = pxsim.getResume();
-            setTimeout(function () { cb(); }, ms);
+            pxsim.runtime.schedule(function () { cb(); }, ms);
         }
         thread.pause = pause;
         function runInBackground(a) {
@@ -2918,7 +3569,6 @@ var pxsim;
                     .done();
             }
             pxtrt.nullCheck(a);
-            incr(a);
             loop();
         }
         thread.forever = forever;
@@ -2928,25 +3578,50 @@ var pxsim;
 (function (pxsim) {
     // A ref-counted collection of either primitive or ref-counted objects (String, Image,
     // user-defined record, another collection)
-    var RefCollection = (function (_super) {
+    var RefCollection = /** @class */ (function (_super) {
         __extends(RefCollection, _super);
-        //undefiend or null values need to be handled specially to support default values
-        //default values of boolean, string, number & object arrays are respectively, false, null, 0, null
-        //All of the default values are implemented by mapping undefined\null to zero.
-        // 1 - collection of refs (need decr)
-        // 2 - collection of strings (in fact we always have 3, never 2 alone)
-        function RefCollection(flags) {
-            _super.call(this);
-            this.flags = flags;
-            this.data = [];
+        function RefCollection() {
+            var _this = _super.call(this) || this;
+            _this.data = [];
+            return _this;
         }
+        RefCollection.prototype.scan = function (mark) {
+            for (var i = 0; i < this.data.length; ++i)
+                mark("[" + i + "]", this.data[i]);
+        };
+        RefCollection.prototype.gcKey = function () { return "[...]"; };
+        RefCollection.prototype.gcSize = function () { return this.data.length + 2; };
+        RefCollection.prototype.toArray = function () {
+            return this.data.slice(0);
+        };
+        RefCollection.prototype.toAny = function () {
+            return this.data.map(function (v) { return pxsim.RefObject.toAny(v); });
+        };
+        RefCollection.prototype.toDebugString = function () {
+            var s = "[";
+            for (var i = 0; i < this.data.length; ++i) {
+                if (i > 0)
+                    s += ",";
+                var newElem = pxsim.RefObject.toDebugString(this.data[i]);
+                if (s.length + newElem.length > 100) {
+                    if (i == 0) {
+                        s += newElem.substr(0, 100);
+                    }
+                    s += "...";
+                    break;
+                }
+                else {
+                    s += newElem;
+                }
+            }
+            s += "]";
+            return s;
+        };
         RefCollection.prototype.destroy = function () {
             var data = this.data;
-            if (this.flags & 1)
-                for (var i = 0; i < data.length; ++i) {
-                    pxsim.decr(data[i]);
-                    data[i] = 0;
-                }
+            for (var i = 0; i < data.length; ++i) {
+                data[i] = 0;
+            }
             this.data = [];
         };
         RefCollection.prototype.isValidIndex = function (x) {
@@ -2956,11 +3631,8 @@ var pxsim;
             this.data.push(x);
         };
         RefCollection.prototype.pop = function () {
-            var x = this.data.pop();
-            if (x != undefined) {
-                return 0;
-            }
-            return x;
+            return this.data.pop();
+            ;
         };
         RefCollection.prototype.getLength = function () {
             return this.data.length;
@@ -2969,10 +3641,7 @@ var pxsim;
             this.data.length = x;
         };
         RefCollection.prototype.getAt = function (x) {
-            if (this.data[x] != undefined) {
-                return this.data[x];
-            }
-            return 0;
+            return this.data[x];
         };
         RefCollection.prototype.setAt = function (x, y) {
             this.data[x] = y;
@@ -2982,98 +3651,80 @@ var pxsim;
         };
         RefCollection.prototype.removeAt = function (x) {
             var ret = this.data.splice(x, 1);
-            if (ret[0] == undefined) {
-                return 0;
-            }
-            return ret[0]; //return the deleted element.
+            return ret[0]; // return the deleted element.
         };
         RefCollection.prototype.indexOf = function (x, start) {
-            if (x != 0) {
-                return this.data.indexOf(x, start);
-            }
-            //As we treat undefined same as 0 which is default value for all the arrays, will need to search both.
-            var defaultValueIndex = this.data.indexOf(x, start);
-            var undefinedIndex = -1;
-            for (var i = start; i < this.data.length; i++) {
-                if (this.data[i] == undefined) {
-                    undefinedIndex = i;
-                    break;
-                }
-            }
-            if (defaultValueIndex < undefinedIndex || undefinedIndex == -1) {
-                return defaultValueIndex;
-            }
-            return undefinedIndex;
+            return this.data.indexOf(x, start);
         };
         RefCollection.prototype.print = function () {
-            console.log("RefCollection id:" + this.id + " refs:" + this.refcnt + " len:" + this.data.length + " flags:" + this.flags + " d0:" + this.data[0]);
+            //console.log(`RefCollection id:${this.id} refs:${this.refcnt} len:${this.data.length} d0:${this.data[0]}`)
         };
         return RefCollection;
     }(pxsim.RefObject));
     pxsim.RefCollection = RefCollection;
     var Array_;
     (function (Array_) {
-        function mk(f) {
-            return new RefCollection(f);
+        function mk() {
+            return new RefCollection();
         }
         Array_.mk = mk;
+        function isArray(c) {
+            return c instanceof RefCollection;
+        }
+        Array_.isArray = isArray;
         function length(c) {
+            pxsim.pxtrt.nullCheck(c);
             return c.getLength();
         }
         Array_.length = length;
         function setLength(c, x) {
+            pxsim.pxtrt.nullCheck(c);
             c.setLength(x);
         }
         Array_.setLength = setLength;
         function push(c, x) {
-            if (c.flags & 1)
-                pxsim.incr(x);
+            pxsim.pxtrt.nullCheck(c);
             c.push(x);
         }
         Array_.push = push;
         function pop(c, x) {
+            pxsim.pxtrt.nullCheck(c);
             var ret = c.pop();
-            if (c.flags & 1)
-                pxsim.decr(ret);
+            // no decr() since we're returning it
             return ret;
         }
         Array_.pop = pop;
         function getAt(c, x) {
+            pxsim.pxtrt.nullCheck(c);
             var tmp = c.getAt(x);
-            if (c.flags & 1)
-                pxsim.incr(tmp);
             return tmp;
         }
         Array_.getAt = getAt;
         function removeAt(c, x) {
+            pxsim.pxtrt.nullCheck(c);
             if (!c.isValidIndex(x))
                 return;
-            if (c.flags & 1) {
-                pxsim.decr(c.getAt(x));
-            }
+            // no decr() since we're returning it
             return c.removeAt(x);
         }
         Array_.removeAt = removeAt;
         function insertAt(c, x, y) {
-            if (c.flags & 1)
-                pxsim.incr(y);
+            pxsim.pxtrt.nullCheck(c);
             c.insertAt(x, y);
         }
         Array_.insertAt = insertAt;
         function setAt(c, x, y) {
-            if (c.isValidIndex(x) && (c.flags & 1)) {
-                //if there is an existing element handle refcount
-                pxsim.decr(c.getAt(x));
-                pxsim.incr(y);
-            }
+            pxsim.pxtrt.nullCheck(c);
             c.setAt(x, y);
         }
         Array_.setAt = setAt;
         function indexOf(c, x, start) {
+            pxsim.pxtrt.nullCheck(c);
             return c.indexOf(x, start);
         }
         Array_.indexOf = indexOf;
         function removeElement(c, x) {
+            pxsim.pxtrt.nullCheck(c);
             var idx = indexOf(c, x, 0);
             if (idx >= 0) {
                 removeAt(c, idx);
@@ -3085,32 +3736,104 @@ var pxsim;
     })(Array_ = pxsim.Array_ || (pxsim.Array_ = {}));
     var Math_;
     (function (Math_) {
-        function sqrt(n) {
-            return Math.sqrt(n) >>> 0;
+        // for explanations see:
+        // http://stackoverflow.com/questions/3428136/javascript-integer-math-incorrect-results (second answer)
+        // (but the code below doesn't come from there; I wrote it myself)
+        Math_.imul = Math.imul || function (a, b) {
+            var ah = (a >>> 16) & 0xffff;
+            var al = a & 0xffff;
+            var bh = (b >>> 16) & 0xffff;
+            var bl = b & 0xffff;
+            // the shift by 0 fixes the sign on the high part
+            // the final |0 converts the unsigned value into a signed value
+            return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0) | 0);
+        };
+        function idiv(x, y) {
+            return ((x | 0) / (y | 0)) | 0;
         }
-        Math_.sqrt = sqrt;
-        function pow(x, y) {
-            return Math.pow(x, y) >>> 0;
-        }
-        Math_.pow = pow;
-        function random(max) {
-            if (max < 1)
+        Math_.idiv = idiv;
+        function round(n) { return Math.round(n); }
+        Math_.round = round;
+        function roundWithPrecision(x, digits) {
+            digits = digits | 0;
+            // invalid digits input
+            if (digits <= 0)
+                return Math.round(x);
+            if (x == 0)
                 return 0;
             var r = 0;
-            do {
-                r = Math.floor(Math.random() * max);
-            } while (r == max);
+            while (r == 0 && digits < 21) {
+                var d = Math.pow(10, digits++);
+                r = Math.round(x * d + Number.EPSILON) / d;
+            }
             return r;
         }
+        Math_.roundWithPrecision = roundWithPrecision;
+        function ceil(n) { return Math.ceil(n); }
+        Math_.ceil = ceil;
+        function floor(n) { return Math.floor(n); }
+        Math_.floor = floor;
+        function sqrt(n) { return Math.sqrt(n); }
+        Math_.sqrt = sqrt;
+        function pow(x, y) {
+            return Math.pow(x, y);
+        }
+        Math_.pow = pow;
+        function clz32(n) { return Math.clz32(n); }
+        Math_.clz32 = clz32;
+        function log(n) { return Math.log(n); }
+        Math_.log = log;
+        function log10(n) { return Math.log10(n); }
+        Math_.log10 = log10;
+        function log2(n) { return Math.log2(n); }
+        Math_.log2 = log2;
+        function exp(n) { return Math.exp(n); }
+        Math_.exp = exp;
+        function sin(n) { return Math.sin(n); }
+        Math_.sin = sin;
+        function sinh(n) { return Math.sinh(n); }
+        Math_.sinh = sinh;
+        function cos(n) { return Math.cos(n); }
+        Math_.cos = cos;
+        function cosh(n) { return Math.cosh(n); }
+        Math_.cosh = cosh;
+        function tan(n) { return Math.tan(n); }
+        Math_.tan = tan;
+        function tanh(n) { return Math.tanh(n); }
+        Math_.tanh = tanh;
+        function asin(n) { return Math.asin(n); }
+        Math_.asin = asin;
+        function asinh(n) { return Math.asinh(n); }
+        Math_.asinh = asinh;
+        function acos(n) { return Math.acos(n); }
+        Math_.acos = acos;
+        function acosh(n) { return Math.acosh(n); }
+        Math_.acosh = acosh;
+        function atan(n) { return Math.atan(n); }
+        Math_.atan = atan;
+        function atanh(x) { return Math.atanh(x); }
+        Math_.atanh = atanh;
+        function atan2(y, x) { return Math.atan2(y, x); }
+        Math_.atan2 = atan2;
+        function trunc(x) { return x > 0 ? Math.floor(x) : Math.ceil(x); }
+        Math_.trunc = trunc;
+        function random() { return Math.random(); }
         Math_.random = random;
+        function randomRange(min, max) {
+            if (min == max)
+                return min;
+            if (min > max) {
+                var t = min;
+                min = max;
+                max = t;
+            }
+            if (Math.floor(min) == min && Math.floor(max) == max)
+                return min + Math.floor(Math.random() * (max - min + 1));
+            else
+                return min + Math.random() * (max - min);
+        }
+        Math_.randomRange = randomRange;
     })(Math_ = pxsim.Math_ || (pxsim.Math_ = {}));
-    // for explanations see:
-    // http://stackoverflow.com/questions/3428136/javascript-integer-math-incorrect-results (second answer)
-    // (but the code below doesn't come from there; I wrote it myself)
-    // TODO use Math.imul if available
-    function intMult(a, b) {
-        return (((a & 0xffff) * (b >>> 16) + (b & 0xffff) * (a >>> 16)) << 16) + ((a & 0xffff) * (b & 0xffff));
-    }
     var Number_;
     (function (Number_) {
         function lt(x, y) { return x < y; }
@@ -3121,6 +3844,15 @@ var pxsim;
         Number_.neq = neq;
         function eq(x, y) { return pxsim.pxtrt.nullFix(x) == pxsim.pxtrt.nullFix(y); }
         Number_.eq = eq;
+        function eqDecr(x, y) {
+            if (pxsim.pxtrt.nullFix(x) == pxsim.pxtrt.nullFix(y)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        Number_.eqDecr = eqDecr;
         function gt(x, y) { return x > y; }
         Number_.gt = gt;
         function ge(x, y) { return x >= y; }
@@ -3129,7 +3861,9 @@ var pxsim;
         Number_.div = div;
         function mod(x, y) { return x % y; }
         Number_.mod = mod;
-        function toString(x) { return pxsim.initString(x + ""); }
+        function bnot(x) { return ~x; }
+        Number_.bnot = bnot;
+        function toString(x) { return (x + ""); }
         Number_.toString = toString;
     })(Number_ = pxsim.Number_ || (pxsim.Number_ = {}));
     var thumb;
@@ -3140,7 +3874,7 @@ var pxsim;
         thumb.subs = subs;
         function divs(x, y) { return Math.floor(x / y) | 0; }
         thumb.divs = divs;
-        function muls(x, y) { return intMult(x, y); }
+        function muls(x, y) { return Math_.imul(x, y); }
         thumb.muls = muls;
         function ands(x, y) { return x & y; }
         thumb.ands = ands;
@@ -3154,42 +3888,77 @@ var pxsim;
         thumb.lsrs = lsrs;
         function asrs(x, y) { return x >> y; }
         thumb.asrs = asrs;
-        function cmp_lt(x, y) { return x < y; }
-        thumb.cmp_lt = cmp_lt;
-        function cmp_le(x, y) { return x <= y; }
-        thumb.cmp_le = cmp_le;
-        function cmp_ne(x, y) { return !cmp_eq(x, y); }
-        thumb.cmp_ne = cmp_ne;
-        function cmp_eq(x, y) { return pxsim.pxtrt.nullFix(x) == pxsim.pxtrt.nullFix(y); }
-        thumb.cmp_eq = cmp_eq;
-        function cmp_gt(x, y) { return x > y; }
-        thumb.cmp_gt = cmp_gt;
-        function cmp_ge(x, y) { return x >= y; }
-        thumb.cmp_ge = cmp_ge;
+        function bnot(x) { return ~x; }
+        thumb.bnot = bnot;
         function ignore(v) { return v; }
         thumb.ignore = ignore;
     })(thumb = pxsim.thumb || (pxsim.thumb = {}));
+    var avr;
+    (function (avr) {
+        function toInt(v) {
+            return (v << 16) >> 16;
+        }
+        function adds(x, y) { return toInt(x + y); }
+        avr.adds = adds;
+        function subs(x, y) { return toInt(x - y); }
+        avr.subs = subs;
+        function divs(x, y) { return toInt(Math.floor(x / y)); }
+        avr.divs = divs;
+        function muls(x, y) { return toInt(Math_.imul(x, y)); }
+        avr.muls = muls;
+        function ands(x, y) { return toInt(x & y); }
+        avr.ands = ands;
+        function orrs(x, y) { return toInt(x | y); }
+        avr.orrs = orrs;
+        function eors(x, y) { return toInt(x ^ y); }
+        avr.eors = eors;
+        function lsls(x, y) { return toInt(x << y); }
+        avr.lsls = lsls;
+        function lsrs(x, y) { return (x & 0xffff) >>> y; }
+        avr.lsrs = lsrs;
+        function asrs(x, y) { return toInt(x >> y); }
+        avr.asrs = asrs;
+        function bnot(x) { return ~x; }
+        avr.bnot = bnot;
+        function ignore(v) { return v; }
+        avr.ignore = ignore;
+    })(avr = pxsim.avr || (pxsim.avr = {}));
     var String_;
     (function (String_) {
+        function stringConv(v) {
+            var cb = pxsim.getResume();
+            if (v instanceof pxsim.RefRecord) {
+                if (v.vtable.toStringMethod) {
+                    pxsim.runtime.runFiberAsync(v.vtable.toStringMethod, v)
+                        .done(function () {
+                        cb(pxsim.runtime.currFrame.retval + "");
+                    });
+                    return;
+                }
+            }
+            cb(v + "");
+        }
+        String_.stringConv = stringConv;
         function mkEmpty() {
             return "";
         }
         String_.mkEmpty = mkEmpty;
         function fromCharCode(code) {
-            return pxsim.initString(String.fromCharCode(code));
+            return (String.fromCharCode(code));
         }
         String_.fromCharCode = fromCharCode;
         function toNumber(s) {
-            return parseInt(s);
+            return parseFloat(s);
         }
         String_.toNumber = toNumber;
         // TODO check edge-conditions
         function concat(a, b) {
-            return pxsim.initString(a + b);
+            return (a + b);
         }
         String_.concat = concat;
         function substring(s, i, j) {
-            return pxsim.initString(s.slice(i, i + j));
+            pxsim.pxtrt.nullCheck(s);
+            return (s.slice(i, i + j));
         }
         String_.substring = substring;
         function equals(s1, s2) {
@@ -3204,27 +3973,57 @@ var pxsim;
             return 1;
         }
         String_.compare = compare;
+        function compareDecr(s1, s2) {
+            if (s1 == s2) {
+                return 0;
+            }
+            if (s1 < s2)
+                return -1;
+            return 1;
+        }
+        String_.compareDecr = compareDecr;
         function length(s) {
             return s.length;
         }
         String_.length = length;
-        function isEmpty(s) {
-            return s == null || s.length == 0;
-        }
-        String_.isEmpty = isEmpty;
         function substr(s, start, length) {
-            return pxsim.initString(s.substr(start, length));
+            return (s.substr(start, length));
         }
         String_.substr = substr;
-        function inRange(s, i) { return 0 <= i && i < s.length; }
+        function inRange(s, i) {
+            pxsim.pxtrt.nullCheck(s);
+            return 0 <= i && i < s.length;
+        }
         function charAt(s, i) {
-            return inRange(s, i) ? pxsim.initString(s.charAt(i)) : null;
+            return (s.charAt(i));
         }
         String_.charAt = charAt;
         function charCodeAt(s, i) {
+            pxsim.pxtrt.nullCheck(s);
             return inRange(s, i) ? s.charCodeAt(i) : 0;
         }
         String_.charCodeAt = charCodeAt;
+        function indexOf(s, searchValue, start) {
+            pxsim.pxtrt.nullCheck(s);
+            if (searchValue == null)
+                return -1;
+            return s.indexOf(searchValue, start);
+        }
+        String_.indexOf = indexOf;
+        function lastIndexOf(s, searchValue, start) {
+            pxsim.pxtrt.nullCheck(s);
+            if (searchValue == null)
+                return -1;
+            return s.lastIndexOf(searchValue, start);
+        }
+        String_.lastIndexOf = lastIndexOf;
+        function includes(s, searchValue, start) {
+            pxsim.pxtrt.nullCheck(s);
+            if (searchValue == null)
+                return false;
+            return s.includes(searchValue, start);
+        }
+        String_.includes = includes;
     })(String_ = pxsim.String_ || (pxsim.String_ = {}));
     var Boolean_;
     (function (Boolean_) {
@@ -3237,14 +4036,22 @@ var pxsim;
         }
         Boolean_.bang = bang;
     })(Boolean_ = pxsim.Boolean_ || (pxsim.Boolean_ = {}));
-    var RefBuffer = (function (_super) {
+    var RefBuffer = /** @class */ (function (_super) {
         __extends(RefBuffer, _super);
         function RefBuffer(data) {
-            _super.call(this);
-            this.data = data;
+            var _this = _super.call(this) || this;
+            _this.data = data;
+            _this.isStatic = false;
+            return _this;
         }
+        RefBuffer.prototype.scan = function (mark) {
+            // nothing to do
+        };
+        RefBuffer.prototype.gcKey = function () { return "Buffer"; };
+        RefBuffer.prototype.gcSize = function () { return 2 + (this.data.length + 3 >> 2); };
+        RefBuffer.prototype.gcIsStatic = function () { return this.isStatic; };
         RefBuffer.prototype.print = function () {
-            console.log("RefBuffer id:" + this.id + " refs:" + this.refcnt + " len:" + this.data.length + " d0:" + this.data[0]);
+            // console.log(`RefBuffer id:${this.id} refs:${this.refcnt} len:${this.data.length} d0:${this.data[0]}`)
         };
         return RefBuffer;
     }(pxsim.RefObject));
@@ -3252,6 +4059,7 @@ var pxsim;
     var BufferMethods;
     (function (BufferMethods) {
         // keep in sync with C++!
+        var NumberFormat;
         (function (NumberFormat) {
             NumberFormat[NumberFormat["Int8LE"] = 1] = "Int8LE";
             NumberFormat[NumberFormat["UInt8LE"] = 2] = "UInt8LE";
@@ -3263,8 +4071,13 @@ var pxsim;
             NumberFormat[NumberFormat["Int16BE"] = 8] = "Int16BE";
             NumberFormat[NumberFormat["UInt16BE"] = 9] = "UInt16BE";
             NumberFormat[NumberFormat["Int32BE"] = 10] = "Int32BE";
-        })(BufferMethods.NumberFormat || (BufferMethods.NumberFormat = {}));
-        var NumberFormat = BufferMethods.NumberFormat;
+            NumberFormat[NumberFormat["UInt32LE"] = 11] = "UInt32LE";
+            NumberFormat[NumberFormat["UInt32BE"] = 12] = "UInt32BE";
+            NumberFormat[NumberFormat["Float32LE"] = 13] = "Float32LE";
+            NumberFormat[NumberFormat["Float64LE"] = 14] = "Float64LE";
+            NumberFormat[NumberFormat["Float32BE"] = 15] = "Float32BE";
+            NumberFormat[NumberFormat["Float64BE"] = 16] = "Float64BE";
+        })(NumberFormat = BufferMethods.NumberFormat || (BufferMethods.NumberFormat = {}));
         ;
         function fmtInfoCore(fmt) {
             switch (fmt) {
@@ -3273,11 +4086,17 @@ var pxsim;
                 case NumberFormat.Int16LE: return -2;
                 case NumberFormat.UInt16LE: return 2;
                 case NumberFormat.Int32LE: return -4;
+                case NumberFormat.UInt32LE: return 4;
                 case NumberFormat.Int8BE: return -10;
                 case NumberFormat.UInt8BE: return 10;
                 case NumberFormat.Int16BE: return -20;
                 case NumberFormat.UInt16BE: return 20;
                 case NumberFormat.Int32BE: return -40;
+                case NumberFormat.UInt32BE: return 40;
+                case NumberFormat.Float32LE: return 4;
+                case NumberFormat.Float32BE: return 40;
+                case NumberFormat.Float64LE: return 8;
+                case NumberFormat.Float64BE: return 80;
                 default: throw pxsim.U.userError("bad format");
             }
         }
@@ -3293,10 +4112,22 @@ var pxsim;
                 swap = true;
                 size /= 10;
             }
-            return { size: size, signed: signed, swap: swap };
+            var isFloat = fmt >= NumberFormat.Float32LE;
+            return { size: size, signed: signed, swap: swap, isFloat: isFloat };
         }
         function getNumber(buf, fmt, offset) {
             var inf = fmtInfo(fmt);
+            if (inf.isFloat) {
+                var subarray = buf.data.buffer.slice(offset, offset + inf.size);
+                if (inf.swap) {
+                    var u8 = new Uint8Array(subarray);
+                    u8.reverse();
+                }
+                if (inf.size == 4)
+                    return new Float32Array(subarray)[0];
+                else
+                    return new Float64Array(subarray)[0];
+            }
             var r = 0;
             for (var i = 0; i < inf.size; ++i) {
                 r <<= 8;
@@ -3307,11 +4138,27 @@ var pxsim;
                 var missingBits = 32 - (inf.size * 8);
                 r = (r << missingBits) >> missingBits;
             }
+            else {
+                r = r >>> 0;
+            }
             return r;
         }
         BufferMethods.getNumber = getNumber;
         function setNumber(buf, fmt, offset, r) {
             var inf = fmtInfo(fmt);
+            if (inf.isFloat) {
+                var arr = new Uint8Array(inf.size);
+                if (inf.size == 4)
+                    new Float32Array(arr.buffer)[0] = r;
+                else
+                    new Float64Array(arr.buffer)[0] = r;
+                if (inf.swap)
+                    arr.reverse();
+                for (var i = 0; i < inf.size; ++i) {
+                    buf.data[offset + i] = arr[i];
+                }
+                return;
+            }
             for (var i = 0; i < inf.size; ++i) {
                 var off = !inf.swap ? offset + i : offset + inf.size - i - 1;
                 buf.data[off] = (r & 0xff);
@@ -3323,14 +4170,27 @@ var pxsim;
             return new RefBuffer(new Uint8Array(size));
         }
         BufferMethods.createBuffer = createBuffer;
+        function createBufferFromHex(hex) {
+            var r = createBuffer(hex.length >> 1);
+            for (var i = 0; i < hex.length; i += 2)
+                r.data[i >> 1] = parseInt(hex.slice(i, i + 2), 16);
+            r.isStatic = true;
+            return r;
+        }
+        BufferMethods.createBufferFromHex = createBufferFromHex;
         function getBytes(buf) {
             // not sure if this is any useful...
             return buf.data;
         }
         BufferMethods.getBytes = getBytes;
         function inRange(buf, off) {
+            pxsim.pxtrt.nullCheck(buf);
             return 0 <= off && off < buf.data.length;
         }
+        function getUint8(buf, off) {
+            return getByte(buf, off);
+        }
+        BufferMethods.getUint8 = getUint8;
         function getByte(buf, off) {
             if (inRange(buf, off))
                 return buf.data[off];
@@ -3338,6 +4198,10 @@ var pxsim;
                 return 0;
         }
         BufferMethods.getByte = getByte;
+        function setUint8(buf, off, v) {
+            setByte(buf, off, v);
+        }
+        BufferMethods.setUint8 = setUint8;
         function setByte(buf, off, v) {
             if (inRange(buf, off))
                 buf.data[off] = v;
@@ -3366,6 +4230,20 @@ var pxsim;
             return new RefBuffer(buf.data.slice(offset, offset + length));
         }
         BufferMethods.slice = slice;
+        function toHex(buf) {
+            var hex = "0123456789abcdef";
+            var res = "";
+            for (var i = 0; i < buf.data.length; ++i) {
+                res += hex[buf.data[i] >> 4];
+                res += hex[buf.data[i] & 0xf];
+            }
+            return res;
+        }
+        BufferMethods.toHex = toHex;
+        function toString(buf) {
+            return pxsim.U.fromUTF8(pxsim.U.uint8ArrayToString(buf.data));
+        }
+        BufferMethods.toString = toString;
         function memmove(dst, dstOff, src, srcOff, len) {
             if (src.buffer === dst.buffer) {
                 memmove(dst, dstOff, src.slice(srcOff, srcOff + len), 0, len);
@@ -3444,365 +4322,101 @@ var pxsim;
         BufferMethods.write = write;
     })(BufferMethods = pxsim.BufferMethods || (pxsim.BufferMethods = {}));
 })(pxsim || (pxsim = {}));
+(function (pxsim) {
+    var control;
+    (function (control) {
+        function createBufferFromUTF8(str) {
+            return new pxsim.RefBuffer(pxsim.U.stringToUint8Array(pxsim.U.toUTF8(str)));
+        }
+        control.createBufferFromUTF8 = createBufferFromUTF8;
+    })(control = pxsim.control || (pxsim.control = {}));
+})(pxsim || (pxsim = {}));
+// Localization functions. Please port any modifications over to pxtlib/util.ts
 var pxsim;
 (function (pxsim) {
-    var logs;
-    (function (logs) {
-        var TrendChartElement = (function () {
-            function TrendChartElement(log, className) {
-                this.log = log;
-                this.vpw = 80;
-                this.vph = 15;
-                this.log = log;
-                this.element = pxsim.svg.elt("svg");
-                pxsim.svg.hydrate(this.element, { class: className, viewBox: "0 0 " + this.vpw + " " + this.vph });
-                this.g = pxsim.svg.child(this.element, "g");
-                this.line = pxsim.svg.child(this.g, "polyline");
-            }
-            TrendChartElement.prototype.render = function () {
-                var _this = this;
-                var data = this.log.accvalues.slice(-25); // take last 10 entry
-                var margin = 2;
-                var times = data.map(function (d) { return d.t; });
-                var values = data.map(function (d) { return d.v; });
-                var maxt = Math.max.apply(null, times);
-                var mint = Math.min.apply(null, times);
-                var maxv = Math.max.apply(null, values);
-                var minv = Math.min.apply(null, values);
-                var h = (maxv - minv) || 10;
-                var w = (maxt - mint) || 10;
-                var points = data.map(function (d) { return ((d.t - mint) / w * _this.vpw + "," + (_this.vph - (d.v - minv) / h * (_this.vph - 2 * margin) - margin)); }).join(' ');
-                pxsim.svg.hydrate(this.line, { points: points });
-            };
-            return TrendChartElement;
-        }());
-        var LogViewElement = (function () {
-            function LogViewElement(props) {
-                var _this = this;
-                this.props = props;
-                this.shouldScroll = false;
-                this.entries = [];
-                this.serialBuffers = {};
-                this.dropSim = false; // drop simulator events
-                this.registerEvents();
-                this.registerChromeSerial();
-                this.element = document.createElement("div");
-                this.element.className = "ui segment hideempty logs";
-                if (this.props.onClick)
-                    this.element.onclick = function () { return _this.props.onClick(_this.rows()); };
-            }
-            LogViewElement.prototype.setLabel = function (text, theme) {
-                if (this.labelElement && this.labelElement.innerText == text)
-                    return;
-                if (this.labelElement) {
-                    if (this.labelElement.parentElement)
-                        this.labelElement.parentElement.removeChild(this.labelElement);
-                    this.labelElement = undefined;
-                }
-                if (text) {
-                    this.labelElement = document.createElement("a");
-                    this.labelElement.className = "ui " + theme + " top right attached mini label";
-                    this.labelElement.appendChild(document.createTextNode(text));
-                }
-            };
-            LogViewElement.prototype.hasTrends = function () {
-                return this.entries.some(function (entry) { return !!entry.chartElement; });
-            };
-            // creates a deep clone of the log entries
-            LogViewElement.prototype.rows = function () {
-                return this.entries.map(function (e) {
-                    return {
-                        id: e.id,
-                        theme: e.theme,
-                        variable: e.variable,
-                        accvalues: e.accvalues ? e.accvalues.slice(0) : undefined,
-                        time: e.time,
-                        value: e.value,
-                        source: e.source,
-                        count: e.count
-                    };
-                });
-            };
-            LogViewElement.prototype.streamPayload = function (startTime) {
-                // filter out data
-                var es = this.entries.filter(function (e) { return !!e.accvalues && e.time + e.accvalues[e.accvalues.length - 1].t >= startTime; });
-                if (es.length == 0)
-                    return undefined;
-                var fields = { "timestamp": 1, "partition": 1 };
-                var rows = [];
-                function entryVariable(e) {
-                    return /^\s*$/.test(e.variable) ? 'data' : e.variable;
-                }
-                // collect fields
-                es.forEach(function (e) {
-                    var n = entryVariable(e);
-                    if (!fields[n])
-                        fields[n] = 1;
-                });
-                // collapse data and fill values
-                var fs = Object.keys(fields);
-                es.forEach(function (e) {
-                    var n = entryVariable(e);
-                    var ei = fs.indexOf(n);
-                    e.accvalues
-                        .filter(function (v) { return (e.time + v.t) >= startTime; })
-                        .forEach(function (v) {
-                        var row = [e.time + v.t, 0];
-                        for (var i = 2; i < fs.length; ++i)
-                            row.push(i == ei ? v.v : null);
-                        rows.push(row);
-                    });
-                });
-                return { fields: fs, values: rows };
-            };
-            LogViewElement.prototype.registerChromeSerial = function () {
-                var _this = this;
-                var buffers = {};
-                var chrome = window.chrome;
-                if (chrome && chrome.runtime) {
-                    var port = chrome.runtime.connect("cihhkhnngbjlhahcfmhekmbnnjcjdbge", { name: "micro:bit" });
-                    port.onMessage.addListener(function (msg) {
-                        if (msg.type == "serial") {
-                            if (!_this.dropSim) {
-                                _this.clear();
-                                _this.dropSim = true;
-                            }
-                            var buf = (buffers[msg.id] || "") + msg.data;
-                            var i = buf.lastIndexOf("\n");
-                            if (i >= 0) {
-                                var msgb = buf.substring(0, i + 1);
-                                msgb.split('\n').filter(function (line) { return !!line; }).forEach(function (line) { return _this.appendEntry('microbit' + msg.id, line, 'black'); });
-                                buf = buf.slice(i + 1);
-                            }
-                            buffers[msg.id] = buf;
-                        }
-                    });
-                }
-            };
-            LogViewElement.prototype.registerEvents = function () {
-                var _this = this;
-                window.addEventListener('message', function (ev) {
-                    var msg = ev.data;
-                    switch (msg.type || '') {
-                        case 'serial':
-                            var smsg = msg;
-                            if (_this.dropSim && smsg.sim) {
-                                // drop simulated event since we are receiving real events
-                                return;
-                            }
-                            else if (!_this.dropSim && !smsg.sim) {
-                                // first non-simulator serial event, drop all previous events
-                                _this.clear();
-                                _this.dropSim = true;
-                            }
-                            var value = smsg.data || '';
-                            var source = smsg.id || '?';
-                            var theme = source.split('-')[0] || '';
-                            if (!/^[a-z]+$/.test(theme))
-                                theme = 'black';
-                            var buffer = _this.serialBuffers[source] || '';
-                            for (var i = 0; i < value.length; ++i) {
-                                switch (value.charCodeAt(i)) {
-                                    case 10:
-                                        _this.appendEntry(source, buffer, theme);
-                                        buffer = '';
-                                        break;
-                                    case 13:
-                                        break;
-                                    default:
-                                        buffer += value[i];
-                                        break;
-                                }
-                            }
-                            _this.serialBuffers[source] = buffer;
-                            break;
-                    }
-                }, false);
-            };
-            LogViewElement.prototype.appendEntry = function (source, value, theme) {
-                var _this = this;
-                if (this.labelElement && !this.labelElement.parentElement)
-                    this.element.insertBefore(this.labelElement, this.element.firstElementChild);
-                var ens = this.entries;
-                while (ens.length > this.props.maxEntries) {
-                    var po = ens.shift();
-                    if (po.element && po.element.parentElement)
-                        po.element.parentElement.removeChild(po.element);
-                }
-                // find the entry with same source
-                var last = undefined;
-                var m = /^\s*(([^:]+):)?\s*(-?\d+)/i.exec(value);
-                var variable = m ? (m[2] || ' ') : undefined;
-                var nvalue = m ? parseInt(m[3]) : null;
-                for (var i = ens.length - 1; i >= 0; --i) {
-                    if (ens[i].source == source &&
-                        ((i == ens.length - 1 && ens[i].value == value) ||
-                            (variable && ens[i].variable == variable))) {
-                        last = ens[i];
-                        break;
-                    }
-                }
-                if (last) {
-                    last.value = value;
-                    if (last.accvalues) {
-                        last.accvalues.push({
-                            t: Date.now() - last.time,
-                            v: nvalue
-                        });
-                        if (last.accvalues.length > this.props.maxAccValues)
-                            last.accvalues.shift();
-                    }
-                    else if (!last.countElement) {
-                        last.countElement = document.createElement("span");
-                        last.countElement.className = 'ui log counter';
-                        last.element.insertBefore(last.countElement, last.element.firstChild);
-                    }
-                    last.count++;
-                    this.scheduleRender(last);
-                }
-                else {
-                    var e_1 = {
-                        id: LogViewElement.counter++,
-                        theme: theme,
-                        time: Date.now(),
-                        value: value,
-                        source: source,
-                        count: 1,
-                        dirty: true,
-                        variable: variable,
-                        accvalues: nvalue != null ? [{ t: 0, v: nvalue }] : undefined,
-                        element: document.createElement("div"),
-                        valueElement: document.createTextNode('')
-                    };
-                    e_1.element.className = "ui log " + e_1.theme;
-                    var raiseTrends = false;
-                    if (e_1.accvalues) {
-                        e_1.accvaluesElement = document.createElement('span');
-                        e_1.accvaluesElement.className = "ui log " + e_1.theme + " gauge";
-                        e_1.chartElement = new TrendChartElement(e_1, "ui trend " + e_1.theme);
-                        if (this.props.onTrendChartClick) {
-                            e_1.chartElement.element.onclick = function () { return _this.props.onTrendChartClick(e_1); };
-                            e_1.chartElement.element.className += " link";
-                        }
-                        e_1.element.appendChild(e_1.accvaluesElement);
-                        e_1.element.appendChild(e_1.chartElement.element);
-                        raiseTrends = true;
-                    }
-                    e_1.element.appendChild(e_1.valueElement);
-                    ens.push(e_1);
-                    this.element.appendChild(e_1.element);
-                    this.scheduleRender(e_1);
-                    if (raiseTrends && this.props.onTrendChartChanged)
-                        this.props.onTrendChartChanged();
-                }
-            };
-            LogViewElement.prototype.scheduleRender = function (e) {
-                var _this = this;
-                e.dirty = true;
-                if (!this.renderFiberId)
-                    this.renderFiberId = setTimeout(function () { return _this.render(); }, 50);
-            };
-            LogViewElement.prototype.clear = function () {
-                this.entries = [];
-                if (this.labelElement && this.labelElement.parentElement)
-                    this.labelElement.parentElement.removeChild(this.labelElement);
-                this.element.innerHTML = '';
-                this.serialBuffers = {};
-                this.dropSim = false;
-                if (this.props.onTrendChartChanged)
-                    this.props.onTrendChartChanged();
-            };
-            LogViewElement.prototype.render = function () {
-                this.entries.forEach(function (entry) {
-                    if (!entry.dirty)
-                        return;
-                    if (entry.countElement)
-                        entry.countElement.innerText = entry.count.toString();
-                    if (entry.accvaluesElement)
-                        entry.accvaluesElement.innerText = entry.value;
-                    if (entry.chartElement)
-                        entry.chartElement.render();
-                    entry.valueElement.textContent = entry.accvalues ? '' : entry.value;
-                    entry.dirty = false;
-                });
-                this.renderFiberId = 0;
-            };
-            LogViewElement.counter = 0;
-            return LogViewElement;
-        }());
-        logs.LogViewElement = LogViewElement;
-        function entriesToCSV(entries) {
-            // first log all data entries to CSV
-            var dataEntries = [];
-            var rows = entries.length;
-            entries.forEach(function (e) {
-                if (e.accvalues && e.accvalues.length > 0) {
-                    dataEntries.push(e);
-                    rows = Math.max(e.accvalues.length, rows);
-                }
-            });
-            var csv = '';
-            // name columns
-            csv += dataEntries.map(function (entry) { return (entry.theme + " time, " + entry.theme + " " + (entry.variable.trim() || "data")); })
-                .concat(['log time', 'log source', 'log message'])
-                .join(', ');
-            csv += '\n';
-            var _loop_2 = function(i) {
-                var cols = [];
-                dataEntries.forEach(function (entry) {
-                    var t0 = entry.accvalues[0].t;
-                    if (i < entry.accvalues.length) {
-                        cols.push(((entry.accvalues[i].t - t0) / 1000).toString());
-                        cols.push(entry.accvalues[i].v.toString());
-                    }
-                    else {
-                        cols.push(' ');
-                        cols.push(' ');
-                    }
-                });
-                if (i < entries.length) {
-                    var t0 = entries[0].time;
-                    cols.push(((entries[i].time - t0) / 1000).toString());
-                    cols.push(entries[i].source);
-                    cols.push(entries[i].value);
-                }
-                csv += cols.join(', ') + '\n';
-            };
-            for (var i = 0; i < rows; ++i) {
-                _loop_2(i);
-            }
-            return csv;
+    var localization;
+    (function (localization) {
+        var _localizeStrings = {};
+        function setLocalizedStrings(strs) {
+            _localizeStrings = strs || {};
         }
-        logs.entriesToCSV = entriesToCSV;
-        function entryToCSV(entry) {
-            var t0 = entry.accvalues.length > 0 ? entry.accvalues[0].t : 0;
-            var csv = (entry.theme + " time, " + (entry.variable.trim() || "data") + "\n")
-                + entry.accvalues.map(function (v) { return ((v.t - t0) / 1000) + ", " + v.v; }).join('\n');
-            return csv;
+        localization.setLocalizedStrings = setLocalizedStrings;
+        function lf(s) {
+            return _localizeStrings[s] || s;
         }
-        logs.entryToCSV = entryToCSV;
-    })(logs = pxsim.logs || (pxsim.logs = {}));
+        localization.lf = lf;
+    })(localization = pxsim.localization || (pxsim.localization = {}));
 })(pxsim || (pxsim = {}));
-/// <reference path="../typings/globals/bluebird/index.d.ts"/>
 /// <reference path="../localtypings/pxtparts.d.ts"/>
 var pxsim;
 (function (pxsim) {
+    var MIN_MESSAGE_WAIT_MS = 200;
+    var tracePauseMs = 0;
     var U;
     (function (U) {
-        function addClass(el, cls) {
-            if (el.classList)
-                el.classList.add(cls);
-            else if (el.className.indexOf(cls) < 0)
-                el.className += ' ' + cls;
+        // Keep these helpers unified with pxtlib/browserutils.ts
+        function containsClass(el, classes) {
+            return classes
+                .split(/\s+/)
+                .every(function (cls) { return containsSingleClass(el, cls); });
+            function containsSingleClass(el, cls) {
+                if (el.classList) {
+                    return el.classList.contains(cls);
+                }
+                else {
+                    var classes_1 = (el.className + "").split(/\s+/);
+                    return !(classes_1.indexOf(cls) < 0);
+                }
+            }
+        }
+        U.containsClass = containsClass;
+        function addClass(el, classes) {
+            classes
+                .split(/\s+/)
+                .forEach(function (cls) { return addSingleClass(el, cls); });
+            function addSingleClass(el, cls) {
+                if (el.classList) {
+                    el.classList.add(cls);
+                }
+                else {
+                    var classes_2 = (el.className + "").split(/\s+/);
+                    if (classes_2.indexOf(cls) < 0) {
+                        el.className.baseVal += " " + cls;
+                    }
+                }
+            }
         }
         U.addClass = addClass;
-        function removeClass(el, cls) {
-            if (el.classList)
-                el.classList.remove(cls);
-            else
-                el.className = el.className.replace(cls, '').replace(/\s{2,}/, ' ');
+        function removeClass(el, classes) {
+            classes
+                .split(/\s+/)
+                .forEach(function (cls) { return removeSingleClass(el, cls); });
+            function removeSingleClass(el, cls) {
+                if (el.classList) {
+                    el.classList.remove(cls);
+                }
+                else {
+                    el.className.baseVal = (el.className + "")
+                        .split(/\s+/)
+                        .filter(function (c) { return c != cls; })
+                        .join(" ");
+                }
+            }
         }
         U.removeClass = removeClass;
+        function remove(element) {
+            element.parentElement.removeChild(element);
+        }
+        U.remove = remove;
+        function removeChildren(element) {
+            while (element.firstChild)
+                element.removeChild(element.firstChild);
+        }
+        U.removeChildren = removeChildren;
+        function clear(element) {
+            removeChildren(element);
+        }
+        U.clear = clear;
         function assert(cond, msg) {
             if (msg === void 0) { msg = "Assertion failed"; }
             if (!cond) {
@@ -3829,74 +4443,252 @@ var pxsim;
             return Date.now();
         }
         U.now = now;
+        var perf;
+        // current time in microseconds
+        function perfNowUs() {
+            if (!perf)
+                perf = typeof performance != "undefined" ?
+                    performance.now.bind(performance) ||
+                        performance.moznow.bind(performance) ||
+                        performance.msNow.bind(performance) ||
+                        performance.webkitNow.bind(performance) ||
+                        performance.oNow.bind(performance) :
+                    Date.now;
+            return perf() * 1000;
+        }
+        U.perfNowUs = perfNowUs;
         function nextTick(f) {
             Promise._async._schedule(f);
         }
         U.nextTick = nextTick;
+        // this will take lower 8 bits from each character
+        function stringToUint8Array(input) {
+            var len = input.length;
+            var res = new Uint8Array(len);
+            for (var i = 0; i < len; ++i)
+                res[i] = input.charCodeAt(i) & 0xff;
+            return res;
+        }
+        U.stringToUint8Array = stringToUint8Array;
+        function uint8ArrayToString(input) {
+            var len = input.length;
+            var res = "";
+            for (var i = 0; i < len; ++i)
+                res += String.fromCharCode(input[i]);
+            return res;
+        }
+        U.uint8ArrayToString = uint8ArrayToString;
+        function fromUTF8(binstr) {
+            if (!binstr)
+                return "";
+            // escape function is deprecated
+            var escaped = "";
+            for (var i = 0; i < binstr.length; ++i) {
+                var k = binstr.charCodeAt(i) & 0xff;
+                if (k == 37 || k > 0x7f) {
+                    escaped += "%" + k.toString(16);
+                }
+                else {
+                    escaped += binstr.charAt(i);
+                }
+            }
+            // decodeURIComponent does the actual UTF8 decoding
+            return decodeURIComponent(escaped);
+        }
+        U.fromUTF8 = fromUTF8;
+        function toUTF8(str, cesu8) {
+            var res = "";
+            if (!str)
+                return res;
+            for (var i = 0; i < str.length; ++i) {
+                var code = str.charCodeAt(i);
+                if (code <= 0x7f)
+                    res += str.charAt(i);
+                else if (code <= 0x7ff) {
+                    res += String.fromCharCode(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
+                }
+                else {
+                    if (!cesu8 && 0xd800 <= code && code <= 0xdbff) {
+                        var next = str.charCodeAt(++i);
+                        if (!isNaN(next))
+                            code = 0x10000 + ((code - 0xd800) << 10) + (next - 0xdc00);
+                    }
+                    if (code <= 0xffff)
+                        res += String.fromCharCode(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+                    else
+                        res += String.fromCharCode(0xf0 | (code >> 18), 0x80 | ((code >> 12) & 0x3f), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+                }
+            }
+            return res;
+        }
+        U.toUTF8 = toUTF8;
     })(U = pxsim.U || (pxsim.U = {}));
+    var BreakLoopException = /** @class */ (function () {
+        function BreakLoopException() {
+        }
+        return BreakLoopException;
+    }());
+    pxsim.BreakLoopException = BreakLoopException;
+    var pxtcore;
+    (function (pxtcore) {
+        function beginTry(lbl) {
+            pxsim.runtime.currFrame.tryFrame = {
+                parent: pxsim.runtime.currTryFrame(),
+                handlerPC: lbl,
+                handlerFrame: pxsim.runtime.currFrame
+            };
+        }
+        pxtcore.beginTry = beginTry;
+        function endTry() {
+            var s = pxsim.runtime.currFrame;
+            s.tryFrame = s.tryFrame.parent;
+        }
+        pxtcore.endTry = endTry;
+        function throwValue(v) {
+            var tf = pxsim.runtime.currTryFrame();
+            if (!tf)
+                U.userError("unhandled exception: " + v);
+            var s = tf.handlerFrame;
+            pxsim.runtime.currFrame = s;
+            s.pc = tf.handlerPC;
+            s.tryFrame = tf.parent;
+            s.thrownValue = v;
+            s.hasThrownValue = true;
+            throw new BreakLoopException();
+        }
+        pxtcore.throwValue = throwValue;
+        function getThrownValue() {
+            var s = pxsim.runtime.currFrame;
+            U.assert(s.hasThrownValue);
+            s.hasThrownValue = false;
+            return s.thrownValue;
+        }
+        pxtcore.getThrownValue = getThrownValue;
+        function endFinally() {
+            var s = pxsim.runtime.currFrame;
+            if (s.hasThrownValue) {
+                s.hasThrownValue = false;
+                throwValue(s.thrownValue);
+            }
+        }
+        pxtcore.endFinally = endFinally;
+    })(pxtcore = pxsim.pxtcore || (pxsim.pxtcore = {}));
     function getResume() { return pxsim.runtime.getResume(); }
     pxsim.getResume = getResume;
-    var BaseBoard = (function () {
+    var SERIAL_BUFFER_LENGTH = 16;
+    var BaseBoard = /** @class */ (function () {
         function BaseBoard() {
+            var _this = this;
+            this.messageListeners = [];
             this.serialOutBuffer = '';
+            this.messages = [];
+            this.lastSerialTime = 0;
+            this.debouncedPostAll = function () {
+                var nowtime = Date.now();
+                if (nowtime - _this.lastSerialTime > MIN_MESSAGE_WAIT_MS) {
+                    clearTimeout(_this.serialTimeout);
+                    if (_this.messages.length) {
+                        Runtime.postMessage({
+                            type: 'bulkserial',
+                            data: _this.messages,
+                            id: pxsim.runtime.id,
+                            sim: true
+                        });
+                        _this.messages = [];
+                        _this.lastSerialTime = nowtime;
+                    }
+                }
+                else {
+                    _this.serialTimeout = setTimeout(_this.debouncedPostAll, 50);
+                }
+            };
+            this.id = "b" + Math.round(Math.random() * 2147483647);
+            this.bus = new pxsim.EventBus(pxsim.runtime);
         }
         BaseBoard.prototype.updateView = function () { };
-        BaseBoard.prototype.receiveMessage = function (msg) { };
+        BaseBoard.prototype.receiveMessage = function (msg) {
+            this.dispatchMessage(msg);
+        };
+        BaseBoard.prototype.dispatchMessage = function (msg) {
+            for (var _i = 0, _a = this.messageListeners; _i < _a.length; _i++) {
+                var listener = _a[_i];
+                listener(msg);
+            }
+        };
+        BaseBoard.prototype.addMessageListener = function (listener) {
+            this.messageListeners.push(listener);
+        };
+        Object.defineProperty(BaseBoard.prototype, "storedState", {
+            get: function () {
+                if (!this.runOptions)
+                    return {};
+                if (!this.runOptions.storedState)
+                    this.runOptions.storedState = {};
+                return this.runOptions.storedState;
+            },
+            enumerable: true,
+            configurable: true
+        });
         BaseBoard.prototype.initAsync = function (msg) {
             this.runOptions = msg;
             return Promise.resolve();
         };
+        BaseBoard.prototype.setStoredState = function (k, value) {
+            if (value == null)
+                delete this.storedState[k];
+            else
+                this.storedState[k] = value;
+            Runtime.postMessage({
+                type: "simulator",
+                command: "setstate",
+                stateKey: k,
+                stateValue: value
+            });
+        };
+        BaseBoard.prototype.onDebuggerResume = function () { };
+        BaseBoard.prototype.screenshotAsync = function (width) {
+            return Promise.resolve(undefined);
+        };
         BaseBoard.prototype.kill = function () { };
         BaseBoard.prototype.writeSerial = function (s) {
-            if (!s)
-                return;
-            for (var i = 0; i < s.length; ++i) {
-                var c = s[i];
-                switch (c) {
-                    case '\n':
-                        Runtime.postMessage({
-                            type: 'serial',
-                            data: this.serialOutBuffer + '\n',
-                            id: pxsim.runtime.id,
-                            sim: true
-                        });
-                        this.serialOutBuffer = '';
-                        break;
-                    case '\r': continue;
-                    default: this.serialOutBuffer += c;
-                }
+            this.serialOutBuffer += s;
+            if (/\n/.test(this.serialOutBuffer) || this.serialOutBuffer.length > SERIAL_BUFFER_LENGTH) {
+                this.messages.push({
+                    time: Date.now(),
+                    data: this.serialOutBuffer
+                });
+                this.debouncedPostAll();
+                this.serialOutBuffer = '';
             }
         };
         return BaseBoard;
     }());
     pxsim.BaseBoard = BaseBoard;
-    var CoreBoard = (function (_super) {
+    var CoreBoard = /** @class */ (function (_super) {
         __extends(CoreBoard, _super);
         function CoreBoard() {
-            var _this = this;
-            _super.call(this);
-            this.id = "b" + pxsim.Math_.random(2147483647);
-            this.bus = new pxsim.EventBus(pxsim.runtime);
+            var _this = _super.call(this) || this;
             // updates
-            this.updateSubscribers = [];
-            this.updateView = function () {
+            _this.updateSubscribers = [];
+            _this.updateView = function () {
                 _this.updateSubscribers.forEach(function (sub) { return sub(); });
             };
-            this.builtinParts = {};
-            this.builtinVisuals = {};
-            this.builtinPartVisuals = {};
+            _this.builtinParts = {};
+            _this.builtinVisuals = {};
+            _this.builtinPartVisuals = {};
+            return _this;
         }
         CoreBoard.prototype.kill = function () {
             _super.prototype.kill.call(this);
-            pxsim.AudioContextManager.stop();
+            pxsim.AudioContextManager.stopAll();
         };
         return CoreBoard;
     }(BaseBoard));
     pxsim.CoreBoard = CoreBoard;
-    var BareBoard = (function (_super) {
+    var BareBoard = /** @class */ (function (_super) {
         __extends(BareBoard, _super);
         function BareBoard() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         return BareBoard;
     }(BaseBoard));
@@ -3922,107 +4714,302 @@ var pxsim;
         };
     }
     pxsim.initBareRuntime = initBareRuntime;
-    var EventQueue = (function () {
-        function EventQueue(runtime) {
+    var LogType;
+    (function (LogType) {
+        LogType[LogType["UserSet"] = 0] = "UserSet";
+        LogType[LogType["BackAdd"] = 1] = "BackAdd";
+        LogType[LogType["BackRemove"] = 2] = "BackRemove";
+    })(LogType || (LogType = {}));
+    var EventQueue = /** @class */ (function () {
+        function EventQueue(runtime, valueToArgs) {
             this.runtime = runtime;
+            this.valueToArgs = valueToArgs;
             this.max = 5;
             this.events = [];
+            this.awaiters = [];
+            this._handlers = [];
+            this._addRemoveLog = [];
         }
-        EventQueue.prototype.push = function (e) {
-            if (!this.handler || this.events.length > this.max)
-                return;
+        EventQueue.prototype.push = function (e, notifyOne) {
+            if (this.awaiters.length > 0) {
+                if (notifyOne) {
+                    var aw = this.awaiters.shift();
+                    if (aw)
+                        aw();
+                }
+                else {
+                    var aws = this.awaiters.slice();
+                    this.awaiters = [];
+                    aws.forEach(function (aw) { return aw(); });
+                }
+            }
+            if (this.handlers.length == 0 || this.events.length > this.max)
+                return Promise.resolve();
             this.events.push(e);
-            // if this is the first event pushed - start processing
-            if (this.events.length == 1)
-                this.poke();
+            // start processing, if not already processing
+            if (!this.lock)
+                return this.poke();
+            else
+                return Promise.resolve();
         };
         EventQueue.prototype.poke = function () {
             var _this = this;
-            var top = this.events.shift();
-            this.runtime.runFiberAsync(this.handler, top)
-                .done(function () {
-                // we're done processing the current event, if there is still something left to do, do it
-                if (_this.events.length > 0)
-                    _this.poke();
+            this.lock = true;
+            var events = this.events;
+            // all events will be processed by concurrent promisified code below, so start afresh
+            this.events = [];
+            // in order semantics for events and handlers
+            return Promise.each(events, function (value) {
+                return Promise.each(_this.handlers, function (handler) {
+                    return (_a = _this.runtime).runFiberAsync.apply(_a, [handler].concat((_this.valueToArgs ? _this.valueToArgs(value) : [value])));
+                    var _a;
+                });
+            }).then(function () {
+                // if some events arrived while processing above then keep processing
+                if (_this.events.length > 0) {
+                    return _this.poke();
+                }
+                else {
+                    _this.lock = false;
+                    // process the log (synchronous)
+                    _this._addRemoveLog.forEach(function (l) {
+                        if (l.log === LogType.BackAdd) {
+                            _this.addHandler(l.act);
+                        }
+                        else if (l.log === LogType.BackRemove) {
+                            _this.removeHandler(l.act);
+                        }
+                        else
+                            _this.setHandler(l.act);
+                    });
+                    _this._addRemoveLog = [];
+                    return Promise.resolve();
+                }
             });
         };
-        Object.defineProperty(EventQueue.prototype, "handler", {
+        Object.defineProperty(EventQueue.prototype, "handlers", {
             get: function () {
-                return this.mHandler;
-            },
-            set: function (a) {
-                if (this.mHandler) {
-                    pxsim.pxtcore.decr(this.mHandler);
-                }
-                this.mHandler = a;
-                if (this.mHandler) {
-                    pxsim.pxtcore.incr(this.mHandler);
-                }
+                return this._handlers;
             },
             enumerable: true,
             configurable: true
         });
+        EventQueue.prototype.setHandler = function (a) {
+            if (!this.lock) {
+                this._handlers = [a];
+            }
+            else {
+                this._addRemoveLog.push({ act: a, log: LogType.UserSet });
+            }
+        };
+        EventQueue.prototype.addHandler = function (a) {
+            if (!this.lock) {
+                var index = this._handlers.indexOf(a);
+                // only add if new, just like CODAL
+                if (index == -1) {
+                    this._handlers.push(a);
+                }
+            }
+            else {
+                this._addRemoveLog.push({ act: a, log: LogType.BackAdd });
+            }
+        };
+        EventQueue.prototype.removeHandler = function (a) {
+            if (!this.lock) {
+                var index = this._handlers.indexOf(a);
+                if (index != -1) {
+                    this._handlers.splice(index, 1);
+                }
+            }
+            else {
+                this._addRemoveLog.push({ act: a, log: LogType.BackRemove });
+            }
+        };
+        EventQueue.prototype.addAwaiter = function (awaiter) {
+            this.awaiters.push(awaiter);
+        };
         return EventQueue;
     }());
     pxsim.EventQueue = EventQueue;
     // overriden at loadtime by specific implementation
     pxsim.initCurrentRuntime = undefined;
     pxsim.handleCustomMessage = undefined;
-    var Runtime = (function () {
-        function Runtime(code) {
+    function _leave(s, v) {
+        s.parent.retval = v;
+        return s.parent;
+    }
+    // wraps simulator code as STS code - useful for default event handlers
+    function syntheticRefAction(f) {
+        return pxtcore.mkAction(0, function (s) { return _leave(s, f(s)); });
+    }
+    pxsim.syntheticRefAction = syntheticRefAction;
+    var TimeoutScheduled = /** @class */ (function () {
+        function TimeoutScheduled(id, fn, totalRuntime, timestampCall) {
+            this.id = id;
+            this.fn = fn;
+            this.totalRuntime = totalRuntime;
+            this.timestampCall = timestampCall;
+        }
+        return TimeoutScheduled;
+    }());
+    pxsim.TimeoutScheduled = TimeoutScheduled;
+    var PausedTimeout = /** @class */ (function () {
+        function PausedTimeout(fn, timeRemaining) {
+            this.fn = fn;
+            this.timeRemaining = timeRemaining;
+        }
+        return PausedTimeout;
+    }());
+    pxsim.PausedTimeout = PausedTimeout;
+    function mkVTable(src) {
+        return {
+            name: src.name,
+            numFields: src.numFields,
+            classNo: src.classNo,
+            methods: src.methods,
+            iface: src.iface,
+            lastSubtypeNo: src.lastSubtypeNo,
+            toStringMethod: src.toStringMethod,
+            maxBgInstances: src.maxBgInstances,
+        };
+    }
+    pxsim.mkVTable = mkVTable;
+    var mapVTable = null;
+    function mkMapVTable() {
+        if (!mapVTable)
+            mapVTable = mkVTable({ name: "_Map", numFields: 0, classNo: 0, lastSubtypeNo: 0, methods: null });
+        return mapVTable;
+    }
+    pxsim.mkMapVTable = mkMapVTable;
+    function functionName(fn) {
+        var fi = fn.info;
+        if (fi)
+            return fi.functionName + " (" + fi.fileName + ":" + (fi.line + 1) + ":" + (fi.column + 1) + ")";
+        return "()";
+    }
+    pxsim.functionName = functionName;
+    var Runtime = /** @class */ (function () {
+        function Runtime(msg) {
             var _this = this;
             this.numGlobals = 1000;
             this.dead = false;
             this.running = false;
+            this.idleTimer = undefined;
+            this.recording = false;
+            this.recordingTimer = 0;
+            this.recordingLastImageData = undefined;
+            this.recordingWidth = undefined;
             this.startTime = 0;
+            this.startTimeUs = 0;
+            this.pausedTime = 0;
+            this.lastPauseTimestamp = 0;
             this.globals = {};
+            this.otherFrames = [];
+            this.loopLock = null;
+            this.loopLockWaitList = [];
+            this.heapSnapshots = [];
+            this.timeoutsScheduled = [];
+            this.timeoutsPausedOnBreakpoint = [];
+            this.pausedOnBreakpoint = false;
+            this.perfOffset = 0;
+            this.perfElapsed = 0;
+            this.perfStack = 0;
+            this.refCountingDebug = false;
+            this.refObjId = 1;
             this.numDisplayUpdates = 0;
             U.assert(!!pxsim.initCurrentRuntime);
-            var yieldMaxSteps = 100;
-            // These variables are used by the generated code as well
-            // ---
-            var entryPoint;
-            var pxtrt = pxsim.pxtrt;
+            this.id = msg.id;
+            this.refCountingDebug = !!msg.refCountingDebug;
+            var threadId = 0;
             var breakpoints = null;
-            var breakAlways = false;
-            var globals = this.globals;
-            var yieldSteps = yieldMaxSteps;
-            // ---
             var currResume;
+            var dbgHeap;
             var dbgResume;
             var breakFrame = null; // for step-over
             var lastYield = Date.now();
-            var __this = this;
+            var userGlobals;
+            var __this = this; // ex
+            // this is passed to generated code
+            var evalIface = {
+                runtime: this,
+                oops: oops,
+                doNothing: doNothing,
+                pxsim: pxsim,
+                globals: this.globals,
+                setupYield: setupYield,
+                maybeYield: maybeYield,
+                setupDebugger: setupDebugger,
+                isBreakFrame: isBreakFrame,
+                breakpoint: breakpoint,
+                trace: trace,
+                checkStack: checkStack,
+                leave: _leave,
+                checkResumeConsumed: checkResumeConsumed,
+                setupResume: setupResume,
+                setupLambda: setupLambda,
+                checkSubtype: checkSubtype,
+                failedCast: failedCast,
+                buildResume: buildResume,
+                mkVTable: mkVTable,
+            };
             function oops(msg) {
                 throw new Error("sim error: " + msg);
             }
-            // referenced from eval()ed code
             function doNothing(s) {
                 s.pc = -1;
-                return leave(s, s.parent.retval);
+                return _leave(s, s.parent.retval);
+            }
+            function flushLoopLock() {
+                while (__this.loopLockWaitList.length > 0 && !__this.loopLock) {
+                    var f = __this.loopLockWaitList.shift();
+                    f();
+                }
+            }
+            // Date.now() - 100ns on Chrome mac, 60ns on Safari iPhone XS
+            // yield-- - 7ns on Chrome
+            var yieldReset = function () { };
+            function setupYield(reset) {
+                yieldReset = reset;
+            }
+            function loopForSchedule(s) {
+                var lock = new Object();
+                var pc = s.pc;
+                __this.loopLock = lock;
+                __this.otherFrames.push(s);
+                return function () {
+                    if (__this.dead)
+                        return;
+                    U.assert(s.pc == pc);
+                    U.assert(__this.loopLock === lock);
+                    __this.loopLock = null;
+                    loop(s);
+                    flushLoopLock();
+                };
             }
             function maybeYield(s, pc, r0) {
-                yieldSteps = yieldMaxSteps;
+                // If code is running on a breakpoint, it's because we are evaluating getters;
+                // no need to yield in that case.
+                if (__this.pausedOnBreakpoint)
+                    return false;
+                __this.cleanScheduledExpired();
+                yieldReset();
                 var now = Date.now();
                 if (now - lastYield >= 20) {
                     lastYield = now;
                     s.pc = pc;
                     s.r0 = r0;
-                    var cont = function () {
-                        if (__this.dead)
-                            return;
-                        U.assert(s.pc == pc);
-                        return loop(s);
-                    };
-                    //U.nextTick(cont)
-                    setTimeout(cont, 5);
+                    /* tslint:disable:no-string-based-set-timeout */
+                    setTimeout(loopForSchedule(s), 5);
                     return true;
                 }
                 return false;
             }
-            function setupDebugger(numBreakpoints) {
+            function setupDebugger(numBreakpoints, userCodeGlobals) {
                 breakpoints = new Uint8Array(numBreakpoints);
-                breakAlways = true;
+                // start running and let user put a breakpoint on start
+                breakpoints[0] = msg.breakOnStart ? 1 : 0;
+                userGlobals = userCodeGlobals;
+                return breakpoints;
             }
             function isBreakFrame(s) {
                 if (!breakFrame)
@@ -4034,42 +5021,72 @@ var pxsim;
                 return false;
             }
             function breakpoint(s, retPC, brkId, r0) {
+                var lock = {};
+                __this.loopLock = lock;
                 U.assert(!dbgResume);
+                U.assert(!dbgHeap);
                 s.pc = retPC;
                 s.r0 = r0;
-                Runtime.postMessage(pxsim.getBreakpointMsg(s, brkId));
+                var _a = pxsim.getBreakpointMsg(s, brkId, userGlobals), msg = _a.msg, heap = _a.heap;
+                dbgHeap = heap;
+                Runtime.postMessage(msg);
+                breakpoints[0] = 0;
+                breakFrame = null;
+                __this.pauseScheduled();
                 dbgResume = function (m) {
                     dbgResume = null;
+                    dbgHeap = null;
                     if (__this.dead)
-                        return;
+                        return null;
+                    __this.resumeAllPausedScheduled();
+                    __this.board.onDebuggerResume();
                     pxsim.runtime = __this;
                     U.assert(s.pc == retPC);
-                    breakAlways = false;
+                    breakpoints[0] = 0;
                     breakFrame = null;
                     switch (m.subtype) {
                         case "resume":
                             break;
                         case "stepover":
-                            breakAlways = true;
+                            breakpoints[0] = 1;
                             breakFrame = s;
                             break;
                         case "stepinto":
-                            breakAlways = true;
+                            breakpoints[0] = 1;
                             break;
                         case "stepout":
-                            breakAlways = true;
+                            breakpoints[0] = 1;
                             breakFrame = s.parent || s;
                             break;
                     }
-                    return loop(s);
+                    U.assert(__this.loopLock == lock);
+                    __this.loopLock = null;
+                    __this.otherFrames.push(s);
+                    loop(s);
+                    flushLoopLock();
                 };
                 return null;
+            }
+            function trace(brkId, s, retPc, info) {
+                setupResume(s, retPc);
+                if (info.functionName === "<main>" || info.fileName === "main.ts") {
+                    Runtime.postMessage({
+                        type: "debugger",
+                        subtype: "trace",
+                        breakpointId: brkId,
+                    });
+                    pxsim.thread.pause(tracePauseMs || 1);
+                }
+                else {
+                    pxsim.thread.pause(0);
+                }
+                checkResumeConsumed();
             }
             function handleDebuggerMsg(msg) {
                 switch (msg.subtype) {
                     case "config":
                         var cfg = msg;
-                        if (cfg.setBreakpoints) {
+                        if (cfg.setBreakpoints && breakpoints) {
                             breakpoints.fill(0);
                             for (var _i = 0, _a = cfg.setBreakpoints; _i < _a.length; _i++) {
                                 var n = _a[_i];
@@ -4077,8 +5094,12 @@ var pxsim;
                             }
                         }
                         break;
+                    case "traceConfig":
+                        var trc = msg;
+                        tracePauseMs = trc.interval;
+                        break;
                     case "pause":
-                        breakAlways = true;
+                        breakpoints[0] = 1;
                         breakFrame = null;
                         break;
                     case "resume":
@@ -4088,53 +5109,82 @@ var pxsim;
                         if (dbgResume)
                             dbgResume(msg);
                         break;
+                    case "variables":
+                        var vmsg = msg;
+                        var vars = undefined;
+                        if (dbgHeap) {
+                            var v = dbgHeap[vmsg.variablesReference];
+                            if (v !== undefined)
+                                vars = pxsim.dumpHeap(v, dbgHeap, vmsg.fields);
+                        }
+                        Runtime.postMessage({
+                            type: "debugger",
+                            subtype: "variables",
+                            req_seq: msg.seq,
+                            variables: vars
+                        });
+                        break;
                 }
+            }
+            function removeFrame(p) {
+                var frames = __this.otherFrames;
+                for (var i = frames.length - 1; i >= 0; --i) {
+                    if (frames[i] === p) {
+                        frames.splice(i, 1);
+                        return;
+                    }
+                }
+                U.userError("frame cannot be removed!");
             }
             function loop(p) {
                 if (__this.dead) {
                     console.log("Runtime terminated");
                     return;
                 }
+                U.assert(!__this.loopLock);
+                __this.perfStartRuntime();
+                removeFrame(p);
                 try {
                     pxsim.runtime = __this;
                     while (!!p) {
                         __this.currFrame = p;
                         __this.currFrame.overwrittenPC = false;
                         p = p.fn(p);
+                        //if (yieldSteps-- < 0 && maybeYield(p, p.pc, 0)) break;
                         __this.maybeUpdateDisplay();
                         if (__this.currFrame.overwrittenPC)
                             p = __this.currFrame;
                     }
+                    __this.perfStopRuntime();
                 }
                 catch (e) {
+                    if (e instanceof BreakLoopException) {
+                        U.nextTick(loopForSchedule(__this.currFrame));
+                        return;
+                    }
+                    __this.perfStopRuntime();
                     if (__this.errorHandler)
                         __this.errorHandler(e);
                     else {
                         console.error("Simulator crashed, no error handler", e.stack);
-                        var msg = pxsim.getBreakpointMsg(p, p.lastBrkId);
-                        msg.exceptionMessage = e.message;
-                        msg.exceptionStack = e.stack;
-                        Runtime.postMessage(msg);
+                        var msg_1 = pxsim.getBreakpointMsg(p, p.lastBrkId, userGlobals).msg;
+                        msg_1.exceptionMessage = e.message;
+                        msg_1.exceptionStack = e.stack;
+                        Runtime.postMessage(msg_1);
                         if (__this.postError)
                             __this.postError(e);
                     }
                 }
             }
-            function actionCall(s, cb) {
-                if (cb)
-                    s.finalCallback = cb;
-                s.depth = s.parent.depth + 1;
-                if (s.depth > 1000) {
+            function checkStack(d) {
+                if (d > 100)
                     U.userError("Stack overflow");
-                }
+            }
+            function actionCall(s) {
+                s.depth = s.parent.depth + 1;
+                checkStack(s.depth);
                 s.pc = 0;
                 return s;
-            }
-            function leave(s, v) {
-                s.parent.retval = v;
-                if (s.finalCallback)
-                    s.finalCallback(v);
-                return s.parent;
             }
             function setupTop(cb) {
                 var s = setupTopCore(cb);
@@ -4146,6 +5196,7 @@ var pxsim;
                     parent: null,
                     pc: 0,
                     depth: 0,
+                    threadId: ++threadId,
                     fn: function () {
                         if (cb)
                             cb(frame.retval);
@@ -4165,6 +5216,7 @@ var pxsim;
                     depth: 0,
                     pc: 0
                 };
+                __this.otherFrames = [frame];
                 loop(actionCall(frame));
             }
             function checkResumeConsumed() {
@@ -4174,37 +5226,77 @@ var pxsim;
             function setupResume(s, retPC) {
                 currResume = buildResume(s, retPC);
             }
+            function setupLambda(s, a) {
+                if (a instanceof pxsim.RefAction) {
+                    s.fn = a.func;
+                    s.caps = a.fields;
+                }
+                else {
+                    s.fn = a;
+                }
+            }
+            function checkSubtype(v, vt) {
+                if (!v)
+                    return false;
+                var vt2 = v.vtable;
+                if (vt === vt2)
+                    return true;
+                return vt2 && vt.classNo <= vt2.classNo && vt2.classNo <= vt.lastSubtypeNo;
+            }
+            function failedCast(v) {
+                // TODO generate the right panic codes
+                if (pxsim.control && pxsim.control.dmesgValue)
+                    pxsim.control.dmesgValue(v);
+                oops("failed cast on " + v);
+            }
             function buildResume(s, retPC) {
                 if (currResume)
                     oops("already has resume");
                 s.pc = retPC;
-                return function (v) {
+                var start = Date.now();
+                __this.otherFrames.push(s);
+                var fn = function (v) {
                     if (__this.dead)
                         return;
+                    if (__this.loopLock) {
+                        __this.loopLockWaitList.push(function () { return fn(v); });
+                        return;
+                    }
                     pxsim.runtime = __this;
+                    var now = Date.now();
+                    if (now - start > 3)
+                        lastYield = now;
                     U.assert(s.pc == retPC);
-                    // TODO should loop() be called here using U.nextTick?
-                    // This matters if the simulator function calls cb()
-                    // synchronously.
                     if (v instanceof pxsim.FnWrapper) {
                         var w = v;
-                        var frame = {
+                        var frame_1 = {
                             parent: s,
                             fn: w.func,
-                            lambdaArgs: [w.a0, w.a1, w.a2],
+                            lambdaArgs: w.args,
                             pc: 0,
                             caps: w.caps,
                             depth: s.depth + 1,
-                            finalCallback: w.cb,
                         };
-                        return loop(actionCall(frame));
+                        // If the function we call never pauses, this would cause the stack
+                        // to grow unbounded.
+                        var lock_1 = {};
+                        __this.loopLock = lock_1;
+                        removeFrame(s);
+                        __this.otherFrames.push(frame_1);
+                        return U.nextTick(function () {
+                            U.assert(__this.loopLock === lock_1);
+                            __this.loopLock = null;
+                            loop(actionCall(frame_1));
+                            flushLoopLock();
+                        });
                     }
                     s.retval = v;
                     return loop(s);
                 };
+                return fn;
             }
             // tslint:disable-next-line
-            eval(code);
+            var entryPoint = eval(msg.code)(evalIface);
             this.run = function (cb) { return topCall(entryPoint, cb); };
             this.getResume = function () {
                 if (!currResume)
@@ -4223,22 +5315,200 @@ var pxsim;
                 _this.currFrame.overwrittenPC = true;
             };
             pxsim.runtime = this;
-            pxsim.initCurrentRuntime();
+            pxsim.initCurrentRuntime(msg);
         }
+        Runtime.prototype.registerLiveObject = function (object) {
+            var id = this.refObjId++;
+            return id;
+        };
         Runtime.prototype.runningTime = function () {
-            return U.now() - this.startTime;
+            return U.now() - this.startTime - this.pausedTime;
+        };
+        Runtime.prototype.runningTimeUs = function () {
+            return 0xffffffff & ((U.perfNowUs() - this.startTimeUs) >> 0);
         };
         Runtime.prototype.runFiberAsync = function (a, arg0, arg1, arg2) {
             var _this = this;
-            pxsim.incr(a);
             return new Promise(function (resolve, reject) {
                 return U.nextTick(function () {
                     pxsim.runtime = _this;
                     _this.setupTop(resolve);
-                    pxsim.pxtcore.runAction3(a, arg0, arg1, arg2);
-                    pxsim.decr(a); // if it's still running, action.run() has taken care of incrementing the counter
+                    pxtcore.runAction(a, [arg0, arg1, arg2]);
                 });
             });
+        };
+        Runtime.prototype.currTryFrame = function () {
+            for (var p = this.currFrame; p; p = p.parent)
+                if (p.tryFrame)
+                    return p.tryFrame;
+            return null;
+        };
+        Runtime.prototype.traceObjects = function () {
+            var visited = {};
+            while (this.heapSnapshots.length > 2)
+                this.heapSnapshots.shift();
+            var stt = {
+                count: 0,
+                size: 0,
+                name: "TOTAL"
+            };
+            var statsByType = {
+                "TOTAL": stt
+            };
+            this.heapSnapshots.push({
+                visited: visited,
+                statsByType: statsByType
+            });
+            function scan(name, v, par) {
+                if (par === void 0) { par = null; }
+                if (!(v instanceof pxsim.RefObject))
+                    return;
+                var obj = v;
+                if (obj.gcIsStatic())
+                    return;
+                var ex = visited[obj.id];
+                if (ex) {
+                    if (par)
+                        ex.pointers.push([par, name]);
+                    return;
+                }
+                var here = { obj: obj, path: null, pointers: [[par, name]] };
+                visited[obj.id] = here;
+                obj.scan(function (subpath, v) {
+                    if (v instanceof pxsim.RefObject && !visited[v.id])
+                        scan(subpath, v, here);
+                });
+            }
+            for (var _i = 0, _a = Object.keys(this.globals); _i < _a.length; _i++) {
+                var k = _a[_i];
+                scan(k.replace(/___\d+$/, ""), this.globals[k]);
+            }
+            var frames = this.otherFrames.slice();
+            if (this.currFrame && frames.indexOf(this.currFrame) < 0)
+                frames.unshift(this.currFrame);
+            for (var _b = 0, _c = this.getThreads(); _b < _c.length; _b++) {
+                var thread_1 = _c[_b];
+                var thrPath = "Thread-" + this.rootFrame(thread_1).threadId;
+                for (var s = thread_1; s; s = s.parent) {
+                    var path = thrPath + "." + functionName(s.fn);
+                    for (var _d = 0, _e = Object.keys(s); _d < _e.length; _d++) {
+                        var k = _e[_d];
+                        if (/^(r0|arg\d+|.*___\d+)/.test(k)) {
+                            var v = s[k];
+                            if (v instanceof pxsim.RefObject) {
+                                k = k.replace(/___.*/, "");
+                                scan(path + "." + k, v);
+                            }
+                        }
+                    }
+                    if (s.caps) {
+                        for (var _f = 0, _g = s.caps; _f < _g.length; _f++) {
+                            var c = _g[_f];
+                            scan(path + ".cap", c);
+                        }
+                    }
+                }
+            }
+            var allObjects = Object.keys(visited).map(function (k) { return visited[k]; });
+            allObjects.sort(function (a, b) { return b.obj.gcSize() - a.obj.gcSize(); });
+            var setPath = function (inf) {
+                if (inf.path != null)
+                    return;
+                var short = "";
+                inf.path = "(cycle)";
+                for (var _i = 0, _a = inf.pointers; _i < _a.length; _i++) {
+                    var _b = _a[_i], par = _b[0], name_2 = _b[1];
+                    if (par == null) {
+                        inf.path = name_2;
+                        return;
+                    }
+                    setPath(par);
+                    var newPath = par.path + "." + name_2;
+                    if (!short || short.length > newPath.length)
+                        short = newPath;
+                }
+                inf.path = short;
+            };
+            allObjects.forEach(setPath);
+            var allStats = [stt];
+            for (var _h = 0, allObjects_1 = allObjects; _h < allObjects_1.length; _h++) {
+                var inf = allObjects_1[_h];
+                var sz = inf.obj.gcSize();
+                var key = inf.obj.gcKey();
+                if (!statsByType.hasOwnProperty(key)) {
+                    allStats.push(statsByType[key] = {
+                        count: 0,
+                        size: 0,
+                        name: key
+                    });
+                }
+                var st = statsByType[key];
+                st.size += sz;
+                st.count++;
+                stt.size += sz;
+                stt.count++;
+            }
+            allStats.sort(function (a, b) { return a.size - b.size; });
+            var objTable = "";
+            var fmt = function (n) { return ("        " + n.toString()).slice(-7); };
+            for (var _j = 0, allStats_1 = allStats; _j < allStats_1.length; _j++) {
+                var st = allStats_1[_j];
+                objTable += fmt(st.size * 4) + fmt(st.count) + " " + st.name + "\n";
+            }
+            var objInfo = function (inf) {
+                return fmt(inf.obj.gcSize() * 4) + " " + inf.obj.gcKey() + " " + inf.path;
+            };
+            var large = allObjects.slice(0, 20).map(objInfo).join("\n");
+            var leaks = "";
+            if (this.heapSnapshots.length >= 3) {
+                var v0_1 = this.heapSnapshots[this.heapSnapshots.length - 3].visited;
+                var v1_1 = this.heapSnapshots[this.heapSnapshots.length - 2].visited;
+                var isBgInstance_1 = function (obj) {
+                    if (!(obj instanceof pxsim.RefRecord))
+                        return false;
+                    if (obj.vtable && obj.vtable.maxBgInstances) {
+                        if (statsByType[obj.gcKey()].count <= obj.vtable.maxBgInstances)
+                            return true;
+                    }
+                    return false;
+                };
+                var leakObjs = allObjects
+                    .filter(function (inf) { return !v0_1[inf.obj.id] && v1_1[inf.obj.id]; })
+                    .filter(function (inf) { return !isBgInstance_1(inf.obj); });
+                leaks = leakObjs
+                    .map(objInfo).join("\n");
+            }
+            return ("Threads:\n" + this.threadInfo() +
+                "\n\nSummary:\n" + objTable +
+                "\n\nLarge Objects:\n" + large +
+                "\n\nNew Objects:\n" + leaks);
+        };
+        Runtime.prototype.getThreads = function () {
+            var frames = this.otherFrames.slice();
+            if (this.currFrame && frames.indexOf(this.currFrame) < 0)
+                frames.unshift(this.currFrame);
+            return frames;
+        };
+        Runtime.prototype.rootFrame = function (f) {
+            var p = f;
+            while (p.parent)
+                p = p.parent;
+            return p;
+        };
+        Runtime.prototype.threadInfo = function () {
+            var frames = this.getThreads();
+            var info = "";
+            for (var _i = 0, frames_2 = frames; _i < frames_2.length; _i++) {
+                var f = frames_2[_i];
+                info += "Thread " + this.rootFrame(f).threadId + ":\n";
+                for (var _a = 0, _b = pxsim.getBreakpointMsg(f, f.lastBrkId).msg.stackframes; _a < _b.length; _a++) {
+                    var s = _b[_a];
+                    var fi = s.funcInfo;
+                    info += "   at " + fi.functionName + " (" + fi.fileName + ":" + (fi.line + 1) + ":" + (fi.column + 1) + ")\n";
+                }
+                info += "\n";
+            }
+            return info;
         };
         Runtime.postMessage = function (data) {
             if (!data)
@@ -4250,13 +5520,95 @@ var pxsim;
             if (Runtime.messagePosted)
                 Runtime.messagePosted(data);
         };
+        Runtime.postScreenshotAsync = function (opts) {
+            var b = pxsim.runtime && pxsim.runtime.board;
+            var p = b
+                ? b.screenshotAsync().catch(function (e) {
+                    console.debug("screenshot failed");
+                    return undefined;
+                })
+                : Promise.resolve(undefined);
+            return p.then(function (img) { return Runtime.postMessage({
+                type: "screenshot",
+                data: img,
+                delay: opts && opts.delay
+            }); });
+        };
+        Runtime.requestToggleRecording = function () {
+            var r = pxsim.runtime;
+            if (!r)
+                return;
+            Runtime.postMessage({
+                type: "recorder",
+                action: r.recording ? "stop" : "start"
+            });
+        };
+        Runtime.prototype.restart = function () {
+            this.kill();
+            setTimeout(function () {
+                return pxsim.Runtime.postMessage({
+                    type: "simulator",
+                    command: "restart"
+                });
+            }, 500);
+        };
         Runtime.prototype.kill = function () {
             this.dead = true;
             // TODO fix this
+            this.stopRecording();
+            this.stopIdle();
             this.setRunning(false);
         };
         Runtime.prototype.updateDisplay = function () {
             this.board.updateView();
+            this.postFrame();
+        };
+        Runtime.prototype.startRecording = function (width) {
+            var _this = this;
+            if (this.recording || !this.running)
+                return;
+            this.recording = true;
+            this.recordingTimer = setInterval(function () { return _this.postFrame(); }, 66);
+            this.recordingLastImageData = undefined;
+            this.recordingWidth = width;
+        };
+        Runtime.prototype.stopRecording = function () {
+            if (!this.recording)
+                return;
+            if (this.recordingTimer)
+                clearInterval(this.recordingTimer);
+            this.recording = false;
+            this.recordingTimer = 0;
+            this.recordingLastImageData = undefined;
+            this.recordingWidth = undefined;
+        };
+        Runtime.prototype.postFrame = function () {
+            var _this = this;
+            if (!this.recording || !this.running)
+                return;
+            var time = pxsim.U.now();
+            this.board.screenshotAsync(this.recordingWidth)
+                .then(function (imageData) {
+                // check for duplicate images
+                if (_this.recordingLastImageData && imageData
+                    && _this.recordingLastImageData.data.byteLength == imageData.data.byteLength) {
+                    var d0 = _this.recordingLastImageData.data;
+                    var d1 = imageData.data;
+                    var n = d0.byteLength;
+                    var i = 0;
+                    for (i = 0; i < n; ++i)
+                        if (d0[i] != d1[i])
+                            break;
+                    if (i == n)
+                        return;
+                }
+                _this.recordingLastImageData = imageData;
+                Runtime.postMessage({
+                    type: "screenshot",
+                    data: imageData,
+                    time: time
+                });
+            });
         };
         Runtime.prototype.queueDisplayUpdate = function () {
             this.numDisplayUpdates++;
@@ -4272,37 +5624,203 @@ var pxsim;
                 this.running = r;
                 if (this.running) {
                     this.startTime = U.now();
-                    Runtime.postMessage({ type: 'status', runtimeid: this.id, state: 'running' });
+                    this.startTimeUs = U.perfNowUs();
+                    Runtime.postMessage({
+                        type: 'status',
+                        frameid: pxsim.Embed.frameid,
+                        runtimeid: this.id,
+                        state: 'running'
+                    });
                 }
                 else {
-                    Runtime.postMessage({ type: 'status', runtimeid: this.id, state: 'killed' });
+                    this.stopRecording();
+                    this.stopIdle();
+                    Runtime.postMessage({
+                        type: 'status',
+                        frameid: pxsim.Embed.frameid,
+                        runtimeid: this.id,
+                        state: 'killed'
+                    });
                 }
                 if (this.stateChanged)
                     this.stateChanged();
             }
         };
+        Runtime.prototype.dumpLivePointers = function () {
+            return;
+        };
+        Runtime.prototype.setupPerfCounters = function (names) {
+            if (!names || !names.length)
+                return;
+            this.perfCounters = names.map(function (s) { return new PerfCounter(s); });
+        };
+        Runtime.prototype.perfStartRuntime = function () {
+            if (this.perfOffset !== 0) {
+                this.perfStack++;
+            }
+            else {
+                this.perfOffset = U.perfNowUs() - this.perfElapsed;
+            }
+        };
+        Runtime.prototype.perfStopRuntime = function () {
+            if (this.perfStack) {
+                this.perfStack--;
+            }
+            else {
+                this.perfElapsed = this.perfNow();
+                this.perfOffset = 0;
+            }
+        };
+        Runtime.prototype.perfNow = function () {
+            if (this.perfOffset === 0)
+                U.userError("bad time now");
+            return (U.perfNowUs() - this.perfOffset) | 0;
+        };
+        Runtime.prototype.startPerfCounter = function (n) {
+            if (!this.perfCounters)
+                return;
+            var c = this.perfCounters[n];
+            if (c.start)
+                U.userError("startPerf");
+            c.start = this.perfNow();
+        };
+        Runtime.prototype.stopPerfCounter = function (n) {
+            if (!this.perfCounters)
+                return;
+            var c = this.perfCounters[n];
+            if (!c.start)
+                U.userError("stopPerf");
+            var curr = this.perfNow() - c.start;
+            c.start = 0;
+            // skip outliers
+            // if (c.numstops > 30 && curr > 1.2 * c.value / c.numstops)
+            //    return
+            c.value += curr;
+            c.numstops++;
+            var p = c.lastFewPtr++;
+            if (p >= c.lastFew.length) {
+                p = 0;
+                c.lastFewPtr = 1;
+            }
+            c.lastFew[p] = curr;
+        };
+        Runtime.prototype.startIdle = function () {
+            var _this = this;
+            // schedules handlers to run every 20ms
+            if (this.idleTimer === undefined) {
+                this.idleTimer = setInterval(function () {
+                    if (!_this.running || _this.pausedOnBreakpoint)
+                        return;
+                    var bus = _this.board.bus;
+                    if (bus)
+                        bus.queueIdle();
+                }, 20);
+            }
+        };
+        Runtime.prototype.stopIdle = function () {
+            if (this.idleTimer !== undefined) {
+                clearInterval(this.idleTimer);
+                this.idleTimer = undefined;
+            }
+        };
+        // Wrapper for the setTimeout
+        Runtime.prototype.schedule = function (fn, timeout) {
+            var _this = this;
+            if (timeout <= 0)
+                timeout = 0;
+            if (this.pausedOnBreakpoint) {
+                this.timeoutsPausedOnBreakpoint.push(new PausedTimeout(fn, timeout));
+                return -1;
+            }
+            var timestamp = U.now();
+            var to = new TimeoutScheduled(-1, fn, timeout, timestamp);
+            // We call the timeout function and add its id to the timeouts scheduled.
+            var removeAndExecute = function () {
+                var idx = _this.timeoutsScheduled.indexOf(to);
+                if (idx >= 0)
+                    _this.timeoutsScheduled.splice(idx, 1);
+                fn();
+            };
+            to.id = setTimeout(removeAndExecute, timeout);
+            this.timeoutsScheduled.push(to);
+            return to.id;
+        };
+        // On breakpoint, pause all timeouts
+        Runtime.prototype.pauseScheduled = function () {
+            var _this = this;
+            this.pausedOnBreakpoint = true;
+            this.timeoutsScheduled.forEach(function (ts) {
+                clearTimeout(ts.id);
+                var elapsed = U.now() - ts.timestampCall;
+                var timeRemaining = ts.totalRuntime - elapsed;
+                // Time reamining needs to be at least 1. Setting to 0 causes fibers
+                // to never resume after breaking
+                if (timeRemaining <= 0)
+                    timeRemaining = 1;
+                _this.timeoutsPausedOnBreakpoint.push(new PausedTimeout(ts.fn, timeRemaining));
+            });
+            this.lastPauseTimestamp = U.now();
+            this.timeoutsScheduled = [];
+        };
+        // When resuming after a breakpoint, restart all paused timeouts with their remaining time.
+        Runtime.prototype.resumeAllPausedScheduled = function () {
+            var _this = this;
+            // Takes the list of all fibers paused on a breakpoint and resumes them.
+            this.pausedOnBreakpoint = false;
+            this.timeoutsPausedOnBreakpoint.forEach(function (pt) {
+                _this.schedule(pt.fn, pt.timeRemaining);
+            });
+            if (this.lastPauseTimestamp) {
+                this.pausedTime += U.now() - this.lastPauseTimestamp;
+                this.lastPauseTimestamp = 0;
+            }
+            this.timeoutsPausedOnBreakpoint = [];
+        };
+        // Removes from the timeouts scheduled list all the ones that had been fulfilled.
+        Runtime.prototype.cleanScheduledExpired = function () {
+            var now = U.now();
+            this.timeoutsScheduled = this.timeoutsScheduled.filter(function (ts) {
+                var elapsed = now - ts.timestampCall;
+                return ts.totalRuntime > elapsed;
+            });
+        };
         return Runtime;
     }());
     pxsim.Runtime = Runtime;
+    var PerfCounter = /** @class */ (function () {
+        function PerfCounter(name) {
+            this.name = name;
+            this.start = 0;
+            this.numstops = 0;
+            this.value = 0;
+            this.lastFew = new Uint32Array(32);
+            this.lastFewPtr = 0;
+        }
+        return PerfCounter;
+    }());
+    pxsim.PerfCounter = PerfCounter;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
+    var SimulatorState;
     (function (SimulatorState) {
         SimulatorState[SimulatorState["Unloaded"] = 0] = "Unloaded";
         SimulatorState[SimulatorState["Stopped"] = 1] = "Stopped";
-        SimulatorState[SimulatorState["Running"] = 2] = "Running";
-        SimulatorState[SimulatorState["Paused"] = 3] = "Paused";
-    })(pxsim.SimulatorState || (pxsim.SimulatorState = {}));
-    var SimulatorState = pxsim.SimulatorState;
+        SimulatorState[SimulatorState["Pending"] = 2] = "Pending";
+        SimulatorState[SimulatorState["Starting"] = 3] = "Starting";
+        SimulatorState[SimulatorState["Running"] = 4] = "Running";
+        SimulatorState[SimulatorState["Paused"] = 5] = "Paused";
+        SimulatorState[SimulatorState["Suspended"] = 6] = "Suspended";
+    })(SimulatorState = pxsim.SimulatorState || (pxsim.SimulatorState = {}));
+    var SimulatorDebuggerCommand;
     (function (SimulatorDebuggerCommand) {
         SimulatorDebuggerCommand[SimulatorDebuggerCommand["StepInto"] = 0] = "StepInto";
         SimulatorDebuggerCommand[SimulatorDebuggerCommand["StepOver"] = 1] = "StepOver";
         SimulatorDebuggerCommand[SimulatorDebuggerCommand["StepOut"] = 2] = "StepOut";
         SimulatorDebuggerCommand[SimulatorDebuggerCommand["Resume"] = 3] = "Resume";
         SimulatorDebuggerCommand[SimulatorDebuggerCommand["Pause"] = 4] = "Pause";
-    })(pxsim.SimulatorDebuggerCommand || (pxsim.SimulatorDebuggerCommand = {}));
-    var SimulatorDebuggerCommand = pxsim.SimulatorDebuggerCommand;
-    var SimulatorDriver = (function () {
+    })(SimulatorDebuggerCommand = pxsim.SimulatorDebuggerCommand || (pxsim.SimulatorDebuggerCommand = {}));
+    var SimulatorDriver = /** @class */ (function () {
         function SimulatorDriver(container, options) {
             if (options === void 0) { options = {}; }
             this.container = container;
@@ -4311,10 +5829,40 @@ var pxsim;
             this.runId = '';
             this.nextFrameId = 0;
             this.frameCounter = 0;
-            this.runOptions = {};
+            this.traceInterval = 0;
+            this.breakpointsSet = false;
+            this._runOptions = {};
             this.state = SimulatorState.Unloaded;
             this.frameCleanupTimeout = 0;
+            this.debuggerSeq = 1;
+            this.debuggerResolvers = {};
         }
+        SimulatorDriver.prototype.isDebug = function () {
+            return this._runOptions && !!this._runOptions.debug;
+        };
+        SimulatorDriver.prototype.hasParts = function () {
+            return this._runOptions && this._runOptions.parts && !!this._runOptions.parts.length;
+        };
+        SimulatorDriver.prototype.setDirty = function () {
+            // We suspend the simulator here to stop it from running without
+            // interfering with the user's stopped state. We're not doing this check
+            // in the driver because the driver should be able to switch from any state
+            // to the suspend state, but in this codepath we only want to switch to the
+            // suspended state if we're running
+            if (this.state == pxsim.SimulatorState.Running)
+                this.suspend();
+        };
+        SimulatorDriver.prototype.setPending = function () {
+            this.setState(SimulatorState.Pending);
+        };
+        SimulatorDriver.prototype.focus = function () {
+            var frame = this.simFrames()[0];
+            if (frame)
+                frame.focus();
+        };
+        SimulatorDriver.prototype.setStarting = function () {
+            this.setState(SimulatorState.Starting);
+        };
         SimulatorDriver.prototype.setHwDebugger = function (hw) {
             if (hw) {
                 // TODO set some visual on the simulator frame
@@ -4339,12 +5887,89 @@ var pxsim;
             pxsim.U.assert(themes && themes.length > 0);
             this.themes = themes;
         };
+        SimulatorDriver.prototype.startRecording = function (width) {
+            var frame = this.simFrames()[0];
+            if (!frame)
+                return undefined;
+            this.postMessage({
+                type: 'recorder',
+                action: 'start',
+                width: width
+            });
+        };
+        SimulatorDriver.prototype.stopRecording = function () {
+            this.postMessage({ type: 'recorder', action: 'stop' });
+        };
+        SimulatorDriver.prototype.setFrameState = function (frame) {
+            var icon = frame.nextElementSibling;
+            var loader = icon.nextElementSibling;
+            // apply state
+            switch (this.state) {
+                case SimulatorState.Pending:
+                case SimulatorState.Starting:
+                    icon.style.display = '';
+                    icon.className = '';
+                    loader.style.display = '';
+                    break;
+                case SimulatorState.Stopped:
+                case SimulatorState.Suspended:
+                    pxsim.U.addClass(frame, (this.state == SimulatorState.Stopped || (this._runOptions && this._runOptions.autoRun))
+                        ? this.stoppedClass : this.invalidatedClass);
+                    if (!this._runOptions || !this._runOptions.autoRun) {
+                        icon.style.display = '';
+                        icon.className = 'videoplay xicon icon';
+                    }
+                    else
+                        icon.style.display = 'none';
+                    loader.style.display = 'none';
+                    this.scheduleFrameCleanup();
+                    break;
+                default:
+                    pxsim.U.removeClass(frame, this.stoppedClass);
+                    pxsim.U.removeClass(frame, this.invalidatedClass);
+                    icon.style.display = 'none';
+                    loader.style.display = 'none';
+                    break;
+            }
+        };
         SimulatorDriver.prototype.setState = function (state) {
+            var _this = this;
             if (this.state != state) {
                 this.state = state;
+                this.freeze(this.state == SimulatorState.Paused); // don't allow interaction when pause
+                this.simFrames().forEach(function (frame) { return _this.setFrameState(frame); });
                 if (this.options.onStateChanged)
                     this.options.onStateChanged(this.state);
             }
+        };
+        SimulatorDriver.prototype.freeze = function (value) {
+            var cls = "pause-overlay";
+            if (!value) {
+                pxsim.util.toArray(this.container.querySelectorAll("div.simframe div." + cls))
+                    .forEach(function (overlay) { return overlay.parentElement.removeChild(overlay); });
+            }
+            else {
+                pxsim.util.toArray(this.container.querySelectorAll("div.simframe"))
+                    .forEach(function (frame) {
+                    if (frame.querySelector("div." + cls))
+                        return;
+                    var div = document.createElement("div");
+                    div.className = cls;
+                    div.onclick = function (ev) {
+                        ev.preventDefault();
+                        return false;
+                    };
+                    frame.appendChild(div);
+                });
+            }
+        };
+        SimulatorDriver.prototype.simFrames = function (skipLoaned) {
+            if (skipLoaned === void 0) { skipLoaned = false; }
+            var frames = pxsim.util.toArray(this.container.getElementsByTagName("iframe"));
+            var loanedFrame = this.loanedIFrame();
+            if (loanedFrame && !skipLoaned)
+                frames.unshift(loanedFrame);
+            return frames;
         };
         SimulatorDriver.prototype.postMessage = function (msg, source) {
             if (this.hwdbg) {
@@ -4352,11 +5977,12 @@ var pxsim;
                 return;
             }
             // dispatch to all iframe besides self
-            var frames = this.container.getElementsByTagName("iframe");
-            if (source && (msg.type === 'eventbus' || msg.type == 'radiopacket')) {
+            var frames = this.simFrames();
+            var broadcastmsg = msg;
+            if (source && broadcastmsg && !!broadcastmsg.broadcast) {
                 if (frames.length < 2) {
                     this.container.appendChild(this.createFrame());
-                    frames = this.container.getElementsByTagName("iframe");
+                    frames = this.simFrames();
                 }
                 else if (frames[1].dataset['runid'] != this.runId) {
                     this.startFrame(frames[1]);
@@ -4364,51 +5990,122 @@ var pxsim;
             }
             for (var i = 0; i < frames.length; ++i) {
                 var frame = frames[i];
+                // same frame as source
                 if (source && frame.contentWindow == source)
                     continue;
+                // frame not in DOM
+                if (!frame.contentWindow)
+                    continue;
                 frame.contentWindow.postMessage(msg, "*");
+                // don't start more than 1 recorder
+                if (msg.type == 'recorder'
+                    && msg.action == "start")
+                    break;
             }
         };
-        SimulatorDriver.prototype.createFrame = function () {
+        SimulatorDriver.prototype.createFrame = function (light) {
+            var _this = this;
             var wrapper = document.createElement("div");
-            wrapper.className = 'simframe';
+            wrapper.className = "simframe ui embed";
             var frame = document.createElement('iframe');
             frame.id = 'sim-frame-' + this.nextId();
+            frame.title = pxsim.localization.lf("Simulator");
             frame.allowFullscreen = true;
+            frame.setAttribute('allow', 'autoplay');
             frame.setAttribute('sandbox', 'allow-same-origin allow-scripts');
-            frame.sandbox.value = "allow-scripts allow-same-origin";
             var simUrl = this.options.simUrl || (window.pxtConfig || {}).simUrl || "/sim/simulator.html";
-            if (this.runOptions.aspectRatio)
-                wrapper.style.paddingBottom = (100 / this.runOptions.aspectRatio) + "%";
+            frame.className = 'no-select';
             frame.src = simUrl + '#' + frame.id;
             frame.frameBorder = "0";
             frame.dataset['runid'] = this.runId;
             wrapper.appendChild(frame);
+            var i = document.createElement("i");
+            i.className = "videoplay xicon icon";
+            i.style.display = "none";
+            i.onclick = function (ev) {
+                ev.preventDefault();
+                if (_this.state != SimulatorState.Running
+                    && _this.state != SimulatorState.Starting) {
+                    // we need to request to restart the simulator
+                    if (_this.options.restart)
+                        _this.options.restart();
+                    else
+                        _this.start();
+                }
+                frame.focus();
+                return false;
+            };
+            wrapper.appendChild(i);
+            var l = document.createElement("div");
+            l.className = "ui active loader";
+            i.style.display = "none";
+            wrapper.appendChild(l);
+            if (this._runOptions)
+                this.applyAspectRatioToFrame(frame);
             return wrapper;
         };
-        SimulatorDriver.prototype.stop = function (unload) {
+        SimulatorDriver.prototype.preload = function (aspectRatio) {
+            if (!this.simFrames().length) {
+                this.container.appendChild(this.createFrame());
+                this.applyAspectRatio(aspectRatio);
+                this.setStarting();
+            }
+        };
+        SimulatorDriver.prototype.stop = function (unload, starting) {
             if (unload === void 0) { unload = false; }
+            if (starting === void 0) { starting = false; }
+            this.clearDebugger();
             this.postMessage({ type: 'stop' });
-            this.setState(SimulatorState.Stopped);
+            this.setState(starting ? SimulatorState.Starting : SimulatorState.Stopped);
             if (unload)
                 this.unload();
-            else {
-                var frames_2 = this.container.getElementsByTagName("iframe");
-                for (var i = 0; i < frames_2.length; ++i) {
-                    var frame = frames_2[i];
-                    if (!/grayscale/.test(frame.className))
-                        pxsim.U.addClass(frame, "grayscale");
-                }
-                this.scheduleFrameCleanup();
-            }
+        };
+        SimulatorDriver.prototype.suspend = function () {
+            this.postMessage({ type: 'stop' });
+            this.setState(SimulatorState.Suspended);
         };
         SimulatorDriver.prototype.unload = function () {
             this.cancelFrameCleanup();
-            this.container.innerHTML = '';
+            pxsim.U.removeChildren(this.container);
             this.setState(SimulatorState.Unloaded);
+            this._runOptions = undefined; // forget about program
+            this._currentRuntime = undefined;
+            this.runId = undefined;
         };
         SimulatorDriver.prototype.mute = function (mute) {
+            if (this._currentRuntime)
+                this._currentRuntime.mute = mute;
             this.postMessage({ type: 'mute', mute: mute });
+        };
+        SimulatorDriver.prototype.stopSound = function () {
+            this.postMessage({ type: 'stopsound' });
+        };
+        SimulatorDriver.prototype.isLoanedSimulator = function (el) {
+            return !!this.loanedSimulator && this.loanedIFrame() == el;
+        };
+        // returns a simulator iframe that can be hosted anywhere in the page
+        // while a loaned simulator is active, all other iframes are suspended
+        SimulatorDriver.prototype.loanSimulator = function () {
+            if (this.loanedSimulator)
+                return this.loanedSimulator;
+            // reuse first simulator or create new one
+            this.loanedSimulator = this.container.firstElementChild || this.createFrame();
+            if (this.loanedSimulator.parentNode)
+                this.container.removeChild(this.loanedSimulator);
+            return this.loanedSimulator;
+        };
+        SimulatorDriver.prototype.unloanSimulator = function () {
+            if (this.loanedSimulator) {
+                if (this.loanedSimulator.parentNode)
+                    this.loanedSimulator.parentNode.removeChild(this.loanedSimulator);
+                this.container.insertBefore(this.loanedSimulator, this.container.firstElementChild);
+                delete this.loanedSimulator;
+            }
+        };
+        SimulatorDriver.prototype.loanedIFrame = function () {
+            return this.loanedSimulator
+                && this.loanedSimulator.parentNode
+                && this.loanedSimulator.querySelector("iframe");
         };
         SimulatorDriver.prototype.cancelFrameCleanup = function () {
             if (this.frameCleanupTimeout) {
@@ -4424,80 +6121,113 @@ var pxsim;
                 _this.cleanupFrames();
             }, 5000);
         };
-        SimulatorDriver.prototype.applyAspectRatio = function () {
-            var frames = this.container.getElementsByTagName("iframe");
-            for (var i = 0; i < frames.length; ++i) {
-                frames[i].parentElement.style.paddingBottom =
-                    (100 / this.runOptions.aspectRatio) + "%";
-            }
+        SimulatorDriver.prototype.applyAspectRatio = function (ratio) {
+            var _this = this;
+            if (!ratio && !this._runOptions)
+                return;
+            var frames = this.simFrames();
+            frames.forEach(function (frame) { return _this.applyAspectRatioToFrame(frame, ratio); });
+        };
+        SimulatorDriver.prototype.applyAspectRatioToFrame = function (frame, ratio) {
+            var r = ratio || this._runOptions.aspectRatio;
+            frame.parentElement.style.paddingBottom =
+                (100 / r) + "%";
         };
         SimulatorDriver.prototype.cleanupFrames = function () {
+            var _this = this;
             // drop unused extras frames after 5 seconds
-            var frames = this.container.getElementsByTagName("iframe");
-            for (var i = 1; i < frames.length; ++i) {
-                var frame = frames[i];
-                if (this.state == SimulatorState.Stopped
-                    || frame.dataset['runid'] != this.runId) {
-                    if (this.options.removeElement)
-                        this.options.removeElement(frame.parentElement);
+            var frames = this.simFrames(true);
+            frames.shift(); // drop first frame
+            frames.forEach(function (frame) {
+                if (_this.state == SimulatorState.Stopped
+                    || frame.dataset['runid'] != _this.runId) {
+                    if (_this.options.removeElement)
+                        _this.options.removeElement(frame.parentElement);
                     else
                         frame.parentElement.remove();
                 }
-            }
+            });
         };
         SimulatorDriver.prototype.hide = function (completeHandler) {
+            var _this = this;
+            this.suspend();
             if (!this.options.removeElement)
                 return;
-            var frames = this.container.getElementsByTagName("iframe");
-            for (var i = 0; i < frames.length; ++i) {
-                var frame = frames[i];
-                this.options.removeElement(frame.parentElement, completeHandler);
-            }
+            var frames = this.simFrames();
+            frames.forEach(function (frame) {
+                _this.options.removeElement(frame.parentElement, completeHandler);
+            });
             // Execute the complete handler if there are no frames in sim view
             if (frames.length == 0 && completeHandler) {
                 completeHandler();
             }
         };
         SimulatorDriver.prototype.unhide = function () {
+            var _this = this;
             if (!this.options.unhideElement)
                 return;
-            var frames = this.container.getElementsByTagName("iframe");
-            for (var i = 0; i < frames.length; ++i) {
-                var frame = frames[i];
-                this.options.unhideElement(frame.parentElement);
-            }
+            var frames = this.simFrames();
+            frames.forEach(function (frame) {
+                _this.options.unhideElement(frame.parentElement);
+            });
         };
         SimulatorDriver.prototype.run = function (js, opts) {
             if (opts === void 0) { opts = {}; }
-            this.runOptions = opts;
+            this._runOptions = opts;
             this.runId = this.nextId();
-            this.addEventListeners();
             // store information
-            this.currentRuntime = {
-                type: 'run',
+            this._currentRuntime = {
+                type: "run",
                 boardDefinition: opts.boardDefinition,
                 parts: opts.parts,
                 fnArgs: opts.fnArgs,
                 code: js,
                 partDefinitions: opts.partDefinitions,
                 mute: opts.mute,
+                highContrast: opts.highContrast,
+                light: opts.light,
+                cdnUrl: opts.cdnUrl,
+                localizedStrings: opts.localizedStrings,
+                refCountingDebug: opts.refCountingDebug,
+                version: opts.version,
+                clickTrigger: opts.clickTrigger,
+                breakOnStart: opts.breakOnStart,
+                storedState: opts.storedState
             };
+            this.start();
+        };
+        SimulatorDriver.prototype.restart = function () {
+            this.stop();
+            this.start();
+        };
+        SimulatorDriver.prototype.areBreakpointsSet = function () {
+            return this.breakpointsSet;
+        };
+        SimulatorDriver.prototype.start = function () {
+            this.clearDebugger();
+            this.addEventListeners();
             this.applyAspectRatio();
             this.scheduleFrameCleanup();
+            if (!this._currentRuntime)
+                return; // nothing to do
+            this.breakpointsSet = false;
             // first frame
-            var frame = this.container.querySelector("iframe");
-            // lazy allocate iframe
+            var frame = this.simFrames()[0];
             if (!frame) {
-                var wrapper = this.createFrame();
+                var wrapper = this.createFrame(this._runOptions && this._runOptions.light);
                 this.container.appendChild(wrapper);
                 frame = wrapper.firstElementChild;
             }
             else
                 this.startFrame(frame);
             this.setState(SimulatorState.Running);
+            this.setTraceInterval(this.traceInterval);
         };
+        // ensure _currentRuntime is ready
         SimulatorDriver.prototype.startFrame = function (frame) {
-            var msg = JSON.parse(JSON.stringify(this.currentRuntime));
+            if (!this._currentRuntime || !frame.contentWindow)
+                return false;
+            var msg = JSON.parse(JSON.stringify(this._currentRuntime));
             var mc = '';
             var m = /player=([A-Za-z0-9]+)/i.exec(window.location.href);
             if (m)
@@ -4509,18 +6239,14 @@ var pxsim;
             };
             msg.id = msg.options.theme + "-" + this.nextId();
             frame.dataset['runid'] = this.runId;
+            frame.dataset['runtimeid'] = msg.id;
             frame.contentWindow.postMessage(msg, "*");
-            pxsim.U.removeClass(frame, "grayscale");
-        };
-        SimulatorDriver.prototype.removeEventListeners = function () {
-            if (this.listener) {
-                window.removeEventListener('message', this.listener, false);
-                this.listener = undefined;
-            }
+            this.setFrameState(frame);
+            return true;
         };
         SimulatorDriver.prototype.handleMessage = function (msg, source) {
             switch (msg.type || '') {
-                case 'ready':
+                case 'ready': {
                     var frameid = msg.frameid;
                     var frame = document.getElementById(frameid);
                     if (frame) {
@@ -4529,21 +6255,38 @@ var pxsim;
                             this.options.revealElement(frame);
                     }
                     break;
+                }
+                case 'status': {
+                    var frameid = msg.frameid;
+                    var frame = document.getElementById(frameid);
+                    if (frame) {
+                        var stmsg = msg;
+                        switch (stmsg.state) {
+                            case "killed":
+                                if (stmsg.runtimeid == frame.dataset['runtimeid'])
+                                    this.setState(SimulatorState.Stopped);
+                                break;
+                        }
+                    }
+                    break;
+                }
                 case 'simulator':
                     this.handleSimulatorCommand(msg);
                     break; //handled elsewhere
-                case 'serial': break; //handled elsewhere
+                case 'serial':
                 case 'pxteditor':
+                case 'screenshot':
                 case 'custom':
+                case 'recorder':
                     break; //handled elsewhere
                 case 'debugger':
                     this.handleDebuggerMessage(msg);
                     break;
+                case 'toplevelcodefinished':
+                    if (this.options.onTopLevelCodeEnd)
+                        this.options.onTopLevelCodeEnd();
+                    break;
                 default:
-                    if (msg.type == 'radiopacket') {
-                        // assign rssi noisy?
-                        msg.rssi = 10;
-                    }
                     this.postMessage(msg, source);
                     break;
             }
@@ -4557,6 +6300,12 @@ var pxsim;
                     _this.handleMessage(ev.data, ev.source);
                 };
                 window.addEventListener('message', this.listener, false);
+            }
+        };
+        SimulatorDriver.prototype.removeEventListeners = function () {
+            if (this.listener) {
+                window.removeEventListener('message', this.listener, false);
+                this.listener = undefined;
             }
         };
         SimulatorDriver.prototype.resume = function (c) {
@@ -4588,14 +6337,42 @@ var pxsim;
             this.postMessage({ type: 'debugger', subtype: msg });
         };
         SimulatorDriver.prototype.setBreakpoints = function (breakPoints) {
+            this.breakpointsSet = true;
             this.postDebuggerMessage("config", { setBreakpoints: breakPoints });
+        };
+        SimulatorDriver.prototype.setTraceInterval = function (intervalMs) {
+            this.traceInterval = intervalMs;
+            this.postDebuggerMessage("traceConfig", { interval: intervalMs });
+        };
+        SimulatorDriver.prototype.variablesAsync = function (id, fields) {
+            return this.postDebuggerMessageAsync("variables", { variablesReference: id, fields: fields })
+                .then(function (msg) { return msg; }, function (e) { return undefined; });
         };
         SimulatorDriver.prototype.handleSimulatorCommand = function (msg) {
             if (this.options.onSimulatorCommand)
                 this.options.onSimulatorCommand(msg);
         };
+        SimulatorDriver.prototype.clearDebugger = function () {
+            var _this = this;
+            var e = new Error("Debugging cancelled");
+            Object.keys(this.debuggerResolvers)
+                .forEach(function (k) {
+                var reject = _this.debuggerResolvers[k].reject;
+                reject(e);
+            });
+            this.debuggerResolvers = {};
+            this.debuggerSeq++;
+        };
         SimulatorDriver.prototype.handleDebuggerMessage = function (msg) {
-            console.log("DBG-MSG", msg.subtype, msg);
+            if (msg.subtype !== "trace") {
+                console.log("DBG-MSG", msg.subtype, msg);
+            }
+            // resolve any request
+            if (msg.seq) {
+                var resolve = this.debuggerResolvers[msg.seq].resolve;
+                if (resolve)
+                    resolve(msg);
+            }
             switch (msg.subtype) {
                 case "warning":
                     if (this.options.onDebuggerWarning)
@@ -4605,33 +6382,80 @@ var pxsim;
                     var brk = msg;
                     if (this.state == SimulatorState.Running) {
                         if (brk.exceptionMessage)
-                            this.stop();
+                            this.suspend();
                         else
                             this.setState(SimulatorState.Paused);
                         if (this.options.onDebuggerBreakpoint)
                             this.options.onDebuggerBreakpoint(brk);
+                        var stackTrace = brk.exceptionMessage + "\n";
+                        for (var _i = 0, _a = brk.stackframes; _i < _a.length; _i++) {
+                            var s = _a[_i];
+                            var fi = s.funcInfo;
+                            stackTrace += "   at " + fi.functionName + " (" + fi.fileName + ":" + (fi.line + 1) + ":" + (fi.column + 1) + ")\n";
+                        }
+                        if (brk.exceptionMessage)
+                            console.error(stackTrace);
                     }
                     else {
                         console.error("debugger: trying to pause from " + this.state);
                     }
                     break;
+                case "trace":
+                    if (this.options.onTraceMessage) {
+                        this.options.onTraceMessage(msg);
+                    }
+                    break;
+                default:
+                    var seq = msg.req_seq;
+                    if (seq) {
+                        var resolve = this.debuggerResolvers[seq].resolve;
+                        if (resolve) {
+                            delete this.debuggerResolvers[seq];
+                            resolve(msg);
+                        }
+                    }
+                    break;
             }
         };
-        SimulatorDriver.prototype.postDebuggerMessage = function (subtype, data) {
+        SimulatorDriver.prototype.postDebuggerMessageAsync = function (subtype, data) {
+            var _this = this;
+            if (data === void 0) { data = {}; }
+            return new Promise(function (resolve, reject) {
+                var seq = _this.debuggerSeq++;
+                _this.debuggerResolvers[seq.toString()] = { resolve: resolve, reject: reject };
+                _this.postDebuggerMessage(subtype, data, seq);
+            });
+        };
+        SimulatorDriver.prototype.postDebuggerMessage = function (subtype, data, seq) {
             if (data === void 0) { data = {}; }
             var msg = JSON.parse(JSON.stringify(data));
             msg.type = "debugger";
             msg.subtype = subtype;
+            if (seq)
+                msg.seq = seq;
             this.postMessage(msg);
         };
         SimulatorDriver.prototype.nextId = function () {
             return this.nextFrameId++ + (Math.random() + '' + Math.random()).replace(/[^\d]/, '');
         };
+        Object.defineProperty(SimulatorDriver.prototype, "stoppedClass", {
+            get: function () {
+                return (this.options && this.options.stoppedClass) || "grayscale";
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SimulatorDriver.prototype, "invalidatedClass", {
+            get: function () {
+                return (this.options && this.options.invalidatedClass) || "sepia";
+            },
+            enumerable: true,
+            configurable: true
+        });
         return SimulatorDriver;
     }());
     pxsim.SimulatorDriver = SimulatorDriver;
 })(pxsim || (pxsim = {}));
-/// <reference path="../typings/globals/bluebird/index.d.ts"/>
 var pxsim;
 (function (pxsim) {
     ;
@@ -4643,35 +6467,102 @@ var pxsim;
         return res;
     }
     pxsim.mkRange = mkRange;
-    function parseQueryString() {
-        var qs = window.location.search.substring(1);
-        var getQsVal = function (key) { return decodeURIComponent((qs.split(key + "=")[1] || "").split("&")[0] || ""); }; //.replace(/\+/g, " ");
-        return getQsVal;
-    }
-    pxsim.parseQueryString = parseQueryString;
-    var EventBus = (function () {
-        function EventBus(runtime) {
+    var EventBus = /** @class */ (function () {
+        function EventBus(runtime, valueToArgs) {
             this.runtime = runtime;
+            this.valueToArgs = valueToArgs;
             this.queues = {};
+            this.backgroundHandlerFlag = false;
+            this.nextNotifyEvent = 1024;
+            this.schedulerID = 15; // DEVICE_ID_SCHEDULER
+            this.idleEventID = 2; // DEVICE_SCHEDULER_EVT_IDLE
         }
+        EventBus.prototype.setBackgroundHandlerFlag = function () {
+            this.backgroundHandlerFlag = true;
+        };
+        EventBus.prototype.setNotify = function (notifyID, notifyOneID) {
+            this.notifyID = notifyID;
+            this.notifyOneID = notifyOneID;
+        };
+        EventBus.prototype.setIdle = function (schedulerID, idleEventID) {
+            this.schedulerID = schedulerID;
+            this.idleEventID = idleEventID;
+        };
+        EventBus.prototype.start = function (id, evid, background, create) {
+            if (create === void 0) { create = false; }
+            var key = (background ? "back" : "fore") + ":" + id + ":" + evid;
+            if (!this.queues[key] && create)
+                this.queues[key] = new pxsim.EventQueue(this.runtime, this.valueToArgs);
+            return this.queues[key];
+        };
         EventBus.prototype.listen = function (id, evid, handler) {
-            var k = id + ":" + evid;
-            var queue = this.queues[k];
-            if (!queue)
-                queue = this.queues[k] = new pxsim.EventQueue(this.runtime);
-            queue.handler = handler;
+            // special handle for idle, start the idle timeout
+            if (id == this.schedulerID && evid == this.idleEventID)
+                this.runtime.startIdle();
+            var q = this.start(id, evid, this.backgroundHandlerFlag, true);
+            if (this.backgroundHandlerFlag)
+                q.addHandler(handler);
+            else
+                q.setHandler(handler);
+            this.backgroundHandlerFlag = false;
+        };
+        EventBus.prototype.removeBackgroundHandler = function (handler) {
+            var _this = this;
+            Object.keys(this.queues).forEach(function (k) {
+                if (k.startsWith("back:"))
+                    _this.queues[k].removeHandler(handler);
+            });
+        };
+        // this handles ANY (0) semantics for id and evid
+        EventBus.prototype.getQueues = function (id, evid, bg) {
+            var ret = [this.start(0, 0, bg)];
+            if (id == 0 && evid == 0)
+                return ret;
+            if (evid)
+                ret.push(this.start(0, evid, bg));
+            if (id)
+                ret.push(this.start(id, 0, bg));
+            if (id && evid)
+                ret.push(this.start(id, evid, bg));
+            return ret;
         };
         EventBus.prototype.queue = function (id, evid, value) {
-            if (value === void 0) { value = 0; }
-            var k = id + ":" + evid;
-            var queue = this.queues[k];
-            if (queue)
-                queue.push(value);
+            if (value === void 0) { value = null; }
+            if (pxsim.runtime.pausedOnBreakpoint)
+                return;
+            // special handling for notify one
+            var notifyOne = this.notifyID && this.notifyOneID && id == this.notifyOneID;
+            if (notifyOne)
+                id = this.notifyID;
+            var queues = this.getQueues(id, evid, true).concat(this.getQueues(id, evid, false));
+            this.lastEventValue = evid;
+            this.lastEventTimestampUs = pxsim.U.perfNowUs();
+            Promise.each(queues, function (q) {
+                if (q)
+                    return q.push(value, notifyOne);
+                else
+                    return Promise.resolve();
+            });
+        };
+        EventBus.prototype.queueIdle = function () {
+            if (this.schedulerID && this.idleEventID)
+                this.queue(this.schedulerID, this.idleEventID);
+        };
+        // only for foreground handlers
+        EventBus.prototype.wait = function (id, evid, cb) {
+            var q = this.start(id, evid, false, true);
+            q.addAwaiter(cb);
+        };
+        EventBus.prototype.getLastEventValue = function () {
+            return this.lastEventValue;
+        };
+        EventBus.prototype.getLastEventTime = function () {
+            return 0xffffffff & (this.lastEventTimestampUs - pxsim.runtime.startTimeUs);
         };
         return EventBus;
     }());
     pxsim.EventBus = EventBus;
-    var AnimationQueue = (function () {
+    var AnimationQueue = /** @class */ (function () {
         function AnimationQueue(runtime) {
             var _this = this;
             this.runtime = runtime;
@@ -4743,10 +6634,12 @@ var pxsim;
     var AudioContextManager;
     (function (AudioContextManager) {
         var _frequency = 0;
-        var _context; // AudioContext
-        var _vco; // OscillatorNode;
-        var _vca; // GainNode;
+        var _context;
+        var _vco;
+        var _vca;
         var _mute = false; //mute audio
+        // for playing WAV
+        var audio;
         function context() {
             if (!_context)
                 _context = freshContext();
@@ -4766,19 +6659,217 @@ var pxsim;
         }
         function mute(mute) {
             _mute = mute;
-            stop();
+            stopAll();
+            var ctx = context();
+            if (!mute && ctx && ctx.state === "suspended")
+                ctx.resume();
         }
         AudioContextManager.mute = mute;
-        function stop() {
+        function stopTone() {
             if (_vca)
                 _vca.gain.value = 0;
             _frequency = 0;
+            if (audio) {
+                audio.pause();
+            }
+        }
+        function stopAll() {
+            stopTone();
+            muteAllChannels();
+        }
+        AudioContextManager.stopAll = stopAll;
+        function stop() {
+            stopTone();
         }
         AudioContextManager.stop = stop;
         function frequency() {
             return _frequency;
         }
         AudioContextManager.frequency = frequency;
+        var waveForms = [null, "triangle", "sawtooth", "sine"];
+        var noiseBuffer;
+        var squareBuffer = [];
+        function getNoiseBuffer() {
+            if (!noiseBuffer) {
+                var bufferSize = 100000;
+                noiseBuffer = context().createBuffer(1, bufferSize, context().sampleRate);
+                var output = noiseBuffer.getChannelData(0);
+                var x = 0xf01ba80;
+                for (var i = 0; i < bufferSize; i++) {
+                    x ^= x << 13;
+                    x ^= x >> 17;
+                    x ^= x << 5;
+                    output[i] = ((x & 1023) / 512.0) - 1.0;
+                }
+            }
+            return noiseBuffer;
+        }
+        function getSquareBuffer(param) {
+            if (!squareBuffer[param]) {
+                var bufferSize = 1024;
+                var buf = context().createBuffer(1, bufferSize, context().sampleRate);
+                var output = buf.getChannelData(0);
+                for (var i = 0; i < bufferSize; i++) {
+                    output[i] = i < (param / 100 * bufferSize) ? 1 : -1;
+                }
+                squareBuffer[param] = buf;
+            }
+            return squareBuffer[param];
+        }
+        /*
+        #define SW_TRIANGLE 1
+        #define SW_SAWTOOTH 2
+        #define SW_SINE 3 // TODO remove it? it takes space
+        #define SW_NOISE 5
+        #define SW_SQUARE_10 11
+        #define SW_SQUARE_50 15
+        */
+        /*
+         struct SoundInstruction {
+             uint8_t soundWave;
+             uint8_t flags;
+             uint16_t frequency;
+             uint16_t duration;
+             uint16_t startVolume;
+             uint16_t endVolume;
+         };
+         */
+        function getGenerator(waveFormIdx, hz) {
+            var form = waveForms[waveFormIdx];
+            if (form) {
+                var src = context().createOscillator();
+                src.type = form;
+                src.frequency.value = hz;
+                return src;
+            }
+            var buffer;
+            if (waveFormIdx == 5)
+                buffer = getNoiseBuffer();
+            else if (11 <= waveFormIdx && waveFormIdx <= 15)
+                buffer = getSquareBuffer((waveFormIdx - 10) * 10);
+            else
+                return null;
+            var node = context().createBufferSource();
+            node.buffer = buffer;
+            node.loop = true;
+            if (waveFormIdx != 5)
+                node.playbackRate.value = hz / (context().sampleRate / 1024);
+            return node;
+        }
+        var channels = [];
+        var Channel = /** @class */ (function () {
+            function Channel() {
+            }
+            Channel.prototype.mute = function () {
+                if (this.generator) {
+                    this.generator.stop();
+                    this.generator.disconnect();
+                }
+                if (this.gain)
+                    this.gain.disconnect();
+                this.gain = null;
+                this.generator = null;
+            };
+            Channel.prototype.remove = function () {
+                var idx = channels.indexOf(this);
+                if (idx >= 0)
+                    channels.splice(idx, 1);
+                this.mute();
+            };
+            return Channel;
+        }());
+        var instrStopId = 1;
+        function muteAllChannels() {
+            instrStopId++;
+            while (channels.length)
+                channels[0].remove();
+        }
+        AudioContextManager.muteAllChannels = muteAllChannels;
+        function queuePlayInstructions(when, b) {
+            var prevStop = instrStopId;
+            Promise.delay(when)
+                .then(function () {
+                if (prevStop != instrStopId)
+                    return Promise.resolve();
+                return playInstructionsAsync(b);
+            })
+                .done();
+        }
+        AudioContextManager.queuePlayInstructions = queuePlayInstructions;
+        function playInstructionsAsync(b) {
+            var prevStop = instrStopId;
+            var ctx = context();
+            var idx = 0;
+            var ch = new Channel();
+            var currWave = -1;
+            var currFreq = -1;
+            var timeOff = 0;
+            if (channels.length > 5)
+                channels[0].remove();
+            channels.push(ch);
+            /** Square waves are perceved as much louder than other sounds, so scale it down a bit to make it less jarring **/
+            var scaleVol = function (n, isSqWave) { return (n / 1024) / 2 * (isSqWave ? .7 : 1); };
+            var finish = function () {
+                ch.mute();
+                timeOff = 0;
+                currWave = -1;
+                currFreq = -1;
+            };
+            var loopAsync = function () {
+                if (idx >= b.data.length || !b.data[idx])
+                    return Promise.delay(timeOff).then(finish);
+                var soundWaveIdx = b.data[idx];
+                var freq = pxsim.BufferMethods.getNumber(b, pxsim.BufferMethods.NumberFormat.UInt16LE, idx + 2);
+                var duration = pxsim.BufferMethods.getNumber(b, pxsim.BufferMethods.NumberFormat.UInt16LE, idx + 4);
+                var startVol = pxsim.BufferMethods.getNumber(b, pxsim.BufferMethods.NumberFormat.UInt16LE, idx + 6);
+                var endVol = pxsim.BufferMethods.getNumber(b, pxsim.BufferMethods.NumberFormat.UInt16LE, idx + 8);
+                var endFreq = pxsim.BufferMethods.getNumber(b, pxsim.BufferMethods.NumberFormat.UInt16LE, idx + 10);
+                var isSquareWave = 11 <= soundWaveIdx && soundWaveIdx <= 15;
+                var scaledStart = scaleVol(startVol, isSquareWave);
+                var scaledEnd = scaleVol(endVol, isSquareWave);
+                if (!ctx || prevStop != instrStopId)
+                    return Promise.delay(duration);
+                if (currWave != soundWaveIdx || currFreq != freq) {
+                    if (ch.generator) {
+                        return Promise.delay(timeOff)
+                            .then(function () {
+                            finish();
+                            return loopAsync();
+                        });
+                    }
+                    ch.generator = _mute ? null : getGenerator(soundWaveIdx, freq);
+                    if (!ch.generator)
+                        return Promise.delay(duration);
+                    currWave = soundWaveIdx;
+                    currFreq = freq;
+                    ch.gain = ctx.createGain();
+                    ch.gain.gain.value = scaledStart;
+                    if (endFreq != freq) {
+                        if (ch.generator.frequency != undefined) {
+                            // If generator is an OscillatorNode
+                            var param = ch.generator.frequency;
+                            param.linearRampToValueAtTime(endFreq, ctx.currentTime + ((timeOff + duration) / 1000));
+                        }
+                        else if (ch.generator.playbackRate != undefined) {
+                            // If generator is an AudioBufferSourceNode
+                            var param = ch.generator.playbackRate;
+                            param.linearRampToValueAtTime(endFreq / (context().sampleRate / 1024), ctx.currentTime + ((timeOff + duration) / 1000));
+                        }
+                    }
+                    ch.generator.connect(ch.gain);
+                    ch.gain.connect(ctx.destination);
+                    ch.generator.start();
+                }
+                idx += 12;
+                ch.gain.gain.setValueAtTime(scaledStart, ctx.currentTime + (timeOff / 1000));
+                timeOff += duration;
+                ch.gain.gain.linearRampToValueAtTime(scaledEnd, ctx.currentTime + (timeOff / 1000));
+                return loopAsync();
+            };
+            return loopAsync()
+                .then(function () { return ch.remove(); });
+        }
+        AudioContextManager.playInstructionsAsync = playInstructionsAsync;
         function tone(frequency, gain) {
             if (_mute)
                 return;
@@ -4812,20 +6903,94 @@ var pxsim;
             _vca.gain.value = gain;
         }
         AudioContextManager.tone = tone;
+        function uint8ArrayToString(input) {
+            var len = input.length;
+            var res = "";
+            for (var i = 0; i < len; ++i)
+                res += String.fromCharCode(input[i]);
+            return res;
+        }
+        function playBufferAsync(buf) {
+            if (!buf)
+                return Promise.resolve();
+            return new Promise(function (resolve) {
+                function res() {
+                    if (resolve)
+                        resolve();
+                    resolve = undefined;
+                }
+                var url = "data:audio/wav;base64," + window.btoa(uint8ArrayToString(buf.data));
+                audio = new Audio(url);
+                if (_mute)
+                    audio.volume = 0;
+                audio.onended = function () { return res(); };
+                audio.onpause = function () { return res(); };
+                audio.onerror = function () { return res(); };
+                audio.play();
+            });
+        }
+        AudioContextManager.playBufferAsync = playBufferAsync;
+        function frequencyFromMidiNoteNumber(note) {
+            return 440 * Math.pow(2, (note - 69) / 12);
+        }
+        function sendMidiMessage(buf) {
+            var data = buf.data;
+            if (!data.length)
+                return;
+            // no midi access or no midi element,
+            // limited interpretation of midi commands
+            var cmd = data[0] >> 4;
+            var channel = data[0] & 0xf;
+            var noteNumber = data[1] || 0;
+            var noteFrequency = frequencyFromMidiNoteNumber(noteNumber);
+            var velocity = data[2] || 0;
+            //console.log(`midi: cmd ${cmd} channel (-1) ${channel} note ${noteNumber} f ${noteFrequency} v ${velocity}`)
+            // play drums regardless
+            if (cmd == 8 || ((cmd == 9) && (velocity == 0))) {
+                // note off
+                stopTone();
+            }
+            else if (cmd == 9) {
+                // note on -- todo handle velocity
+                tone(noteFrequency, 1);
+                if (channel == 9)
+                    setTimeout(function () { return stopTone(); }, 500);
+            }
+        }
+        AudioContextManager.sendMidiMessage = sendMidiMessage;
     })(AudioContextManager = pxsim.AudioContextManager || (pxsim.AudioContextManager = {}));
-    pxsim.pointerEvents = typeof window != "undefined" && !!window.PointerEvent ? {
+    function isTouchEnabled() {
+        return typeof window !== "undefined" &&
+            ('ontouchstart' in window // works on most browsers
+                || (navigator && navigator.maxTouchPoints > 0)); // works on IE10/11 and Surface);
+    }
+    pxsim.isTouchEnabled = isTouchEnabled;
+    function hasPointerEvents() {
+        return typeof window != "undefined" && !!window.PointerEvent;
+    }
+    pxsim.hasPointerEvents = hasPointerEvents;
+    pxsim.pointerEvents = hasPointerEvents() ? {
         up: "pointerup",
-        down: "pointerdown",
+        down: ["pointerdown"],
         move: "pointermove",
+        enter: "pointerenter",
         leave: "pointerleave"
-    } : {
-        up: "mouseup",
-        down: "mousedown",
-        move: "mousemove",
-        leave: "mouseleave"
-    };
+    } : isTouchEnabled() ?
+        {
+            up: "mouseup",
+            down: ["mousedown", "touchstart"],
+            move: "touchmove",
+            enter: "touchenter",
+            leave: "touchend"
+        } :
+        {
+            up: "mouseup",
+            down: ["mousedown"],
+            move: "mousemove",
+            enter: "mouseenter",
+            leave: "mouseleave"
+        };
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var visuals;
     (function (visuals) {
@@ -4937,7 +7102,7 @@ var pxsim;
                 style: "font-size:" + size + "px;",
                 transform: "translate(" + cx + " " + cy + ") rotate(" + rot + ") translate(" + xOff + " " + yOff + ")"
             });
-            pxsim.svg.addClass(el, "noselect");
+            pxsim.U.addClass(el, "noselect");
             el.textContent = txt;
             return el;
         }
@@ -4999,7 +7164,7 @@ var pxsim;
     var svg;
     (function (svg_1) {
         function parseString(xml) {
-            return new DOMParser().parseFromString(xml, "image/svg+xml").querySelector("svg");
+            return new DOMParser().parseFromString(xml, "image/svg+xml").getElementsByTagName("svg").item(0);
         }
         svg_1.parseString = parseString;
         function toDataUri(xml) {
@@ -5008,8 +7173,9 @@ var pxsim;
         svg_1.toDataUri = toDataUri;
         var pt;
         function cursorPoint(pt, svg, evt) {
-            pt.x = evt.clientX;
-            pt.y = evt.clientY;
+            // clientX and clientY are not defined in iOS safari
+            pt.x = evt.clientX != null ? evt.clientX : evt.pageX;
+            pt.y = evt.clientY != null ? evt.clientY : evt.pageY;
             return pt.matrixTransform(svg.getScreenCTM().inverse());
         }
         svg_1.cursorPoint = cursorPoint;
@@ -5017,20 +7183,6 @@ var pxsim;
             el.setAttribute('transform', "translate(" + originX + "," + originY + ") rotate(" + (degrees + 90) + ") translate(" + -originX + "," + -originY + ")");
         }
         svg_1.rotateElement = rotateElement;
-        function addClass(el, cls) {
-            if (el.classList)
-                el.classList.add(cls);
-            else if (el.className.baseVal.indexOf(cls) < 0)
-                el.className.baseVal += ' ' + cls;
-        }
-        svg_1.addClass = addClass;
-        function removeClass(el, cls) {
-            if (el.classList)
-                el.classList.remove(cls);
-            else
-                el.className.baseVal = el.className.baseVal.replace(cls, '').replace(/\s{2,}/, ' ');
-        }
-        svg_1.removeClass = removeClass;
         function hydrate(el, props) {
             for (var k in props) {
                 if (k == "title") {
@@ -5081,37 +7233,67 @@ var pxsim;
             els.forEach(function (el) { return el.style.fill = c; });
         }
         svg_1.fills = fills;
-        function buttonEvents(el, move, start, stop) {
+        function isTouchEnabled() {
+            return typeof window !== "undefined" &&
+                ('ontouchstart' in window // works on most browsers
+                    || navigator.maxTouchPoints > 0); // works on IE10/11 and Surface);
+        }
+        svg_1.isTouchEnabled = isTouchEnabled;
+        function onClick(el, click) {
             var captured = false;
-            el.addEventListener('mousedown', function (ev) {
+            pxsim.pointerEvents.down.forEach(function (evid) { return el.addEventListener(evid, function (ev) {
                 captured = true;
-                if (start)
-                    start(ev);
                 return true;
-            });
-            el.addEventListener('mousemove', function (ev) {
+            }, false); });
+            el.addEventListener(pxsim.pointerEvents.up, function (ev) {
                 if (captured) {
-                    move(ev);
+                    captured = false;
+                    click(ev);
                     ev.preventDefault();
                     return false;
                 }
                 return true;
-            });
-            el.addEventListener('mouseup', function (ev) {
+            }, false);
+        }
+        svg_1.onClick = onClick;
+        function buttonEvents(el, move, start, stop, keydown) {
+            var captured = false;
+            pxsim.pointerEvents.down.forEach(function (evid) { return el.addEventListener(evid, function (ev) {
+                captured = true;
+                if (start)
+                    start(ev);
+                return true;
+            }, false); });
+            el.addEventListener(pxsim.pointerEvents.move, function (ev) {
+                if (captured) {
+                    if (move)
+                        move(ev);
+                    ev.preventDefault();
+                    return false;
+                }
+                return true;
+            }, false);
+            el.addEventListener(pxsim.pointerEvents.up, function (ev) {
                 captured = false;
                 if (stop)
                     stop(ev);
-            });
-            el.addEventListener('mouseleave', function (ev) {
+            }, false);
+            el.addEventListener(pxsim.pointerEvents.leave, function (ev) {
                 captured = false;
                 if (stop)
                     stop(ev);
+            }, false);
+            el.addEventListener('keydown', function (ev) {
+                captured = false;
+                if (keydown)
+                    keydown(ev);
             });
         }
         svg_1.buttonEvents = buttonEvents;
-        function mkLinearGradient(id) {
+        function mkLinearGradient(id, horizontal) {
+            if (horizontal === void 0) { horizontal = false; }
             var gradient = svg.elt("linearGradient");
-            svg.hydrate(gradient, { id: id, x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
+            svg.hydrate(gradient, { id: id, x1: "0%", y1: "0%", x2: horizontal ? "100%" : "0%", y2: horizontal ? "0%" : "100%" });
             var stop1 = svg.child(gradient, "stop", { offset: "0%" });
             var stop2 = svg.child(gradient, "stop", { offset: "100%" });
             var stop3 = svg.child(gradient, "stop", { offset: "100%" });
@@ -5119,8 +7301,9 @@ var pxsim;
             return gradient;
         }
         svg_1.mkLinearGradient = mkLinearGradient;
-        function linearGradient(defs, id) {
-            var lg = mkLinearGradient(id);
+        function linearGradient(defs, id, horizontal) {
+            if (horizontal === void 0) { horizontal = false; }
+            var lg = mkLinearGradient(id, horizontal);
             defs.appendChild(lg);
             return lg;
         }
@@ -5142,7 +7325,7 @@ var pxsim;
         }
         svg_1.setGradientValue = setGradientValue;
         function animate(el, cls) {
-            svg.addClass(el, cls);
+            pxsim.U.addClass(el, cls);
             var p = el.parentElement;
             if (p) {
                 p.removeChild(el);
@@ -5174,14 +7357,14 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    var Button = (function () {
+    var Button = /** @class */ (function () {
         function Button(id) {
             this.id = id;
         }
         return Button;
     }());
     pxsim.Button = Button;
-    var ButtonPairState = (function () {
+    var ButtonPairState = /** @class */ (function () {
         function ButtonPairState(props) {
             this.props = props;
             this.usesButtonAB = false;
@@ -5196,7 +7379,7 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    var CompassState = (function () {
+    var CompassState = /** @class */ (function () {
         function CompassState() {
             this.usesHeading = false;
             this.heading = 90;
@@ -5207,82 +7390,7 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    (function (PinFlags) {
-        PinFlags[PinFlags["Unused"] = 0] = "Unused";
-        PinFlags[PinFlags["Digital"] = 1] = "Digital";
-        PinFlags[PinFlags["Analog"] = 2] = "Analog";
-        PinFlags[PinFlags["Input"] = 4] = "Input";
-        PinFlags[PinFlags["Output"] = 8] = "Output";
-        PinFlags[PinFlags["Touch"] = 16] = "Touch";
-    })(pxsim.PinFlags || (pxsim.PinFlags = {}));
-    var PinFlags = pxsim.PinFlags;
-    var Pin = (function () {
-        function Pin(id) {
-            this.id = id;
-            this.touched = false;
-            this.value = 0;
-            this.period = 0;
-            this.servoAngle = 0;
-            this.mode = PinFlags.Unused;
-            this.pitch = false;
-            this.pull = 0; // PullDown
-        }
-        Pin.prototype.digitalReadPin = function () {
-            this.mode = PinFlags.Digital | PinFlags.Input;
-            return this.value > 100 ? 1 : 0;
-        };
-        Pin.prototype.digitalWritePin = function (value) {
-            this.mode = PinFlags.Digital | PinFlags.Output;
-            this.value = value > 0 ? 200 : 0;
-            pxsim.runtime.queueDisplayUpdate();
-        };
-        Pin.prototype.setPull = function (pull) {
-            this.pull = pull;
-        };
-        Pin.prototype.analogReadPin = function () {
-            this.mode = PinFlags.Analog | PinFlags.Input;
-            return this.value || 0;
-        };
-        Pin.prototype.analogWritePin = function (value) {
-            this.mode = PinFlags.Analog | PinFlags.Output;
-            this.value = Math.max(0, Math.min(1023, value));
-            pxsim.runtime.queueDisplayUpdate();
-        };
-        Pin.prototype.analogSetPeriod = function (micros) {
-            this.mode = PinFlags.Analog | PinFlags.Output;
-            this.period = micros;
-            pxsim.runtime.queueDisplayUpdate();
-        };
-        Pin.prototype.servoWritePin = function (value) {
-            this.analogSetPeriod(20000);
-            this.servoAngle = Math.max(0, Math.min(180, value));
-            pxsim.runtime.queueDisplayUpdate();
-        };
-        Pin.prototype.servoSetPulse = function (pinId, micros) {
-            // TODO
-        };
-        Pin.prototype.isTouched = function () {
-            this.mode = PinFlags.Touch | PinFlags.Analog | PinFlags.Input;
-            return this.touched;
-        };
-        return Pin;
-    }());
-    pxsim.Pin = Pin;
-    var EdgeConnectorState = (function () {
-        function EdgeConnectorState(props) {
-            this.props = props;
-            this.pins = props.pins.map(function (id) { return id != undefined ? new Pin(id) : null; });
-        }
-        EdgeConnectorState.prototype.getPin = function (id) {
-            return this.pins.filter(function (p) { return p && p.id == id; })[0] || null;
-        };
-        return EdgeConnectorState;
-    }());
-    pxsim.EdgeConnectorState = EdgeConnectorState;
-})(pxsim || (pxsim = {}));
-var pxsim;
-(function (pxsim) {
-    var FileSystemState = (function () {
+    var FileSystemState = /** @class */ (function () {
         function FileSystemState() {
             this.files = {};
         }
@@ -5298,7 +7406,7 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    var LightSensorState = (function () {
+    var LightSensorState = /** @class */ (function () {
         function LightSensorState() {
             this.usesLightLevel = false;
             this.lightLevel = 128;
@@ -5309,13 +7417,13 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
+    var NeoPixelMode;
     (function (NeoPixelMode) {
         NeoPixelMode[NeoPixelMode["RGB"] = 0] = "RGB";
         NeoPixelMode[NeoPixelMode["RGBW"] = 1] = "RGBW";
-    })(pxsim.NeoPixelMode || (pxsim.NeoPixelMode = {}));
-    var NeoPixelMode = pxsim.NeoPixelMode;
+    })(NeoPixelMode = pxsim.NeoPixelMode || (pxsim.NeoPixelMode = {}));
     ;
-    var NeoPixelState = (function () {
+    var NeoPixelState = /** @class */ (function () {
         function NeoPixelState() {
             this.buffers = {};
             this.colors = {};
@@ -5328,7 +7436,7 @@ var pxsim;
         NeoPixelState.prototype.getColors = function (pin, mode) {
             var outColors = this.colors[pin] || (this.colors[pin] = []);
             if (this.dirty[pin]) {
-                var buf = this.buffers[pin] || (this.buffers[pin] = []);
+                var buf = this.buffers[pin] || (this.buffers[pin] = new Uint8Array([]));
                 this.readNeoPixelBuffer(buf, outColors, mode);
                 this.dirty[pin] = false;
             }
@@ -5361,19 +7469,22 @@ var pxsim;
             var boardVis = opts.visual;
             return new visuals.GenericBoardSvg({
                 visualDef: boardVis,
+                boardDef: opts.boardDef,
                 wireframe: opts.wireframe,
             });
         };
-        var BoardHost = (function () {
+        var BoardHost = /** @class */ (function () {
             function BoardHost(view, opts) {
                 var _this = this;
                 this.parts = [];
                 this.boardView = view;
+                this.opts = opts;
+                if (!opts.boardDef.pinStyles)
+                    opts.boardDef.pinStyles = {};
                 this.state = opts.state;
                 var activeComponents = opts.partsList;
-                this.useCrocClips = opts.boardDef.useCrocClips;
-                var useBreadboard = 0 < activeComponents.length || opts.forceBreadboardLayout;
-                if (useBreadboard) {
+                var useBreadboardView = 0 < activeComponents.length || opts.forceBreadboardLayout;
+                if (useBreadboardView) {
                     this.breadboard = new visuals.Breadboard({
                         wireframe: opts.wireframe,
                     });
@@ -5394,12 +7505,11 @@ var pxsim;
                     var edges = composition.edges;
                     this.fromMBCoord = composition.toHostCoord1;
                     this.fromBBCoord = composition.toHostCoord2;
-                    var pinDist = composition.scaleUnit;
                     this.partGroup = over;
                     this.partOverGroup = pxsim.svg.child(this.view, "g");
                     this.style = pxsim.svg.child(this.view, "style", {});
                     this.defs = pxsim.svg.child(this.view, "defs", {});
-                    this.wireFactory = new visuals.WireFactory(under, over, edges, this.style, this.getLocCoord.bind(this));
+                    this.wireFactory = new visuals.WireFactory(under, over, edges, this.style, this.getLocCoord.bind(this), this.getPinStyle.bind(this));
                     var allocRes = pxsim.allocateDefinitions({
                         boardDef: opts.boardDef,
                         partDefs: opts.partDefs,
@@ -5407,11 +7517,29 @@ var pxsim;
                         getBBCoord: this.breadboard.getCoord.bind(this.breadboard),
                         partsList: activeComponents,
                     });
-                    this.addAll(allocRes);
-                    if (!allocRes.requiresBreadboard && !opts.forceBreadboardRender)
-                        this.breadboard.hide();
+                    if (!allocRes.partsAndWires.length && !opts.forceBreadboardLayout) {
+                        // nothing got allocated, so we rollback the changes.
+                        useBreadboardView = false;
+                    }
+                    else {
+                        this.addAll(allocRes);
+                        if (!allocRes.requiresBreadboard && !opts.forceBreadboardRender)
+                            useBreadboardView = false;
+                        else if (allocRes.hideBreadboard && this.breadboard)
+                            this.breadboard.hide();
+                    }
                 }
-                else {
+                if (!useBreadboardView) {
+                    // delete any kind of left over
+                    delete this.breadboard;
+                    delete this.wireFactory;
+                    delete this.partOverGroup;
+                    delete this.partGroup;
+                    delete this.style;
+                    delete this.defs;
+                    delete this.fromBBCoord;
+                    delete this.fromMBCoord;
+                    // allocate view
                     var el = this.boardView.getView().el;
                     this.view = el;
                     this.partGroup = pxsim.svg.child(this.view, "g");
@@ -5433,14 +7561,51 @@ var pxsim;
                 //TODO: move to wiring.ts
                 //underboard wires
                 wire.wires.forEach(function (e) {
-                    pxsim.svg.addClass(e, "highlight");
+                    pxsim.U.addClass(e, "highlight");
                     e.style["visibility"] = "visible";
                 });
                 //un greyed out
-                pxsim.svg.addClass(wire.endG, "highlight");
+                pxsim.U.addClass(wire.endG, "highlight");
             };
             BoardHost.prototype.getView = function () {
                 return this.view;
+            };
+            BoardHost.prototype.screenshotAsync = function (width) {
+                var svg = this.view.cloneNode(true);
+                svg.setAttribute('width', this.view.width.baseVal.value + "");
+                svg.setAttribute('height', this.view.height.baseVal.value + "");
+                var xml = new XMLSerializer().serializeToString(svg);
+                var data = "data:image/svg+xml,"
+                    + encodeURIComponent(xml.replace(/\s+/g, ' ').replace(/"/g, "'"));
+                return new Promise(function (resolve, reject) {
+                    var img = document.createElement("img");
+                    img.onload = function () {
+                        var cvs = document.createElement("canvas");
+                        cvs.width = img.width;
+                        cvs.height = img.height;
+                        // check if a width or a height was specified
+                        if (width > 0) {
+                            cvs.width = width;
+                            cvs.height = (img.height * width / img.width) | 0;
+                        }
+                        else if (cvs.width < 200) {
+                            cvs.width *= 2;
+                            cvs.height *= 2;
+                        }
+                        else if (cvs.width > 480) {
+                            cvs.width /= 2;
+                            cvs.height /= 2;
+                        }
+                        var ctx = cvs.getContext("2d");
+                        ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+                        resolve(ctx.getImageData(0, 0, cvs.width, cvs.height));
+                    };
+                    img.onerror = function (e) {
+                        console.log(e);
+                        resolve(undefined);
+                    };
+                    img.src = data;
+                });
             };
             BoardHost.prototype.updateState = function () {
                 this.parts.forEach(function (c) { return c.updateState(); });
@@ -5451,7 +7616,10 @@ var pxsim;
             };
             BoardHost.prototype.getPinCoord = function (pin) {
                 var boardCoord = this.boardView.getCoord(pin);
-                pxsim.U.assert(!!boardCoord, "Unable to find coord for pin: " + pin);
+                if (!boardCoord) {
+                    console.error("Unable to find coord for pin: " + pin);
+                    return undefined;
+                }
                 return this.fromMBCoord(boardCoord);
             };
             BoardHost.prototype.getLocCoord = function (loc) {
@@ -5464,16 +7632,19 @@ var pxsim;
                     var pinNm = loc.pin;
                     coord = this.getPinCoord(pinNm);
                 }
-                if (!coord) {
-                    console.error("Unknown location: " + name);
-                    return [0, 0];
-                }
+                if (!coord)
+                    console.debug("Unknown location: " + name);
                 return coord;
+            };
+            BoardHost.prototype.getPinStyle = function (loc) {
+                if (loc.type == "breadboard")
+                    return "female";
+                else
+                    return this.opts.boardDef.pinStyles[loc.pin] || "female";
             };
             BoardHost.prototype.addPart = function (partInst) {
                 var _this = this;
                 var part = null;
-                var colOffset = 0;
                 if (partInst.simulationBehavior) {
                     //TODO: seperate simulation behavior from builtin visual
                     var builtinBehavior = partInst.simulationBehavior;
@@ -5508,27 +7679,31 @@ var pxsim;
                 };
                 var coord = this.getBBCoord(rowCol);
                 part.moveToCoord(coord);
-                var getCmpClass = function (type) { return ("sim-" + type + "-cmp"); };
+                var getCmpClass = function (type) { return "sim-" + type + "-cmp"; };
                 var cls = getCmpClass(partInst.name);
-                pxsim.svg.addClass(part.element, cls);
-                pxsim.svg.addClass(part.element, "sim-cmp");
+                pxsim.U.addClass(part.element, cls);
+                pxsim.U.addClass(part.element, "sim-cmp");
                 part.updateTheme();
                 part.updateState();
                 return part;
             };
             BoardHost.prototype.addWire = function (inst) {
-                return this.wireFactory.addWire(inst.start, inst.end, inst.color, this.useCrocClips);
+                return this.wireFactory.addWire(inst.start, inst.end, inst.color);
             };
             BoardHost.prototype.addAll = function (allocRes) {
                 var _this = this;
                 allocRes.partsAndWires.forEach(function (pAndWs) {
-                    var part = pAndWs.part;
-                    if (part)
-                        _this.addPart(part);
                     var wires = pAndWs.wires;
-                    if (wires)
-                        wires.forEach(function (w) { return _this.addWire(w); });
+                    var wiresOk = wires && wires.every(function (w) { return _this.wireFactory.checkWire(w.start, w.end); });
+                    if (wiresOk)
+                        wires.forEach(function (w) { return allocRes.wires.push(_this.addWire(w)); });
+                    var part = pAndWs.part;
+                    if (part && (!wires || wiresOk))
+                        allocRes.parts.push(_this.addPart(part));
                 });
+                // at least one wire
+                allocRes.requiresBreadboard = !!allocRes.wires.length
+                    || !!allocRes.parts.length;
             };
             return BoardHost;
         }());
@@ -5612,7 +7787,9 @@ var pxsim;
             var removeAll = function (arr, e) {
                 var res = 0;
                 var idx;
+                /* tslint:disable:no-conditional-assignment */
                 while (0 <= (idx = arr.indexOf(e))) {
+                    /* tslint:enable:no-conditional-assignment */
                     arr.splice(idx, 1);
                     res += 1;
                 }
@@ -5620,18 +7797,18 @@ var pxsim;
             };
             var rowGaps = 0;
             var rowIdxsWithGap = copyArr(opts.rowIdxsWithGap);
-            var _loop_3 = function(i) {
+            var _loop_2 = function (i) {
                 var colGaps = 0;
                 var colIdxsWithGap = copyArr(opts.colIdxsWithGap);
                 var cy = yOff + i * opts.pinDist + rowGaps * opts.pinDist;
                 var rowIdx = i + rowIdxOffset;
-                var _loop_4 = function(j) {
+                var _loop_3 = function (j) {
                     var cx = xOff + j * opts.pinDist + colGaps * opts.pinDist;
                     var colIdx = j + colIdxOffset;
                     var addEl = function (pin) {
-                        var pinX = cx - pin.w * 0.5;
-                        var pinY = cy - pin.h * 0.5;
-                        pxsim.svg.hydrate(pin.el, { x: pinX, y: pinY });
+                        pxsim.svg.hydrate(pin.el, pin.el.tagName == "circle"
+                            ? { cx: cx, cy: cy }
+                            : { x: cx - pin.w * 0.5, y: cy - pin.h * 0.5 });
                         grid.appendChild(pin.el);
                         return pin.el;
                     };
@@ -5646,13 +7823,13 @@ var pxsim;
                     colGaps += removeAll(colIdxsWithGap, colIdx);
                 };
                 for (var j = 0; j < opts.colCount; j++) {
-                    _loop_4(j);
+                    _loop_3(j);
                 }
                 //row gaps
                 rowGaps += removeAll(rowIdxsWithGap, rowIdx);
             };
             for (var i = 0; i < opts.rowCount; i++) {
-                _loop_3(i);
+                _loop_2(i);
             }
             return { g: grid, allPins: allPins };
         }
@@ -5685,19 +7862,19 @@ var pxsim;
         function mkBBLabel(cx, cy, size, rotation, txt, group, extraClasses) {
             //lbl
             var el = visuals.mkTxt(cx, cy, size, rotation, txt);
-            pxsim.svg.addClass(el, "sim-bb-label");
+            pxsim.U.addClass(el, "sim-bb-label");
             if (extraClasses)
-                extraClasses.forEach(function (c) { return pxsim.svg.addClass(el, c); });
+                extraClasses.forEach(function (c) { return pxsim.U.addClass(el, c); });
             //hover lbl
             var hoverEl = visuals.mkTxt(cx, cy, size * PIN_LBL_HOVER_SCALAR, rotation, txt);
-            pxsim.svg.addClass(hoverEl, "sim-bb-label-hover");
+            pxsim.U.addClass(hoverEl, "sim-bb-label-hover");
             if (extraClasses)
-                extraClasses.forEach(function (c) { return pxsim.svg.addClass(hoverEl, c); });
+                extraClasses.forEach(function (c) { return pxsim.U.addClass(hoverEl, c); });
             var lbl = { el: el, hoverEl: hoverEl, txt: txt, group: group };
             return lbl;
         }
         ;
-        var Breadboard = (function () {
+        var Breadboard = /** @class */ (function () {
             function Breadboard(opts) {
                 //truth
                 this.allPins = [];
@@ -5708,7 +7885,7 @@ var pxsim;
                 this.rowColToLbls = {};
                 this.buildDom();
                 if (opts.wireframe)
-                    pxsim.svg.addClass(this.bb, "sim-bb-outline");
+                    pxsim.U.addClass(this.bb, "sim-bb-outline");
             }
             Breadboard.prototype.hide = function () {
                 this.bb.style.display = 'none';
@@ -5772,7 +7949,7 @@ var pxsim;
                 };
                 mkChannel(BAR_HEIGHT + MID_HEIGHT / 2, CHANNEL_HEIGHT, "sim-bb-mid-channel");
                 mkChannel(BAR_HEIGHT, SMALL_CHANNEL_HEIGHT, "sim-bb-sml-channel");
-                mkChannel(BAR_HEIGHT + MID_HEIGHT, SMALL_CHANNEL_HEIGHT), "sim-bb-sml-channel";
+                mkChannel(BAR_HEIGHT + MID_HEIGHT, SMALL_CHANNEL_HEIGHT, "sim-bb-sml-channel");
                 //-----pins
                 var getMidTopOrBot = function (rowIdx) { return rowIdx < visuals.BREADBOARD_MID_ROWS / 2.0 ? "b" : "t"; };
                 var getBarTopOrBot = function (colIdx) { return colIdx < POWER_COLS / 2.0 ? "b" : "t"; };
@@ -5948,7 +8125,8 @@ var pxsim;
                         x: x,
                         y: y - lnThickness / 2.0,
                         width: lnLen,
-                        height: lnThickness });
+                        height: lnThickness
+                    });
                     var bar = { el: ln, group: group };
                     return bar;
                 };
@@ -5970,8 +8148,8 @@ var pxsim;
                     var g = pxsim.svg.elt("g");
                     return g;
                 });
-                groups.forEach(function (g) { return pxsim.svg.addClass(g, "sim-bb-pin-group"); });
-                groups.forEach(function (g, i) { return pxsim.svg.addClass(g, "group-" + allGrpNms[i]); });
+                groups.forEach(function (g) { return pxsim.U.addClass(g, "sim-bb-pin-group"); });
+                groups.forEach(function (g, i) { return pxsim.U.addClass(g, "group-" + allGrpNms[i]); });
                 var grpNmToGroup = {};
                 allGrpNms.forEach(function (g, i) { return grpNmToGroup[g] = groups[i]; });
                 //group pins and add connecting wire
@@ -5992,7 +8170,7 @@ var pxsim;
                     var width = Math.max(maxX - minX, 0.0001 /*rects with no width aren't displayed*/);
                     var height = Math.max(maxY - minY, 0.0001);
                     pxsim.svg.hydrate(wire, { x: minX, y: minY, width: width, height: height });
-                    pxsim.svg.addClass(wire, "sim-bb-group-wire");
+                    pxsim.U.addClass(wire, "sim-bb-group-wire");
                     var g = grpNmToGroup[grpNm];
                     g.appendChild(wire);
                 });
@@ -6029,8 +8207,8 @@ var pxsim;
                 var cx = pin.cx, cy = pin.cy;
                 var lbls = this.rowColToLbls[row][col];
                 var highlightLbl = function (lbl) {
-                    pxsim.svg.addClass(lbl.el, "highlight");
-                    pxsim.svg.addClass(lbl.hoverEl, "highlight");
+                    pxsim.U.addClass(lbl.el, "highlight");
+                    pxsim.U.addClass(lbl.hoverEl, "highlight");
                 };
                 lbls.forEach(highlightLbl);
             };
@@ -6039,162 +8217,17 @@ var pxsim;
         visuals.Breadboard = Breadboard;
     })(visuals = pxsim.visuals || (pxsim.visuals = {}));
 })(pxsim || (pxsim = {}));
-/// <reference path="../../typings/globals/bluebird/index.d.ts"/>
 var pxsim;
 (function (pxsim) {
     var visuals;
     (function (visuals) {
-        function mkBtnSvg(xy) {
-            var _a = ["sim-button", "sim-button-outer"], innerCls = _a[0], outerCls = _a[1];
-            var tabSize = visuals.PIN_DIST / 2.5;
-            var pegR = visuals.PIN_DIST / 5;
-            var btnR = visuals.PIN_DIST * .8;
-            var pegMargin = visuals.PIN_DIST / 8;
-            var plateR = visuals.PIN_DIST / 12;
-            var pegOffset = pegMargin + pegR;
-            var x = xy[0], y = xy[1];
-            var left = x - tabSize / 2;
-            var top = y - tabSize / 2;
-            var plateH = 3 * visuals.PIN_DIST - tabSize;
-            var plateW = 2 * visuals.PIN_DIST + tabSize;
-            var plateL = left;
-            var plateT = top + tabSize;
-            var btnCX = plateL + plateW / 2;
-            var btnCY = plateT + plateH / 2;
-            var btng = pxsim.svg.elt("g");
-            //tabs
-            var mkTab = function (x, y) {
-                pxsim.svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize });
-            };
-            mkTab(left, top);
-            mkTab(left + 2 * visuals.PIN_DIST, top);
-            mkTab(left, top + 3 * visuals.PIN_DIST);
-            mkTab(left + 2 * visuals.PIN_DIST, top + 3 * visuals.PIN_DIST);
-            //plate
-            pxsim.svg.child(btng, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
-            //pegs
-            var mkPeg = function (x, y) {
-                pxsim.svg.child(btng, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
-            };
-            mkPeg(plateL + pegOffset, plateT + pegOffset);
-            mkPeg(plateL + plateW - pegOffset, plateT + pegOffset);
-            mkPeg(plateL + pegOffset, plateT + plateH - pegOffset);
-            mkPeg(plateL + plateW - pegOffset, plateT + plateH - pegOffset);
-            //inner btn
-            var innerBtn = pxsim.svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
-            //return
-            return { el: btng, y: top, x: left, w: plateW, h: plateH + 2 * tabSize };
-        }
-        visuals.mkBtnSvg = mkBtnSvg;
-        visuals.BUTTON_PAIR_STYLE = "\n            .sim-button {\n                pointer-events: none;\n                fill: #000;\n            }\n            .sim-button-outer:active ~ .sim-button,\n            .sim-button-virtual:active {\n                fill: #FFA500;\n            }\n            .sim-button-outer {\n                cursor: pointer;\n                fill: #979797;\n            }\n            .sim-button-outer:hover {\n                stroke:gray;\n                stroke-width: " + visuals.PIN_DIST / 5 + "px;\n            }\n            .sim-button-nut {\n                fill:#000;\n                pointer-events:none;\n            }\n            .sim-button-nut:hover {\n                stroke:" + visuals.PIN_DIST / 15 + "px solid #704A4A;\n            }\n            .sim-button-tab {\n                fill:#FFF;\n                pointer-events:none;\n            }\n            .sim-button-virtual {\n                cursor: pointer;\n                fill: rgba(255, 255, 255, 0.6);\n                stroke: rgba(255, 255, 255, 1);\n                stroke-width: " + visuals.PIN_DIST / 5 + "px;\n            }\n            .sim-button-virtual:hover {\n                stroke: rgba(128, 128, 128, 1);\n            }\n            .sim-text-virtual {\n                fill: #000;\n                pointer-events:none;\n            }\n            ";
-        var ButtonPairView = (function () {
-            function ButtonPairView() {
-                this.style = visuals.BUTTON_PAIR_STYLE;
-            }
-            ButtonPairView.prototype.init = function (bus, state) {
-                this.state = state;
-                this.bus = bus;
-                this.defs = [];
-                this.element = this.mkBtns();
-                this.updateState();
-                this.attachEvents();
-            };
-            ButtonPairView.prototype.moveToCoord = function (xy) {
-                var btnWidth = visuals.PIN_DIST * 3;
-                var x = xy[0], y = xy[1];
-                visuals.translateEl(this.aBtn, [x, y]);
-                visuals.translateEl(this.bBtn, [x + btnWidth, y]);
-                visuals.translateEl(this.abBtn, [x + visuals.PIN_DIST * 1.5, y + visuals.PIN_DIST * 4]);
-            };
-            ButtonPairView.prototype.updateState = function () {
-                var stateBtns = [this.state.aBtn, this.state.bBtn, this.state.abBtn];
-                var svgBtns = [this.aBtn, this.bBtn, this.abBtn];
-                if (this.state.usesButtonAB && this.abBtn.style.visibility != "visible") {
-                    this.abBtn.style.visibility = "visible";
-                }
-            };
-            ButtonPairView.prototype.updateTheme = function () { };
-            ButtonPairView.prototype.mkBtns = function () {
-                this.aBtn = mkBtnSvg([0, 0]).el;
-                this.bBtn = mkBtnSvg([0, 0]).el;
-                var mkVirtualBtn = function () {
-                    var numPins = 2;
-                    var w = visuals.PIN_DIST * 2.8;
-                    var offset = (w - (numPins * visuals.PIN_DIST)) / 2;
-                    var corner = visuals.PIN_DIST / 2;
-                    var cx = 0 - offset + w / 2;
-                    var cy = cx;
-                    var txtSize = visuals.PIN_DIST * 1.3;
-                    var x = -offset;
-                    var y = -offset;
-                    var txtXOff = visuals.PIN_DIST / 7;
-                    var txtYOff = visuals.PIN_DIST / 10;
-                    var btng = pxsim.svg.elt("g");
-                    var btn = pxsim.svg.child(btng, "rect", { class: "sim-button-virtual", x: x, y: y, rx: corner, ry: corner, width: w, height: w });
-                    var btnTxt = visuals.mkTxt(cx + txtXOff, cy + txtYOff, txtSize, 0, "A+B");
-                    pxsim.svg.addClass(btnTxt, "sim-text");
-                    pxsim.svg.addClass(btnTxt, "sim-text-virtual");
-                    btng.appendChild(btnTxt);
-                    return btng;
-                };
-                this.abBtn = mkVirtualBtn();
-                this.abBtn.style.visibility = "hidden";
-                var el = pxsim.svg.elt("g");
-                pxsim.svg.addClass(el, "sim-buttonpair");
-                el.appendChild(this.aBtn);
-                el.appendChild(this.bBtn);
-                el.appendChild(this.abBtn);
-                return el;
-            };
-            ButtonPairView.prototype.attachEvents = function () {
-                var _this = this;
-                var btnStates = [this.state.aBtn, this.state.bBtn];
-                var btnSvgs = [this.aBtn, this.bBtn];
-                btnSvgs.forEach(function (btn, index) {
-                    btn.addEventListener(pxsim.pointerEvents.down, function (ev) {
-                        btnStates[index].pressed = true;
-                    });
-                    btn.addEventListener(pxsim.pointerEvents.leave, function (ev) {
-                        btnStates[index].pressed = false;
-                    });
-                    btn.addEventListener(pxsim.pointerEvents.up, function (ev) {
-                        btnStates[index].pressed = false;
-                        _this.bus.queue(btnStates[index].id, _this.state.props.BUTTON_EVT_UP);
-                        _this.bus.queue(btnStates[index].id, _this.state.props.BUTTON_EVT_CLICK);
-                    });
-                });
-                var updateBtns = function (s) {
-                    btnStates.forEach(function (b) { return b.pressed = s; });
-                };
-                this.abBtn.addEventListener(pxsim.pointerEvents.down, function (ev) {
-                    updateBtns(true);
-                });
-                this.abBtn.addEventListener(pxsim.pointerEvents.leave, function (ev) {
-                    updateBtns(false);
-                });
-                this.abBtn.addEventListener(pxsim.pointerEvents.up, function (ev) {
-                    updateBtns(false);
-                    _this.bus.queue(_this.state.abBtn.id, _this.state.props.BUTTON_EVT_UP);
-                    _this.bus.queue(_this.state.abBtn.id, _this.state.props.BUTTON_EVT_CLICK);
-                });
-            };
-            return ButtonPairView;
-        }());
-        visuals.ButtonPairView = ButtonPairView;
-    })(visuals = pxsim.visuals || (pxsim.visuals = {}));
-})(pxsim || (pxsim = {}));
-/// <reference path="../../typings/globals/bluebird/index.d.ts"/>
-var pxsim;
-(function (pxsim) {
-    var visuals;
-    (function (visuals) {
-        visuals.BOARD_SYTLE = "\n        .noselect {\n            -webkit-touch-callout: none; /* iOS Safari */\n            -webkit-user-select: none;   /* Chrome/Safari/Opera */\n            -khtml-user-select: none;    /* Konqueror */\n            -moz-user-select: none;      /* Firefox */\n            -ms-user-select: none;       /* Internet Explorer/Edge */\n            user-select: none;           /* Non-prefixed version, currently\n                                            not supported by any browser */\n        }\n\n        .sim-board-pin {\n            fill:#999;\n            stroke:#000;\n            stroke-width:" + visuals.PIN_DIST / 3.0 + "px;\n        }\n        .sim-board-pin-lbl {\n            fill: #333;\n        }\n        .gray-cover {\n            fill:#FFF;\n            opacity: 0.3;\n            stroke-width:0;\n            visibility: hidden;\n        }\n        .sim-board-pin-hover {\n            visibility: hidden;\n            pointer-events: all;\n            stroke-width:" + visuals.PIN_DIST / 6.0 + "px;\n        }\n        .sim-board-pin-hover:hover {\n            visibility: visible;\n        }\n        .sim-board-pin-lbl {\n            visibility: hidden;\n        }\n        .sim-board-outline .sim-board-pin-lbl {\n            visibility: visible;\n        }\n        .sim-board-pin-lbl {\n            fill: #555;\n        }\n        .sim-board-pin-lbl-hover {\n            fill: red;\n        }\n        .sim-board-outline .sim-board-pin-lbl-hover {\n            fill: black;\n        }\n        .sim-board-pin-lbl,\n        .sim-board-pin-lbl-hover {\n            font-family:\"Lucida Console\", Monaco, monospace;\n            pointer-events: all;\n            stroke-width: 0;\n        }\n        .sim-board-pin-lbl-hover {\n            visibility: hidden;\n        }\n        .sim-board-outline .sim-board-pin-hover:hover + .sim-board-pin-lbl,\n        .sim-board-pin-lbl.highlight {\n            visibility: hidden;\n        }\n        .sim-board-outline .sim-board-pin-hover:hover + * + .sim-board-pin-lbl-hover,\n        .sim-board-pin-lbl-hover.highlight {\n            visibility: visible;\n        }\n        /* Graying out */\n        .grayed .sim-board-pin-lbl:not(.highlight) {\n            fill: #AAA;\n        }\n        .grayed .sim-board-pin:not(.highlight) {\n            fill:#BBB;\n            stroke:#777;\n        }\n        .grayed .gray-cover {\n            visibility: inherit;\n        }\n        .grayed .sim-cmp:not(.notgrayed) {\n            opacity: 0.3;\n        }\n        /* Highlighting */\n        .sim-board-pin-lbl.highlight {\n            fill: #000;\n            font-weight: bold;\n        }\n        .sim-board-pin.highlight {\n            fill:#999;\n            stroke:#000;\n        }\n        ";
+        visuals.BOARD_SYTLE = "\n        .noselect {\n            -webkit-touch-callout: none; /* iOS Safari */\n            -webkit-user-select: none;   /* Chrome/Safari/Opera */\n            -khtml-user-select: none;    /* Konqueror */\n            -moz-user-select: none;      /* Firefox */\n            -ms-user-select: none;       /* Internet Explorer/Microsoft Edge */\n            user-select: none;           /* Non-prefixed version, currently\n                                            not supported by any browser */\n        }\n\n        .sim-board-pin {\n            fill:#999;\n            stroke:#000;\n            stroke-width:" + visuals.PIN_DIST / 3.0 + "px;\n        }\n        .sim-board-pin-lbl {\n            fill: #333;\n        }\n        .gray-cover {\n            fill:#FFF;\n            opacity: 0.3;\n            stroke-width:0;\n            visibility: hidden;\n        }\n        .sim-board-pin-hover {\n            visibility: hidden;\n            pointer-events: all;\n            stroke-width:" + visuals.PIN_DIST / 6.0 + "px;\n        }\n        .sim-board-pin-hover:hover {\n            visibility: visible;\n        }\n        .sim-board-pin-lbl {\n            visibility: hidden;\n        }\n        .sim-board-outline .sim-board-pin-lbl {\n            visibility: visible;\n        }\n        .sim-board-pin-lbl {\n            fill: #555;\n        }\n        .sim-board-pin-lbl-hover {\n            fill: red;\n        }\n        .sim-board-outline .sim-board-pin-lbl-hover {\n            fill: black;\n        }\n        .sim-board-pin-lbl,\n        .sim-board-pin-lbl-hover {\n            font-family:\"Lucida Console\", Monaco, monospace;\n            pointer-events: all;\n            stroke-width: 0;\n        }\n        .sim-board-pin-lbl-hover {\n            visibility: hidden;\n        }\n        .sim-board-outline .sim-board-pin-hover:hover + .sim-board-pin-lbl,\n        .sim-board-pin-lbl.highlight {\n            visibility: hidden;\n        }\n        .sim-board-outline .sim-board-pin-hover:hover + * + .sim-board-pin-lbl-hover,\n        .sim-board-pin-lbl-hover.highlight {\n            visibility: visible;\n        }\n        /* Graying out */\n        .grayed .sim-board-pin-lbl:not(.highlight) {\n            fill: #AAA;\n        }\n        .grayed .sim-board-pin:not(.highlight) {\n            fill:#BBB;\n            stroke:#777;\n        }\n        .grayed .gray-cover {\n            visibility: inherit;\n        }\n        .grayed .sim-cmp:not(.notgrayed) {\n            opacity: 0.3;\n        }\n        /* Highlighting */\n        .sim-board-pin-lbl.highlight {\n            fill: #000;\n            font-weight: bold;\n        }\n        .sim-board-pin.highlight {\n            fill:#999;\n            stroke:#000;\n        }\n        ";
         var PIN_LBL_SIZE = visuals.PIN_DIST * 0.7;
         var PIN_LBL_HOVER_SIZE = PIN_LBL_SIZE * 1.5;
         var SQUARE_PIN_WIDTH = visuals.PIN_DIST * 0.66666;
         var SQUARE_PIN_HOVER_WIDTH = visuals.PIN_DIST * 0.66666 + visuals.PIN_DIST / 3.0;
         var nextBoardId = 0;
-        var GenericBoardSvg = (function () {
+        var GenericBoardSvg = /** @class */ (function () {
             function GenericBoardSvg(props) {
                 var _this = this;
                 this.props = props;
@@ -6208,7 +8241,7 @@ var pxsim;
                 //TODO: handle wireframe mode
                 this.id = nextBoardId++;
                 var visDef = props.visualDef;
-                var imgHref = props.wireframe ? visDef.outlineImage : visDef.image;
+                var imgHref = props.wireframe && visDef.outlineImage ? visDef.outlineImage : visDef.image;
                 var boardImgAndSize = visuals.mkImageSVG({
                     image: imgHref,
                     width: visDef.width,
@@ -6229,7 +8262,7 @@ var pxsim;
                     "y": "0px"
                 });
                 if (props.wireframe)
-                    pxsim.svg.addClass(this.element, "sim-board-outline");
+                    pxsim.U.addClass(this.element, "sim-board-outline");
                 this.style = pxsim.svg.child(this.element, "style", {});
                 this.style.textContent += visuals.BOARD_SYTLE;
                 this.defs = pxsim.svg.child(this.element, "defs", {});
@@ -6239,9 +8272,28 @@ var pxsim;
                 this.g.appendChild(img);
                 this.background = img;
                 pxsim.svg.hydrate(img, { class: "sim-board" });
-                var backgroundCover = this.mkGrayCover(0, 0, this.width, this.height);
-                this.g.appendChild(backgroundCover);
+                // does not look great
+                //let backgroundCover = this.mkGrayCover(0, 0, this.width, this.height);
+                //this.g.appendChild(backgroundCover);
                 // ----- pins
+                var mkRoundPin = function () {
+                    var el = pxsim.svg.elt("circle");
+                    var width = SQUARE_PIN_WIDTH;
+                    pxsim.svg.hydrate(el, {
+                        class: "sim-board-pin",
+                        r: width / 2,
+                    });
+                    return { el: el, w: width, h: width, x: 0, y: 0 };
+                };
+                var mkRoundHoverPin = function () {
+                    var el = pxsim.svg.elt("circle");
+                    var width = SQUARE_PIN_HOVER_WIDTH;
+                    pxsim.svg.hydrate(el, {
+                        class: "sim-board-pin-hover",
+                        r: width / 2
+                    });
+                    return { el: el, w: width, h: width, x: 0, y: 0 };
+                };
                 var mkSquarePin = function () {
                     var el = pxsim.svg.elt("rect");
                     var width = SQUARE_PIN_WIDTH;
@@ -6268,7 +8320,7 @@ var pxsim;
                     var rowCount = 1;
                     var colCount = pinBlock.labels.length;
                     var getColName = function (colIdx) { return pinBlock.labels[colIdx]; };
-                    var getRowName = function () { return ("" + (blockIdx + 1)); };
+                    var getRowName = function () { return "" + (blockIdx + 1); };
                     var getGroupName = function () { return pinBlock.labels.join(" "); };
                     var gridRes = visuals.mkGrid({
                         xOffset: xOffset,
@@ -6276,15 +8328,15 @@ var pxsim;
                         rowCount: rowCount,
                         colCount: colCount,
                         pinDist: visuals.PIN_DIST,
-                        mkPin: mkSquarePin,
-                        mkHoverPin: mkSquareHoverPin,
+                        mkPin: visDef.useCrocClips ? mkRoundPin : mkSquarePin,
+                        mkHoverPin: visDef.useCrocClips ? mkRoundHoverPin : mkSquareHoverPin,
                         getRowName: getRowName,
                         getColName: getColName,
                         getGroupName: getGroupName,
                     });
                     var pins = gridRes.allPins;
                     var pinsG = gridRes.g;
-                    pxsim.svg.addClass(gridRes.g, "sim-board-pin-group");
+                    pxsim.U.addClass(gridRes.g, "sim-board-pin-group");
                     return gridRes;
                 };
                 var pinBlocks = visDef.pinBlocks.map(mkPinBlockGrid);
@@ -6323,15 +8375,15 @@ var pxsim;
                 };
                 var mkLabel = function (pinX, pinY, txt, pos) {
                     var el = mkLabelTxtEl(pinX, pinY, PIN_LBL_SIZE, txt, pos);
-                    pxsim.svg.addClass(el, "sim-board-pin-lbl");
+                    pxsim.U.addClass(el, "sim-board-pin-lbl");
                     var hoverEl = mkLabelTxtEl(pinX, pinY, PIN_LBL_HOVER_SIZE, txt, pos);
-                    pxsim.svg.addClass(hoverEl, "sim-board-pin-lbl-hover");
+                    pxsim.U.addClass(hoverEl, "sim-board-pin-lbl-hover");
                     var label = { el: el, hoverEl: hoverEl, txt: txt };
                     return label;
                 };
                 this.allLabels = this.allPins.map(function (p, pIdx) {
                     var blk = pinToBlockDef[pIdx];
-                    return mkLabel(p.cx, p.cy, p.col, blk.labelPosition);
+                    return mkLabel(p.cx, p.cy, p.col, blk.labelPosition || "above");
                 });
                 //catalog labels
                 this.allPins.forEach(function (pin, pinIdx) {
@@ -6348,8 +8400,26 @@ var pxsim;
                     _this.g.appendChild(lbl.hoverEl);
                 });
             }
-            GenericBoardSvg.prototype.getCoord = function (pinNm) {
+            GenericBoardSvg.prototype.findPin = function (pinNm) {
                 var pin = this.pinNmToPin[pinNm];
+                if (!pin && this.props.boardDef.gpioPinMap) {
+                    pinNm = this.props.boardDef.gpioPinMap[pinNm];
+                    if (pinNm)
+                        pin = this.pinNmToPin[pinNm];
+                }
+                return pin;
+            };
+            GenericBoardSvg.prototype.findPinLabel = function (pinNm) {
+                var pin = this.pinNmToLbl[pinNm];
+                if (!pin && this.props.boardDef.gpioPinMap) {
+                    pinNm = this.props.boardDef.gpioPinMap[pinNm];
+                    if (pinNm)
+                        pin = this.pinNmToLbl[pinNm];
+                }
+                return pin;
+            };
+            GenericBoardSvg.prototype.getCoord = function (pinNm) {
+                var pin = this.findPin(pinNm);
                 if (!pin)
                     return null;
                 return [pin.cx, pin.cy];
@@ -6366,13 +8436,13 @@ var pxsim;
                 return visuals.PIN_DIST;
             };
             GenericBoardSvg.prototype.highlightPin = function (pinNm) {
-                var lbl = this.pinNmToLbl[pinNm];
-                var pin = this.pinNmToPin[pinNm];
+                var lbl = this.findPinLabel(pinNm);
+                var pin = this.findPin(pinNm);
                 if (lbl && pin) {
-                    pxsim.svg.addClass(lbl.el, "highlight");
-                    pxsim.svg.addClass(lbl.hoverEl, "highlight");
-                    pxsim.svg.addClass(pin.el, "highlight");
-                    pxsim.svg.addClass(pin.hoverEl, "highlight");
+                    pxsim.U.addClass(lbl.el, "highlight");
+                    pxsim.U.addClass(lbl.hoverEl, "highlight");
+                    pxsim.U.addClass(pin.el, "highlight");
+                    pxsim.U.addClass(pin.hoverEl, "highlight");
                 }
             };
             return GenericBoardSvg;
@@ -6395,7 +8465,7 @@ var pxsim;
             return imgAndSize;
         }
         visuals.mkGenericPartSVG = mkGenericPartSVG;
-        var GenericPart = (function () {
+        var GenericPart = /** @class */ (function () {
             function GenericPart(partVisual) {
                 this.style = "";
                 this.defs = [];
@@ -6420,65 +8490,6 @@ var pxsim;
 (function (pxsim) {
     var visuals;
     (function (visuals) {
-        function mkMicroServoPart(xy) {
-            if (xy === void 0) { xy = [0, 0]; }
-            // TODO
-            return { el: null, y: 0, x: 0, w: 0, h: 0 };
-        }
-        visuals.mkMicroServoPart = mkMicroServoPart;
-        var MicroServoView = (function () {
-            function MicroServoView() {
-                this.style = "";
-                this.overElement = undefined;
-                this.defs = [];
-                this.currentAngle = 0;
-                this.targetAngle = 0;
-                this.lastAngleTime = 0;
-            }
-            MicroServoView.prototype.init = function (bus, state, svgEl, otherParams) {
-                this.state = state;
-                this.pin = this.state.props.servos[pxsim.readPin(otherParams["name"] || otherParams["pin"])];
-                this.bus = bus;
-                this.defs = [];
-                this.initDom();
-                this.updateState();
-            };
-            MicroServoView.prototype.initDom = function () {
-                this.element = pxsim.svg.parseString("\n<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"svg2\" width=\"112.188\" height=\"299.674\">\n  <g id=\"layer1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" transform=\"scale(0.8)\">\n    <path id=\"path8212\" fill=\"#0061ff\" stroke-width=\"6.6\" d=\"M.378 44.61v255.064h112.188V44.61H.378z\"/>\n    <path id=\"crankbase\" fill=\"#00f\" stroke-width=\"6.6\" d=\"M56.57 88.047C25.328 88.047 0 113.373 0 144.615c.02 22.352 11.807 42.596 32.238 51.66.03 3.318.095 5.24.088 7.938 0 13.947 11.307 25.254 25.254 25.254 13.947 0 25.254-11.307 25.254-25.254-.006-2.986-.415-5.442-.32-8.746 19.487-9.45 30.606-29.195 30.625-50.852 0-31.24-25.33-56.568-56.57-56.568z\"/>\n    <path id=\"lowertip\" fill=\"#00a2ff\" stroke-width=\"2\" d=\"M.476 260.78v38.894h53.82v-10.486a6.82 6.566 0 0 1-4.545-6.182 6.82 6.566 0 0 1 6.82-6.566 6.82 6.566 0 0 1 6.82 6.566 6.82 6.566 0 0 1-4.545 6.182v10.486h53.82V260.78H.475z\"/>\n    <path id=\"uppertip\" fill=\"#00a2ff\" stroke-width=\"2\" d=\"M112.566 83.503V44.61h-53.82v10.487a6.82 6.566 0 0 1 4.544 6.18 6.82 6.566 0 0 1-6.818 6.568 6.82 6.566 0 0 1-6.82-6.567 6.82 6.566 0 0 1 4.546-6.18V44.61H.378v38.893h112.188z\"/>\n    <path id=\"VCC\" fill=\"red\" stroke-width=\"2\" d=\"M53.72 21.93h5.504v22.627H53.72z\"/>\n    <path id=\"LOGIC\" fill=\"#fc0\" stroke-width=\"2\" d=\"M47.3 21.93h5.503v22.627H47.3z\"/>\n    <path id=\"GND\" fill=\"#a02c2c\" stroke-width=\"2\" d=\"M60.14 21.93h5.505v22.627H60.14z\"/>\n    <path id=\"connector\" stroke-width=\"2\" d=\"M45.064 0a1.488 1.488 0 0 0-1.488 1.488v24.5a1.488 1.488 0 0 0 1.488 1.487h22.71a1.488 1.488 0 0 0 1.49-1.488v-24.5A1.488 1.488 0 0 0 67.774 0h-22.71z\"/>\n    <g id=\"crank\" transform=\"translate(0 -752.688)\">\n      <path id=\"arm\" fill=\"#ececec\" stroke=\"#000\" stroke-width=\"1.372\" d=\"M47.767 880.88c-4.447 1.162-8.412 8.278-8.412 18.492s3.77 18.312 8.412 18.494c8.024.314 78.496 5.06 78.51-16.952.012-22.013-74.377-21.117-78.51-20.035z\"/>\n      <circle id=\"path8216\" cx=\"56.661\" cy=\"899.475\" r=\"8.972\" fill=\"gray\" stroke-width=\"2\"/>\n    </g>\n  </g>\n</svg>            \n            ").firstElementChild;
-                this.crankEl = this.element.querySelector("#crank");
-                this.crankTransform = this.crankEl.getAttribute("transform");
-            };
-            MicroServoView.prototype.moveToCoord = function (xy) {
-                var x = xy[0], y = xy[1];
-                visuals.translateEl(this.element, [x, y]);
-            };
-            MicroServoView.prototype.updateState = function () {
-                this.targetAngle = this.state.getPin(this.pin).servoAngle;
-                if (this.targetAngle != this.currentAngle) {
-                    var now = pxsim.U.now();
-                    var cx = 56.661;
-                    var cy = 899.475;
-                    var speed = 300; // 0.1s/60 degree
-                    var dt = Math.min(now - this.lastAngleTime, 50) / 1000;
-                    var delta = this.targetAngle - this.currentAngle;
-                    this.currentAngle += Math.min(Math.abs(delta), speed * dt) * (delta > 0 ? 1 : -1);
-                    this.crankEl.setAttribute("transform", this.crankTransform
-                        + (" rotate(" + this.currentAngle + ", " + cx + ", " + cy + ")"));
-                    this.lastAngleTime = now;
-                    setTimeout(function () { return pxsim.runtime.updateDisplay(); }, 20);
-                }
-            };
-            MicroServoView.prototype.updateTheme = function () {
-            };
-            return MicroServoView;
-        }());
-        visuals.MicroServoView = MicroServoView;
-    })(visuals = pxsim.visuals || (pxsim.visuals = {}));
-})(pxsim || (pxsim = {}));
-var pxsim;
-(function (pxsim) {
-    var visuals;
-    (function (visuals) {
         var WIRE_WIDTH = visuals.PIN_DIST / 2.5;
         var BB_WIRE_SMOOTH = 0.7;
         var INSTR_WIRE_SMOOTH = 0.8;
@@ -6495,12 +8506,12 @@ var pxsim;
                 .replace(/\./g, "-")
                 .replace(/\s/g, "");
         }
+        var WireEndStyle;
         (function (WireEndStyle) {
             WireEndStyle[WireEndStyle["BBJumper"] = 0] = "BBJumper";
             WireEndStyle[WireEndStyle["OpenJumper"] = 1] = "OpenJumper";
             WireEndStyle[WireEndStyle["Croc"] = 2] = "Croc";
-        })(visuals.WireEndStyle || (visuals.WireEndStyle = {}));
-        var WireEndStyle = visuals.WireEndStyle;
+        })(WireEndStyle = visuals.WireEndStyle || (visuals.WireEndStyle = {}));
         function mkWirePart(cp, clr, croc) {
             if (croc === void 0) { croc = false; }
             var g = pxsim.svg.elt("g");
@@ -6534,7 +8545,7 @@ var pxsim;
             var c1 = [x1, y1 + yLen * smooth];
             var c2 = [x2, y2 - yLen * smooth];
             var w = pxsim.svg.mkPath("sim-bb-wire", "M" + coordStr(p1) + " C" + coordStr(c1) + " " + coordStr(c2) + " " + coordStr(p2));
-            pxsim.svg.addClass(w, "wire-stroke-" + clrClass);
+            pxsim.U.addClass(w, "wire-stroke-" + clrClass);
             return w;
         }
         function mkWirePartSeg(p1, p2, clr) {
@@ -6552,7 +8563,7 @@ var pxsim;
         function mkWireSeg(p1, p2, clrClass) {
             var coordStr = function (xy) { return xy[0] + ", " + xy[1]; };
             var w = pxsim.svg.mkPath("sim-bb-wire", "M" + coordStr(p1) + " L" + coordStr(p2));
-            pxsim.svg.addClass(w, "wire-stroke-" + clrClass);
+            pxsim.U.addClass(w, "wire-stroke-" + clrClass);
             return w;
         }
         function mkBBJumperEnd(p, clrClass) {
@@ -6562,7 +8573,7 @@ var pxsim;
             var y = p[1];
             var r = WIRE_WIDTH / 2 + endW / 2;
             pxsim.svg.hydrate(w, { cx: x, cy: y, r: r, class: "sim-bb-wire-end" });
-            pxsim.svg.addClass(w, "wire-fill-" + clrClass);
+            pxsim.U.addClass(w, "wire-fill-" + clrClass);
             w.style["stroke-width"] = endW + "px";
             return w;
         }
@@ -6646,11 +8657,11 @@ var pxsim;
             var w1 = plasticWidth;
             var x1 = cx - w1 / 2;
             var y1 = cy - (h1 / 2);
-            var mkPnt = function (xy) { return (xy[0] + "," + xy[1]); };
+            var mkPnt = function (xy) { return xy[0] + "," + xy[1]; };
             var mkPnts = function () {
                 var xys = [];
                 for (var _i = 0; _i < arguments.length; _i++) {
-                    xys[_i - 0] = arguments[_i];
+                    xys[_i] = arguments[_i];
                 }
                 return xys.map(function (xy) { return mkPnt(xy); }).join(" ");
             };
@@ -6679,8 +8690,8 @@ var pxsim;
             return { el: g, x: x1 - strokeWidth, y: Math.min(y1, y2), w: w1 + strokeWidth * 2, h: h1 + h2 };
         }
         //TODO: make this stupid class obsolete
-        var WireFactory = (function () {
-            function WireFactory(underboard, overboard, boardEdges, styleEl, getLocCoord) {
+        var WireFactory = /** @class */ (function () {
+            function WireFactory(underboard, overboard, boardEdges, styleEl, getLocCoord, getPinStyle) {
                 this.nextWireId = 0;
                 this.styleEl = styleEl;
                 this.styleEl.textContent += visuals.WIRES_CSS;
@@ -6688,6 +8699,7 @@ var pxsim;
                 this.overboard = overboard;
                 this.boardEdges = boardEdges;
                 this.getLocCoord = getLocCoord;
+                this.getPinStyle = getPinStyle;
             }
             WireFactory.prototype.indexOfMin = function (vs) {
                 var minIdx = 0;
@@ -6752,7 +8764,7 @@ var pxsim;
                         midSeg = mkWireSeg(offP1, offP2, clrClass);
                         midSegHover = mkWireSeg(offP1, offP2, clrClass);
                     }
-                    pxsim.svg.addClass(midSegHover, "sim-bb-wire-hover");
+                    pxsim.U.addClass(midSegHover, "sim-bb-wire-hover");
                     g.appendChild(offSeg1);
                     wires.push(offSeg1);
                     g.appendChild(offSeg2);
@@ -6763,7 +8775,7 @@ var pxsim;
                     wires.push(midSegHover);
                     //set hover mechanism
                     var wireIdClass_1 = "sim-bb-wire-id-" + wireId;
-                    var setId = function (e) { return pxsim.svg.addClass(e, wireIdClass_1); };
+                    var setId = function (e) { return pxsim.U.addClass(e, wireIdClass_1); };
                     setId(endG);
                     setId(midSegHover);
                     this.styleEl.textContent += "\n                    ." + wireIdClass_1 + ":hover ~ ." + wireIdClass_1 + ".sim-bb-wire-hover {\n                        visibility: visible;\n                    }";
@@ -6831,7 +8843,7 @@ var pxsim;
                         midSeg = mkWireSeg(offP1, pin2, clrClass);
                         midSegHover = mkWireSeg(offP1, pin2, clrClass);
                     }
-                    pxsim.svg.addClass(midSegHover, "sim-bb-wire-hover");
+                    pxsim.U.addClass(midSegHover, "sim-bb-wire-hover");
                     g.appendChild(offSeg1);
                     wires.push(offSeg1);
                     // g.appendChild(offSeg2);
@@ -6842,7 +8854,7 @@ var pxsim;
                     //wires.push(midSegHover);
                     //set hover mechanism
                     var wireIdClass_2 = "sim-bb-wire-id-" + wireId;
-                    var setId = function (e) { return pxsim.svg.addClass(e, wireIdClass_2); };
+                    var setId = function (e) { return pxsim.U.addClass(e, wireIdClass_2); };
                     setId(endG);
                     setId(midSegHover);
                     this.styleEl.textContent += "\n                    ." + wireIdClass_2 + ":hover ~ ." + wireIdClass_2 + ".sim-bb-wire-hover {\n                        visibility: visible;\n                    }";
@@ -6853,20 +8865,23 @@ var pxsim;
                 this.styleEl.textContent += colorCSS;
                 return { endG: endG, end1: end1, end2: end2, wires: wires };
             };
-            WireFactory.prototype.addWire = function (start, end, color, withCrocs) {
-                if (withCrocs === void 0) { withCrocs = false; }
+            WireFactory.prototype.checkWire = function (start, end) {
                 var startLoc = this.getLocCoord(start);
                 var endLoc = this.getLocCoord(end);
+                return !!startLoc && !!endLoc;
+            };
+            WireFactory.prototype.addWire = function (start, end, color) {
+                var startLoc = this.getLocCoord(start);
+                var endLoc = this.getLocCoord(end);
+                if (!startLoc || !endLoc) {
+                    console.debug("unable to allocate wire for " + start + " or " + end);
+                    return undefined;
+                }
+                //let startStyle = this.getPinStyle(start);
+                var endStyle = this.getPinStyle(end);
                 var wireEls;
-                if (withCrocs && end.type == "dalboard") {
-                    var boardPin = end.pin;
-                    if (boardPin == "P0" || boardPin == "P1" || boardPin == "P2" || boardPin == "GND" || boardPin == "+3v3") {
-                        //HACK
-                        wireEls = this.drawWireWithCrocs(startLoc, endLoc, color);
-                    }
-                    else {
-                        wireEls = this.drawWireWithCrocs(startLoc, endLoc, color, true);
-                    }
+                if (end.type == "dalboard" && endStyle == "croc") {
+                    wireEls = this.drawWireWithCrocs(startLoc, endLoc, color);
                 }
                 else {
                     wireEls = this.drawWire(startLoc, endLoc, color);
