@@ -1,407 +1,407 @@
 {
-  "accentColor": "#249899",
-  "defaultLocale": "de",
-  "logoUrl": "https://calliope.cc/",
-  "logo": "docs/static/Calliopeminieditor.svg",
-  "docsLogo": "docs/static/Logo_Calliope_Woman.svg",
-  "portraitLogo": "docs/static/Logo_Calliope_Woman.svg",
-  "footerLogo": "docs/static/Calliopeminieditor.svg",
-  "cardLogo": "docs/static/icons/apple-touch-icon.png",
-  "appLogo": "docs/static/icons/apple-touch-icon.png",
-  "organization": "Microsoft MakeCode",
-  "organizationUrl": "https://makecode.com/",
-  "organizationLogo": "docs/static/Microsoft-logo_rgb_c-gray-square.png",
-  "organizationWideLogo": "docs/static/Microsoft-logo_rgb_c-white.png",
-  "homeScreenHero": "docs/static/hero.png",
-  "homeUrl": "https://makecode.calliope.cc/",
-  "embedUrl": "https://makecode.calliope.cc/",
-  "shareUrl": "https://makecode.calliope.cc/",
-  "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
-  "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
-  "githubUrl": "https://github.com/Microsoft/pxt-calliope",
-  "boardName": "Calliope mini",
-  "driveDisplayName": "MINI",
-  "appStoreID": "1309545545",
-  "mobileSafariDownloadProtocol": "microbithex://?data",
-  "crowdinProject": "kindscript",
-  "extendEditor": true,
-  "extendFieldEditors": true,
-  "enableTrace": true,
-  "ignoreDocsErrors": true,
-  "experiments": [
-    "allowPackageExtensions",
-    "instructions",
-    "debugger",
-    "debugExtensionCode",
-    "bluetoothUartConsole",
-    "bluetoothPartialFlashing",
-    "simScreenshot",
-    "simGif",
-    "qrCode",
-    "githubBlocksDiff"
-  ],
-  "bluetoothUartFilters": [
-    {
-      "namePrefix": "Calliope mini"
-    }
-  ],
-  "docMenu": [
-    {
-      "name": "Support",
-      "path": "https://calliope.cc/faq"
-    },
-    {
-      "name": "Reference",
-      "path": "/reference"
-    },
-    {
-      "name": "Blocks",
-      "path": "/blocks"
-    },
-    {
-      "name": "JavaScript",
-      "path": "/javascript"
-    },
-    {
-      "name": "Hardware",
-      "path": "/device"
-    },
-    {
-      "name": "Buy",
-      "path": "https://shop.calliope.cc/"
-    }
-  ],
-  "hasReferenceDocs": false,
-  "invertedMenu": true,
-  "coloredToolbox": true,
-  "monacoToolbox": true,
-  "hasAudio": true,
-  "blocklyOptions": {
-    "grid": {
-      "spacing": 45,
-      "length": 7,
-      "colour": "rgba(189, 195, 199, 0.30)",
-      "snap": false
-    }
-  },
-  "blockColors": {
-    "basic": "#54C9C9",
-    "input": "#C94600",
-    "music": "#DF4600",
-    "led": "#8169E6",
-    "radio": "#E3008C",
-    "motors": "#008272",
-    "logic": "#006970",
-    "loops": "#107C10",
-    "math": "#712672",
-    "variables": "#A80000",
-    "text": "#996600",
-    "advanced": "#DDDDDD",
-    "functions": "#005A9E",
-    "arrays": "#E65722"
-  },
-  "highContrast": true,
-  "greenScreen": true,
-  "print": true,
-  "selectLanguage": true,
-  "availableLocales": [
-    "en",
-    "ar",
-    "cs",
-    "da",
-    "de",
-    "el",
-    "es-ES",
-    "fi",
-    "fr",
-    "hu",
-    "is",
-    "it",
-    "ja",
-    "ko",
-    "nl",
-    "no",
-    "pl",
-    "pt-BR",
-    "pt-PT",
-    "ru",
-    "si-LK",
-    "sk",
-    "sv-SE",
-    "tr",
-    "uk",
-    "zh-CN",
-    "zh-TW"
-  ],
-  "monacoColors": {
-    "editor.background": "#ecf0f1"
-  },
-  "browserDbPrefixes": {
-    "1": "v1",
-    "2": "v2"
-  },
-  "editorVersionPaths": {
-    "0": "v0"
-  },
-  "showProjectSettings": true,
-  "scriptManager": true,
-  "simGifTransparent": "rgba(0,0,0,0)",
-  "simGifMaxFrames": 44,
-  "simScreenshotMaxUriLength": 300000,
-  "importExtensionFiles": true,
-  "TOC": [
-    {
-      "name": "About",
-      "path": "/about",
-      "subitems": []
-    },
-    {
-      "name": "FAQ",
-      "path": "/faq",
-      "subitems": []
-    },
-    {
-      "name": "Projects",
-      "path": "/projects",
-      "subitems": []
-    },
-    {
-      "name": "Blocks",
-      "path": "/blocks",
-      "subitems": [
+    "accentColor": "#249899",
+    "defaultLocale": "de",
+    "logoUrl": "https://calliope.cc/",
+    "logo": "docs/static/Calliopeminieditor.svg",
+    "docsLogo": "docs/static/Logo_Calliope_Woman.svg",
+    "portraitLogo": "docs/static/Logo_Calliope_Woman.svg",
+    "footerLogo": "docs/static/Calliopeminieditor.svg",
+    "cardLogo": "docs/static/icons/apple-touch-icon.png",
+    "appLogo": "docs/static/icons/apple-touch-icon.png",
+    "organization": "Microsoft MakeCode",
+    "organizationUrl": "https://makecode.com/",
+    "organizationLogo": "docs/static/Microsoft-logo_rgb_c-gray-square.png",
+    "organizationWideLogo": "docs/static/Microsoft-logo_rgb_c-white.png",
+    "homeScreenHero": "docs/static/hero.png",
+    "homeUrl": "https://makecode.calliope.cc/",
+    "embedUrl": "https://makecode.calliope.cc/",
+    "shareUrl": "https://makecode.calliope.cc/",
+    "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
+    "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
+    "githubUrl": "https://github.com/Microsoft/pxt-calliope",
+    "boardName": "Calliope mini",
+    "driveDisplayName": "MINI",
+    "appStoreID": "1309545545",
+    "mobileSafariDownloadProtocol": "microbithex://?data",
+    "crowdinProject": "kindscript",
+    "extendEditor": true,
+    "extendFieldEditors": true,
+    "enableTrace": true,
+    "ignoreDocsErrors": true,
+    "experiments": [
+        "allowPackageExtensions",
+        "instructions",
+        "debugger",
+        "debugExtensionCode",
+        "bluetoothUartConsole",
+        "bluetoothPartialFlashing",
+        "simScreenshot",
+        "simGif",
+        "qrCode",
+        "githubBlocksDiff"
+    ],
+    "bluetoothUartFilters": [
         {
-          "name": "On Start",
-          "path": "/blocks/on-start",
-          "subitems": []
-        },
-        {
-          "name": "Loops",
-          "path": "/blocks/loops",
-          "subitems": [
-            {
-              "name": "repeat",
-              "path": "/blocks/loops/repeat",
-              "subitems": []
-            },
-            {
-              "name": "for",
-              "path": "/blocks/loops/for",
-              "subitems": []
-            },
-            {
-              "name": "while",
-              "path": "/blocks/loops/while",
-              "subitems": []
-            },
-            {
-              "name": "for of",
-              "path": "/blocks/loops/for-of",
-              "subitems": []
-            }
-          ]
-        },
-        {
-          "name": "Logic",
-          "path": "/blocks/logic",
-          "subitems": [
-            {
-              "name": "if",
-              "path": "/blocks/logic/if",
-              "subitems": []
-            },
-            {
-              "name": "Boolean",
-              "path": "/blocks/logic/boolean",
-              "subitems": []
-            }
-          ]
-        },
-        {
-          "name": "Variables",
-          "path": "/blocks/variables",
-          "subitems": [
-            {
-              "name": "assign",
-              "path": "/blocks/variables/assign",
-              "subitems": []
-            },
-            {
-              "name": "change var",
-              "path": "/blocks/variables/change",
-              "subitems": []
-            },
-            {
-              "name": "var",
-              "path": "/blocks/variables/var",
-              "subitems": []
-            }
-          ]
-        },
-        {
-          "name": "Math",
-          "path": "/blocks/math",
-          "subitems": []
-        },
-        {
-          "name": "JavaScript blocks",
-          "path": "/blocks/javascript-blocks",
-          "subitems": []
-        },
-        {
-          "name": "Custom blocks",
-          "path": "/blocks/custom",
-          "subitems": []
+            "namePrefix": "Calliope mini"
         }
-      ]
-    },
-    {
-      "name": "JavaScript",
-      "path": "/javascript",
-      "subitems": [
+    ],
+    "docMenu": [
         {
-          "name": "Calling",
-          "path": "/javascript/call",
-          "subitems": []
+            "name": "Support",
+            "path": "https://calliope.cc/faq"
         },
         {
-          "name": "Sequencing",
-          "path": "/javascript/sequence",
-          "subitems": []
+            "name": "Reference",
+            "path": "/reference"
         },
         {
-          "name": "Variables",
-          "path": "/javascript/variables",
-          "subitems": []
+            "name": "Blocks",
+            "path": "/blocks"
         },
         {
-          "name": "Operators",
-          "path": "/javascript/operators",
-          "subitems": []
+            "name": "JavaScript",
+            "path": "/javascript"
         },
         {
-          "name": "Statements",
-          "path": "/javascript/statements",
-          "subitems": []
+            "name": "Hardware",
+            "path": "/device"
         },
         {
-          "name": "Functions",
-          "path": "/javascript/functions",
-          "subitems": []
-        },
-        {
-          "name": "Types",
-          "path": "/javascript/types",
-          "subitems": []
-        },
-        {
-          "name": "Classes",
-          "path": "/javascript/classes",
-          "subitems": []
-        },
-        {
-          "name": "Interfaces",
-          "path": "/javascript/interfaces",
-          "subitems": []
-        },
-        {
-          "name": "Generics",
-          "path": "/javascript/generics",
-          "subitems": []
+            "name": "Buy",
+            "path": "https://shop.calliope.cc/"
         }
-      ]
-    },
-    {
-      "name": "Types",
-      "path": "/types",
-      "subitems": [
-        {
-          "name": "Number",
-          "path": "/types/number",
-          "subitems": []
-        },
-        {
-          "name": "String",
-          "path": "/types/string",
-          "subitems": []
-        },
-        {
-          "name": "Boolean",
-          "path": "/types/boolean",
-          "subitems": []
-        },
-        {
-          "name": "Array",
-          "path": "/types/array",
-          "subitems": []
-        },
-        {
-          "name": "Function",
-          "path": "/types/function",
-          "subitems": []
+    ],
+    "hasReferenceDocs": false,
+    "invertedMenu": true,
+    "coloredToolbox": true,
+    "monacoToolbox": true,
+    "hasAudio": true,
+    "blocklyOptions": {
+        "grid": {
+            "spacing": 45,
+            "length": 7,
+            "colour": "rgba(189, 195, 199, 0.30)",
+            "snap": false
         }
-      ]
     },
-    {
-      "name": "Miscellaneous",
-      "path": "",
-      "subitems": [
-        {
-          "name": "About",
-          "path": "/about",
-          "subitems": []
-        },
-        {
-          "name": "Support",
-          "path": "/support",
-          "subitems": []
-        },
-        {
-          "name": "Translate",
-          "path": "/translate",
-          "subitems": []
-        },
-        {
-          "name": "Sharing projects",
-          "path": "/share",
-          "subitems": []
-        },
-        {
-          "name": "Offline support",
-          "path": "/offline",
-          "subitems": []
-        },
-        {
-          "name": "Save",
-          "path": "/save",
-          "subitems": []
-        }
-      ]
+    "blockColors": {
+        "basic": "#54C9C9",
+        "input": "#C94600",
+        "music": "#DF4600",
+        "led": "#8169E6",
+        "radio": "#E3008C",
+        "motors": "#008272",
+        "logic": "#006970",
+        "loops": "#107C10",
+        "math": "#712672",
+        "variables": "#A80000",
+        "text": "#996600",
+        "advanced": "#DDDDDD",
+        "functions": "#005A9E",
+        "arrays": "#E65722"
     },
-    {
-      "name": "Developers",
-      "path": "",
-      "subitems": [
+    "highContrast": true,
+    "greenScreen": true,
+    "print": true,
+    "selectLanguage": true,
+    "availableLocales": [
+        "en",
+        "ar",
+        "cs",
+        "da",
+        "de",
+        "el",
+        "es-ES",
+        "fi",
+        "fr",
+        "hu",
+        "is",
+        "it",
+        "ja",
+        "ko",
+        "nl",
+        "no",
+        "pl",
+        "pt-BR",
+        "pt-PT",
+        "ru",
+        "si-LK",
+        "sk",
+        "sv-SE",
+        "tr",
+        "uk",
+        "zh-CN",
+        "zh-TW"
+    ],
+    "monacoColors": {
+        "editor.background": "#ecf0f1"
+    },
+    "browserDbPrefixes": {
+        "1": "v1",
+        "2": "v2"
+    },
+    "editorVersionPaths": {
+        "0": "v0"
+    },
+    "showProjectSettings": true,
+    "scriptManager": true,
+    "simGifTransparent": "rgba(0,0,0,0)",
+    "simGifMaxFrames": 44,
+    "simScreenshotMaxUriLength": 300000,
+    "importExtensionFiles": true,
+    "TOC": [
         {
-          "name": "Command Line Interface",
-          "path": "/cli",
-          "subitems": []
+            "name": "About",
+            "path": "/about",
+            "subitems": []
         },
         {
-          "name": "Visual Studio Code support",
-          "path": "/code",
-          "subitems": []
+            "name": "FAQ",
+            "path": "/faq",
+            "subitems": []
         },
         {
-          "name": "Blocks Embed",
-          "path": "/blocks-embed",
-          "subitems": []
+            "name": "Projects",
+            "path": "/projects",
+            "subitems": []
+        },
+        {
+            "name": "Blocks",
+            "path": "/blocks",
+            "subitems": [
+                {
+                    "name": "On Start",
+                    "path": "/blocks/on-start",
+                    "subitems": []
+                },
+                {
+                    "name": "Loops",
+                    "path": "/blocks/loops",
+                    "subitems": [
+                        {
+                            "name": "repeat",
+                            "path": "/blocks/loops/repeat",
+                            "subitems": []
+                        },
+                        {
+                            "name": "for",
+                            "path": "/blocks/loops/for",
+                            "subitems": []
+                        },
+                        {
+                            "name": "while",
+                            "path": "/blocks/loops/while",
+                            "subitems": []
+                        },
+                        {
+                            "name": "for of",
+                            "path": "/blocks/loops/for-of",
+                            "subitems": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Logic",
+                    "path": "/blocks/logic",
+                    "subitems": [
+                        {
+                            "name": "if",
+                            "path": "/blocks/logic/if",
+                            "subitems": []
+                        },
+                        {
+                            "name": "Boolean",
+                            "path": "/blocks/logic/boolean",
+                            "subitems": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Variables",
+                    "path": "/blocks/variables",
+                    "subitems": [
+                        {
+                            "name": "assign",
+                            "path": "/blocks/variables/assign",
+                            "subitems": []
+                        },
+                        {
+                            "name": "change var",
+                            "path": "/blocks/variables/change",
+                            "subitems": []
+                        },
+                        {
+                            "name": "var",
+                            "path": "/blocks/variables/var",
+                            "subitems": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Math",
+                    "path": "/blocks/math",
+                    "subitems": []
+                },
+                {
+                    "name": "JavaScript blocks",
+                    "path": "/blocks/javascript-blocks",
+                    "subitems": []
+                },
+                {
+                    "name": "Custom blocks",
+                    "path": "/blocks/custom",
+                    "subitems": []
+                }
+            ]
+        },
+        {
+            "name": "JavaScript",
+            "path": "/javascript",
+            "subitems": [
+                {
+                    "name": "Calling",
+                    "path": "/javascript/call",
+                    "subitems": []
+                },
+                {
+                    "name": "Sequencing",
+                    "path": "/javascript/sequence",
+                    "subitems": []
+                },
+                {
+                    "name": "Variables",
+                    "path": "/javascript/variables",
+                    "subitems": []
+                },
+                {
+                    "name": "Operators",
+                    "path": "/javascript/operators",
+                    "subitems": []
+                },
+                {
+                    "name": "Statements",
+                    "path": "/javascript/statements",
+                    "subitems": []
+                },
+                {
+                    "name": "Functions",
+                    "path": "/javascript/functions",
+                    "subitems": []
+                },
+                {
+                    "name": "Types",
+                    "path": "/javascript/types",
+                    "subitems": []
+                },
+                {
+                    "name": "Classes",
+                    "path": "/javascript/classes",
+                    "subitems": []
+                },
+                {
+                    "name": "Interfaces",
+                    "path": "/javascript/interfaces",
+                    "subitems": []
+                },
+                {
+                    "name": "Generics",
+                    "path": "/javascript/generics",
+                    "subitems": []
+                }
+            ]
+        },
+        {
+            "name": "Types",
+            "path": "/types",
+            "subitems": [
+                {
+                    "name": "Number",
+                    "path": "/types/number",
+                    "subitems": []
+                },
+                {
+                    "name": "String",
+                    "path": "/types/string",
+                    "subitems": []
+                },
+                {
+                    "name": "Boolean",
+                    "path": "/types/boolean",
+                    "subitems": []
+                },
+                {
+                    "name": "Array",
+                    "path": "/types/array",
+                    "subitems": []
+                },
+                {
+                    "name": "Function",
+                    "path": "/types/function",
+                    "subitems": []
+                }
+            ]
+        },
+        {
+            "name": "Miscellaneous",
+            "path": "",
+            "subitems": [
+                {
+                    "name": "About",
+                    "path": "/about",
+                    "subitems": []
+                },
+                {
+                    "name": "Support",
+                    "path": "/support",
+                    "subitems": []
+                },
+                {
+                    "name": "Translate",
+                    "path": "/translate",
+                    "subitems": []
+                },
+                {
+                    "name": "Sharing projects",
+                    "path": "/share",
+                    "subitems": []
+                },
+                {
+                    "name": "Offline support",
+                    "path": "/offline",
+                    "subitems": []
+                },
+                {
+                    "name": "Save",
+                    "path": "/save",
+                    "subitems": []
+                }
+            ]
+        },
+        {
+            "name": "Developers",
+            "path": "",
+            "subitems": [
+                {
+                    "name": "Command Line Interface",
+                    "path": "/cli",
+                    "subitems": []
+                },
+                {
+                    "name": "Visual Studio Code support",
+                    "path": "/code",
+                    "subitems": []
+                },
+                {
+                    "name": "Blocks Embed",
+                    "path": "/blocks-embed",
+                    "subitems": []
+                }
+            ]
         }
-      ]
-    }
-  ],
-  "id": "calliopemini",
-  "title": "Microsoft MakeCode for Calliope mini",
-  "name": "makecode.calliope.cc",
-  "description": "A Blocks / JavaScript code editor for the Calliope mini powered by Microsoft MakeCode.",
-  "htmlDocIncludes": {}
+    ],
+    "id": "calliopemini",
+    "title": "Microsoft MakeCode for Calliope mini",
+    "name": "makecode.calliope.cc",
+    "description": "A Blocks / JavaScript code editor for the Calliope mini powered by Microsoft MakeCode.",
+    "htmlDocIncludes": {}
 }

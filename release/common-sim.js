@@ -512,7 +512,7 @@ var pxsim;
         }
         control.deviceLongSerialNumber = deviceLongSerialNumber;
         function deviceDalVersion() {
-            return "0.0.0";
+            return "sim";
         }
         control.deviceDalVersion = deviceDalVersion;
         function internalOnEvent(id, evid, handler) {
@@ -688,6 +688,10 @@ var pxsim;
             this._wasPressed = false;
             return temp;
         };
+        CommonButton.prototype.pressureLevel = function () {
+            // digital for now
+            return this.isPressed() ? 512 : 0;
+        };
         CommonButton.prototype.isPressed = function () {
             return this.pressed;
         };
@@ -752,6 +756,10 @@ var pxsim;
             return button.pressed;
         }
         ButtonMethods.isPressed = isPressed;
+        function pressureLevel(button) {
+            return button.pressureLevel();
+        }
+        ButtonMethods.pressureLevel = pressureLevel;
         function wasPressed(button) {
             return button.wasPressed();
         }

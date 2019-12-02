@@ -345,12 +345,26 @@
 <pre><code class="lang-sig">basic.showIcon(IconNames.Heart)</code></pre>
 <h2 id="parameters">Parameters</h2><ul>
 <li><code>icon</code>, the identifier of the icon to display</li>
-<li><code>interval</code> (optional), the time to display in milliseconds. default is 400.</li>
+<li><code>interval</code> (optional), the time to display in milliseconds. default is 600.</li>
 </ul>
 <h2 id="example">Example</h2><p>This program shows a happy face and then a sad face with the <code>show icon</code> function, with a one second pause in between.</p>
 <pre><code class="lang-blocks">basic.showIcon(IconNames.Happy)
 basic.pause(1000)
 basic.showIcon(IconNames.Sad)</code></pre>
+<h2 id="beating-heart">Beating Heart</h2><p>You can create a beating heart by using the forever block as follows:</p>
+<pre><code class="lang-blocks">basic.forever(function () {
+    basic.showIcon(IconNames.Heart)
+    basic.showIcon(IconNames.SmallHeart)
+})</code></pre>
+<h2 id="fast-beating-heart">Fast Beating Heart</h2><p>You could slow down the previous animation by inserting a pause block:</p>
+<pre><code class="lang-block">basic.pause(1000)</code></pre>
+<p>…but how would you speed it up?</p>
+<p>You can change the default pause value, which is set in the <code>interval</code> parameter, to be smaller than <code>600</code> by changing it in the JavaScript editor.</p>
+<p>This JavaScript code creates a crazy fast heart beat! Did you know that a hamster’s heart beats at a rate this fast? </p>
+<pre><code class="lang-typescript">basic.forever(function () {
+    basic.showIcon(IconNames.Heart, 60)
+    basic.showIcon(IconNames.SmallHeart, 60)
+})</code></pre>
 <h2 id="see-also">See also</h2><p><a  rel="nofollow noopener" href="/docs/reference/basic/show-leds.html">showLeds</a></p>
 
     </div>

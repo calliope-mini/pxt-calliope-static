@@ -179,7 +179,11 @@
             "assirati/pxt-inventura",
             "Veilkrand/pxt-RobotCar",
             "4tronix/DriveBit",
-            "Freenove/Makecode-Extension-Starter-Kit"
+            "Freenove/Makecode-Extension-Starter-Kit",
+            "BrightWearables/pxt-microbit-brightboard",
+            "EBOTICS/pxt-eboticsMIBO",
+            "KitronikLtd/pxt-kitronik-halohd",
+            "dugbraden/pxt-climate-action-kit"
         ],
         "preferredRepos": [
             "Microsoft/pxt-neopixel",
@@ -222,7 +226,7 @@
     ],
     "galleries": {
         "First Steps": "calliope/firststeps",
-        "Tutorials": "calliope/tutorials",
+        "Turorials": "calliope/tutorials",
         "Calliope Links": "calliope/links"
     },
     "electronManifest": {

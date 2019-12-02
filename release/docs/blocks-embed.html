@@ -354,14 +354,14 @@ A quick solution is take screenshots of the snippets but that approach can quick
 <h2 id="plugins">Plugins</h2><p>Here is an integration sample:</p>
 <ul>
 <li><a target="_blank" rel="nofollow noopener" href="https://github.com/microsoft/pxt-react-extension-template/blob/master/src/components/snippet.tsx">React component</a></li>
-<li><a target="_blank" rel="nofollow noopener" href="https://jsfiddle.net/ndyz1d57/80/">HTML only</a></li>
+<li><a target="_blank" rel="nofollow noopener" href="https://jsfiddle.net/L8msdjpu/2/">HTML only</a></li>
 <li><a target="_blank" rel="nofollow noopener" href="https://microsoft.github.io/pxt-mkdocs-sample/">MkDocs plugin</a></li>
 </ul>
 <h2 id="custom-rendering">Custom rendering</h2><p>To render blocks in your own HTML documents or to make plugins for a document platform (such as a CMS or blogging engine), a custom implementation is needed. You can use the MakeCode blocks rendering engine to render blocks for code snippets in your own documents.</p>
 
     <div class="ui info message">
         <div class="content">
-            <p>Try this <a target="_blank" rel="nofollow noopener" href="https://jsfiddle.net/ndyz1d57/80/">fiddle</a> to see an embedded blocks rendering example.</p>
+            <p>Try this <a target="_blank" rel="nofollow noopener" href="https://jsfiddle.net/L8msdjpu/2/">fiddle</a> to see an embedded blocks rendering example.</p>
 
         </div>
     </div>
@@ -380,12 +380,14 @@ A quick solution is take screenshots of the snippets but that approach can quick
     code: string;
     options?: {
         package?: string;
+        packageId?: string;
         snippetMode?: boolean;
     }
 }</code></pre>
 <ul>
 <li><code>id</code>: The identifer of the snippet element. This is used to match the document element of the snippet with the rendered blocks returned later.</li>
 <li><code>code</code>: The text of the code snippet to send, compile, and render.</li>
+<li><code>packageId</code>: the identifier of a project shared in the editor (without the <code>https://makecode.com/</code> prefix)</li>
 </ul>
 <h4 id="render-blocks-response-message">Render Blocks Response message</h4><p>The renderer sends back a <code>renderblocks</code> response after it has transformed the code into a block image. The block image is returned in two forms: as a SVG element and as an image data source.</p>
 <p>The <code>renderblocks</code> response has this message format:</p>
@@ -467,7 +469,7 @@ basic.showString(&quot;Hello World&quot;)
 makeCodeInjectRenderer();</code></pre>
 <p>Once this <code>iframe</code> loads, it sends the <code>renderready</code> message to the registered handler.</p>
 <h3 id="example">Putting it together </h3><p>This HTML document example contains three <code>pre</code> elements with code snippets. Only two are sent to the renderer since they’re filtered on their class as <code>blocks</code>. Each element sent is given an identifier to match up with the rendered block that is returned. JQuery is used in this example but another framework or standard DOM methods could be used too.</p>
-<pre><code>&lt;html lang=&quot;en&quot;&gt;
+<pre><code class="lang-html">&lt;html lang=&quot;en&quot;&gt;
 &lt;head&gt;
     &lt;title&gt;Blocks Embedding Test Page&lt;/title&gt;
     &lt;script src=&quot;https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.3.1.min.js&quot;&gt;&lt;/script&gt;
@@ -588,7 +590,22 @@ $(function () {
 });
 &lt;/script&gt;
 &lt;/body&gt;
-&lt;/html&gt;</code></pre><h2 id="laziness">Laziness</h2><p>You can detect whether you have any snippet on your page before loading the rendering iFrame.</p>
+&lt;/html&gt;</code></pre>
+<h2 id="rendering-shared-projects">Rendering shared projects</h2><p>Rendering a shared project is accomplished in almost the same manner as the embedded blocks method. In this case though,
+leave the <code>code</code> attribute empty and pass the shared project id in a <code>options.packageId</code> data field.</p>
+<p>In the HTML, you can store the shared project id in a <code>pre</code> element as a data attribute.</p>
+<pre><code>&lt;pre data-packageid=&quot;_HjWJo9eHjXwP&quot;&gt;&lt;/pre&gt;</code></pre><p>Then, read the <code>data-packageid</code> attribute and pass it along as the <code>packageId</code> field in the <code>options</code> of the <code>renderblocks</code> message.</p>
+<pre><code>f.contentWindow.postMessage({
+    type: &quot;renderblocks&quot;,
+    id: pre.id,
+    code: &quot;&quot;,
+    options: {
+        packageId: pre.getAttribute(&quot;data-packageid&quot;)
+    }
+}, &quot;https://makecode.calliope.cc/&quot;);</code></pre><ul>
+<li><a target="_blank" rel="nofollow noopener" href="https://jsfiddle.net/L8msdjpu/3/">HTML only</a></li>
+</ul>
+<h2 id="lazy-loading">Lazy loading</h2><p>You can detect whether you have any snippet on your page before loading the rendering <code>iframe</code>.</p>
 
     </div>
 

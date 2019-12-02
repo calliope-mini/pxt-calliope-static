@@ -8,7 +8,7 @@
     "workerjs": "/worker.js",
     "monacoworkerjs": "/monacoworker.js",
     "gifworkerjs": "/gifjs/gif.worker.js",
-    "pxtVersion": "5.28.24",
+    "pxtVersion": "5.30.6",
     "pxtRelId": "",
     "pxtCdnUrl": "/",
     "commitCdnUrl": "/",

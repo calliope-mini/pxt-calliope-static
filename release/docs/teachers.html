@@ -22,14 +22,14 @@
 <meta name="twitter:site" content="@msmakecode" />
 <meta name="twitter:title" content="Microsoft MakeCode for Calliope mini" />
 <meta name="twitter:description" content="A Blocks / JavaScript code editor for the Calliope mini powered by Microsoft MakeCode." />
-<meta name="twitter:image" content="docs/static/icons/apple-touch-icon.png" />
+<meta name="twitter:image" content="/static/teachers/how-to-print.gif" />
 
 <meta property="og:title" content="Microsoft MakeCode for Calliope mini" />
 <meta property="og:site_name" content="Microsoft MakeCode" />
 <meta property="og:type" content="website" />
 <meta property="og:description" content="A Blocks / JavaScript code editor for the Calliope mini powered by Microsoft MakeCode." />
 <meta property="fb:app_id" content="" />
-<meta property="og:image" content="docs/static/icons/apple-touch-icon.png" />
+<meta property="og:image" content="/static/teachers/how-to-print.gif" />
 
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="docs/static/icons/apple-touch-icon.png">
@@ -341,15 +341,39 @@
 					</button>
 					
     <div class="ui text">
-        <h1 id="device-dal-version">device Dal Version</h1><p>Get the version information for the system software on the Calliope mini.</p>
-<pre><code class="lang-sig">control.deviceDalVersion()</code></pre>
-<h2 id="returns">Returns</h2><ul>
-<li>a <a  rel="nofollow noopener" href="/docs/types/string.html">string</a> that represents the version of the system software (DAL) on the board.</li>
-</ul>
-<p>Returns <code>&quot;sim&quot;</code> when running the simulator, and <code>&quot;linux&quot;</code> when running on Raspberry Pi.</p>
-<h2 id="example">Example </h2><p>Write the system software version to the serial port.</p>
-<pre><code class="lang-blocks">serial.writeLine(&quot;DAL version = &quot; + control.deviceDalVersion());</code></pre>
-<h2 id="seealso">See also </h2><p><a  rel="nofollow noopener" href="/docs/reference/control/device-serial-number.html">device serial number</a></p>
+        <h1 id="features-for-teachers">Features for Teachers</h1><p>This is a list of lesser known features that teachers have found useful when using MakeCode.</p>
+<h2 id="printing-and-snapshots">Printing and Snapshots</h2><p>If you want to include examples of code in printed materials, there are two good ways to do this:</p>
+<h3 id="printing">Printing</h3><p>In the editor, you can print the current project you are working with by clicking the cogwheel in the top right corner and selecting <code>Print</code>.
+This will produce a view of the code from your project that is printer friendly.</p>
+<p><img class="ui image" src="/static/teachers/how-to-print.gif" alt="Animation showing how to print" loading="lazy"></p>
+<h3 id="snapshot">Snapshot</h3><p>You can save a <code>.png</code> file with an image of all the blocks in your current projects using the <code>Snapshot</code> feature.
+Right click on the Workspace (press and hold on touch devices) and select <strong>Snapshot</strong>.</p>
+<p><img class="ui image" src="/static/teachers/how-to-snapshot.gif" alt="Animation showing how to take a snapshot" loading="lazy"></p>
+<h2 id="sharing">Sharing</h2><p>You can create links to share your project using the <code>Share</code> button in the top left corner of the editor.</p>
+<p><img class="ui image" src="/static/teachers/how-to-share.gif" alt="Animation showing how to share a project" loading="lazy"></p>
+<h3 id="embed">Embed</h3><p>If you have a class website that supports adding <code>HTML</code> elements to web pages,
+you can embed the simulator, code, or the full editor from the share screen.</p>
+<p><img class="ui image" src="/static/teachers/how-to-embed.gif" alt="Animation showing how to embed a project" loading="lazy"></p>
+<h2 id="tutorials">Tutorials</h2><p>Tutorials are examples that guide students through the process of creating programs step by step,
+using just the features and blocks limited what is most important.
+Typically, the first examples on the home page are tutorials.
+They help introduce students to the concepts they need to write simple programs.</p>
+<h3 id="writing-your-own">Writing your own</h3><p>If you want to create your own examples for your students to follow,
+you can <a target="_blank" rel="nofollow noopener" href="https://makecode.com/writing-docs/user-tutorials">create a tutorial yourself</a>!</p>
+<h3 id="sharing-a-tutorial">Sharing a tutorial</h3><p>If you are using a tutorial in a class,
+it may be helpful to give your students a link that goes directly to the tutorial.
+Instructions to do this are available in the <a  rel="nofollow noopener" href="/docs/faq#share-tutorials.html">FAQ</a>.</p>
+<h2 id="classroom">Classroom</h2><p>These features are specially designed to be used in a classroom.</p>
+<h2 id="green-screen">Green screen</h2><p>You can enable the <code>Green Screen</code> feature from the cogwheel menu in the editor. It will render the video stream of a webcam on the background of the code editor. Great to mix coding and filming the device.</p>
+<h2 id="courses">Courses</h2><p>Many editors include free courses that you can use in your class;
+if you want to print or save these courses, you can use a special url to convert
+the entire course into a single page. The format for this is:</p>
+<pre><code>https://[editor url]/--docs#book:/[course location under the docs folder]</code></pre><p>For example, here are the steps to create a ‘book’ view of an introductory course
+for MakeCode Arcade. The course is found at <a target="_blank" rel="nofollow noopener" href="https://arcade.makecode.com/courses/csintro1">https://arcade.makecode.com/courses/csintro1</a>,
+so the first step is to split that into two parts: the editor url (<code>https://arcade.makecode.com</code>)
+and the location of the course (<code>/courses/csintro1</code>).</p>
+<p>To get the course book, you combine the two with <code>/--docs#book:</code> in between them:</p>
+<pre><code>https://arcade.makecode.com/--docs#book:/courses/csintro1</code></pre><p>and after a few moments of compiling the page, you should have a complete printable book for the course!</p>
 
     </div>
 
