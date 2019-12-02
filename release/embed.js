@@ -4,16 +4,20 @@
     // This line gets patched up by the cloud
     var pxtConfig = {
     "relprefix": "/",
+    "verprefix": "",
     "workerjs": "/worker.js",
-    "tdworkerjs": "/tdworker.js",
     "monacoworkerjs": "/monacoworker.js",
-    "pxtVersion": "1.0.20",
+    "gifworkerjs": "/gifjs/gif.worker.js",
+    "pxtVersion": "5.30.6",
     "pxtRelId": "",
     "pxtCdnUrl": "/",
+    "commitCdnUrl": "/",
+    "blobCdnUrl": "/",
+    "cdnUrl": "/",
     "targetVersion": "0.0.0",
     "targetRelId": "",
-    "targetCdnUrl": "/",
     "targetUrl": "",
+    "targetId": "calliopemini",
     "simUrl": "/simulator.html",
     "partsUrl": "/siminstructions.html",
     "runUrl": "/run.html",
@@ -21,27 +25,19 @@
     "isStatic": true
 };
 
-    var appCdnRoot = "/";
     var scripts = [
-        "highlight.js/highlight.pack.js",
-        "bluebird.min.js",
-        "typescript.js",
-        "semantic.js",
-        "marked/marked.min.js",
-        "lzma/lzma_worker-min.js",
-        "blockly/blockly_compressed.js",
-        "blockly/blocks_compressed.js",
-        "blockly/msg/js/en.js",
-        "pxtlib.js",
-        "pxtblocks.js",
-        "pxteditor.js",
-        "pxtsim.js",
-        "target.js",
-        "pxtrunner.js"
-    ].map(function(s) { return appCdnRoot + s; })
+        "/highlight.js/highlight.pack.js",
+        "/bluebird.min.js",
+        "/marked/marked.min.js",
+    ]
 
     if (typeof jQuery == "undefined")
-        scripts.unshift(appCdnRoot + "jquery.js")
+        scripts.unshift("/jquery.js")
+    if (typeof jQuery == "undefined" || !jQuery.prototype.sidebar)
+        scripts.push("/semantic.js")
+    if (!window.pxtTargetBundle)
+        scripts.push("/target.js");
+    scripts.push("/pxtembed.js");
 
     var pxtCallbacks = []
 

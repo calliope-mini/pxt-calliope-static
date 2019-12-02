@@ -1,26 +1,31 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>
 var pxsim;
 (function (pxsim) {
-    var DalBoard = (function (_super) {
+    var DalBoard = /** @class */ (function (_super) {
         __extends(DalBoard, _super);
         function DalBoard() {
-            _super.call(this);
+            var _this = _super.call(this) || this;
             // components
-            this.fileSystem = new pxsim.FileSystemState();
-            this.builtinParts["ledmatrix"] = this.ledMatrixState = new pxsim.LedMatrixState(pxsim.runtime);
-            this.builtinParts["buttonpair"] = this.buttonPairState = new pxsim.ButtonPairState({
+            _this.fileSystem = new pxsim.FileSystemState();
+            _this.builtinParts["ledmatrix"] = _this.ledMatrixState = new pxsim.LedMatrixState(pxsim.runtime);
+            _this.builtinParts["buttonpair"] = _this.buttonPairState = new pxsim.ButtonPairState({
                 ID_BUTTON_A: 1 /* MICROBIT_ID_BUTTON_A */,
                 ID_BUTTON_B: 2 /* MICROBIT_ID_BUTTON_B */,
                 ID_BUTTON_AB: 26 /* MICROBIT_ID_BUTTON_AB */,
                 BUTTON_EVT_UP: 2 /* MICROBIT_BUTTON_EVT_UP */,
                 BUTTON_EVT_CLICK: 3 /* MICROBIT_BUTTON_EVT_CLICK */
             });
-            this.builtinParts["edgeconnector"] = this.edgeConnectorState = new pxsim.EdgeConnectorState({
+            _this.builtinParts["edgeconnector"] = _this.edgeConnectorState = new pxsim.EdgeConnectorState({
                 pins: [
                     7 /* MICROBIT_ID_IO_P0 */,
                     8 /* MICROBIT_ID_IO_P1 */,
@@ -52,23 +57,24 @@ var pxsim;
                     "P3": 23 /* MICROBIT_ID_IO_P16 */
                 }
             });
-            this.builtinParts["radio"] = this.radioState = new pxsim.RadioState(pxsim.runtime);
-            this.builtinParts["accelerometer"] = this.accelerometerState = new pxsim.AccelerometerState(pxsim.runtime);
-            this.builtinParts["serial"] = this.serialState = new pxsim.SerialState();
-            this.builtinParts["thermometer"] = this.thermometerState = new pxsim.ThermometerState();
-            this.builtinParts["lightsensor"] = this.lightSensorState = new pxsim.LightSensorState();
-            this.builtinParts["compass"] = this.compassState = new pxsim.CompassState();
-            this.builtinParts["neopixel"] = this.neopixelState = new pxsim.NeoPixelState();
-            this.builtinParts["speaker"] = this.speakerState = new pxsim.SpeakerState();
-            this.builtinParts["microservo"] = this.edgeConnectorState;
-            this.builtinVisuals["buttonpair"] = function () { return new pxsim.visuals.ButtonPairView(); };
-            this.builtinVisuals["ledmatrix"] = function () { return new pxsim.visuals.LedMatrixView(); };
-            this.builtinVisuals["neopixel"] = function () { return new pxsim.visuals.NeoPixelView(); };
-            this.builtinVisuals["microservo"] = function () { return new pxsim.visuals.MicroServoView(); };
-            this.builtinPartVisuals["buttonpair"] = function (xy) { return pxsim.visuals.mkBtnSvg(xy); };
-            this.builtinPartVisuals["ledmatrix"] = function (xy) { return pxsim.visuals.mkLedMatrixSvg(xy, 8, 8); };
-            this.builtinPartVisuals["neopixel"] = function (xy) { return pxsim.visuals.mkNeoPixelPart(xy); };
-            this.builtinPartVisuals["microservo"] = function (xy) { return pxsim.visuals.mkMicroServoPart(xy); };
+            _this.builtinParts["radio"] = _this.radioState = new pxsim.RadioState(pxsim.runtime);
+            _this.builtinParts["accelerometer"] = _this.accelerometerState = new pxsim.AccelerometerState(pxsim.runtime);
+            _this.builtinParts["serial"] = _this.serialState = new pxsim.SerialState();
+            _this.builtinParts["thermometer"] = _this.thermometerState = new pxsim.ThermometerState();
+            _this.builtinParts["lightsensor"] = _this.lightSensorState = new pxsim.LightSensorState();
+            _this.builtinParts["compass"] = _this.compassState = new pxsim.CompassState();
+            _this.builtinParts["neopixel"] = _this.neopixelState = new pxsim.NeoPixelState();
+            _this.builtinParts["speaker"] = _this.speakerState = new pxsim.SpeakerState();
+            _this.builtinParts["microservo"] = _this.edgeConnectorState;
+            _this.builtinVisuals["buttonpair"] = function () { return new pxsim.visuals.ButtonPairView(); };
+            _this.builtinVisuals["ledmatrix"] = function () { return new pxsim.visuals.LedMatrixView(); };
+            _this.builtinVisuals["neopixel"] = function () { return new pxsim.visuals.NeoPixelView(); };
+            _this.builtinVisuals["microservo"] = function () { return new pxsim.visuals.MicroServoView(); };
+            _this.builtinPartVisuals["buttonpair"] = function (xy) { return pxsim.visuals.mkBtnSvg(xy); };
+            _this.builtinPartVisuals["ledmatrix"] = function (xy) { return pxsim.visuals.mkLedMatrixSvg(xy, 8, 8); };
+            _this.builtinPartVisuals["neopixel"] = function (xy) { return pxsim.visuals.mkNeoPixelPart(xy); };
+            _this.builtinPartVisuals["microservo"] = function (xy) { return pxsim.visuals.mkMicroServoPart(xy); };
+            return _this;
         }
         DalBoard.prototype.receiveMessage = function (msg) {
             if (!pxsim.runtime || pxsim.runtime.dead)
@@ -80,11 +86,11 @@ var pxsim;
                     break;
                 case "serial":
                     var data = msg.data || "";
-                    this.serialState.recieveData(data);
+                    this.serialState.receiveData(data);
                     break;
                 case "radiopacket":
                     var packet = msg;
-                    this.radioState.recievePacket(packet);
+                    this.radioState.receivePacket(packet);
                     break;
             }
         };
@@ -103,13 +109,19 @@ var pxsim;
                 fnArgs: fnArgs,
                 maxWidth: "100%",
                 maxHeight: "100%",
+                highContrast: msg.highContrast
             };
-            var viewHost = new pxsim.visuals.BoardHost(pxsim.visuals.mkBoardView({
-                visual: boardDef.visual
+            this.viewHost = new pxsim.visuals.BoardHost(pxsim.visuals.mkBoardView({
+                visual: boardDef.visual,
+                boardDef: boardDef,
+                highContrast: msg.highContrast
             }), opts);
             document.body.innerHTML = ""; // clear children
-            document.body.appendChild(viewHost.getView());
+            document.body.appendChild(this.view = this.viewHost.getView());
             return Promise.resolve();
+        };
+        DalBoard.prototype.screenshotAsync = function (width) {
+            return this.viewHost.screenshotAsync(width);
         };
         return DalBoard;
     }(pxsim.CoreBoard));
@@ -147,107 +159,45 @@ var pxsim;
     }
     pxsim.board = board;
 })(pxsim || (pxsim = {}));
-/// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>
-/// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>
-/// <reference path="../node_modules/pxt-core/built/pxtrunner.d.ts"/>
-//HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well
-if (!window.pxt)
-    window.pxt = {};
-var pxtrunner = pxt.runner;
-var pxtdocs = pxt.docs;
-var pxsim;
-(function (pxsim) {
-    var instructions;
-    (function (instructions) {
-        function drawInstructions() {
-            pxsim.visuals.mkBoardView = function (opts) {
-                return new pxsim.visuals.MicrobitBoardSvg({
-                    runtime: pxsim.runtime,
-                    theme: pxsim.visuals.randomTheme(),
-                    disableTilt: false,
-                    wireframe: opts.wireframe,
-                });
-            };
-            var getQsVal = pxsim.parseQueryString();
-            //project name
-            var name = getQsVal("name") || "Untitled";
-            // board def
-            var boardDef = JSON.parse(getQsVal("board"));
-            //parts list
-            var parts = (getQsVal("parts") || "").split(" ");
-            parts.sort();
-            // parts definitions
-            var partDefinitions = JSON.parse(getQsVal("partdefs") || "{}");
-            //fn args
-            var fnArgs = JSON.parse((getQsVal("fnArgs") || "{}"));
-            //project code
-            var tsCode = getQsVal("code");
-            var tsPackage = getQsVal("package") || "";
-            var codeSpinnerDiv = document.getElementById("proj-code-spinner");
-            var codeContainerDiv = document.getElementById("proj-code-container");
-            if (tsCode) {
-                //we use the docs renderer to decompile the code to blocks and render it
-                //TODO: render the blocks code directly
-                var md = "```blocks\n" + tsCode + "\n```\n```package\n" + tsPackage + "\n```\n";
-                pxtdocs.requireMarked = function () { return window.marked; };
-                pxtrunner.renderMarkdownAsync(codeContainerDiv, md)
-                    .done(function () {
-                    var codeSvg = $("#proj-code-container svg");
-                    if (codeSvg.length > 0) {
-                        //code rendered successfully as blocks
-                        codeSvg.css("width", "inherit");
-                        codeSvg.css("height", "inherit");
-                        //takes the svg out of the wrapper markdown
-                        codeContainerDiv.innerHTML = "";
-                        codeContainerDiv.appendChild(codeSvg[0]);
-                    }
-                    else {
-                        //code failed to convert to blocks, display as typescript instead
-                        codeContainerDiv.innerText = tsCode;
-                    }
-                    $(codeContainerDiv).show();
-                    $(codeSpinnerDiv).hide();
-                });
-            }
-            if (name)
-                $("#proj-title").text(name);
-            //init runtime
-            if (!pxsim.initCurrentRuntime)
-                pxsim.initCurrentRuntime = pxsim.initRuntimeWithDalBoard;
-            instructions.renderParts({
-                name: name,
-                boardDef: boardDef,
-                parts: parts,
-                partDefinitions: partDefinitions,
-                fnArgs: fnArgs
-            });
-        }
-        instructions.drawInstructions = drawInstructions;
-    })(instructions = pxsim.instructions || (pxsim.instructions = {}));
-})(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
     var input;
     (function (input) {
-        function onGesture(gesture, handler) {
+        function accForGesture(gesture) {
             var b = pxsim.board().accelerometerState;
             b.accelerometer.activate();
             if (gesture == 11 && !b.useShake) {
                 b.useShake = true;
                 pxsim.runtime.queueDisplayUpdate();
             }
+            return b;
+        }
+        function onGesture(gesture, handler) {
+            var b = accForGesture(gesture);
             pxsim.pxtcore.registerWithDal(27 /* MICROBIT_ID_GESTURE */, gesture, handler);
         }
         input.onGesture = onGesture;
+        function isGesture(gesture) {
+            var b = accForGesture(gesture);
+            return b.accelerometer.getGesture() == gesture;
+        }
+        input.isGesture = isGesture;
         function acceleration(dimension) {
             var b = pxsim.board().accelerometerState;
             var acc = b.accelerometer;
-            acc.activate();
             switch (dimension) {
-                case 0: return acc.getX();
-                case 1: return acc.getY();
-                case 2: return acc.getZ();
-                default: return Math.floor(Math.sqrt(acc.instantaneousAccelerationSquared()));
+                case 0:
+                    acc.activate(pxsim.AccelerometerFlag.X);
+                    return acc.getX();
+                case 1:
+                    acc.activate(pxsim.AccelerometerFlag.Y);
+                    return acc.getY();
+                case 2:
+                    acc.activate(pxsim.AccelerometerFlag.Z);
+                    return acc.getZ();
+                default:
+                    acc.activate();
+                    return Math.floor(Math.sqrt(acc.instantaneousAccelerationSquared()));
             }
         }
         input.acceleration = acceleration;
@@ -256,8 +206,8 @@ var pxsim;
             var acc = b.accelerometer;
             acc.activate();
             var x = acc.getX(pxsim.MicroBitCoordinateSystem.NORTH_EAST_DOWN);
-            var y = acc.getX(pxsim.MicroBitCoordinateSystem.NORTH_EAST_DOWN);
-            var z = acc.getX(pxsim.MicroBitCoordinateSystem.NORTH_EAST_DOWN);
+            var y = acc.getY(pxsim.MicroBitCoordinateSystem.NORTH_EAST_DOWN);
+            var z = acc.getZ(pxsim.MicroBitCoordinateSystem.NORTH_EAST_DOWN);
             var roll = Math.atan2(y, z);
             var pitch = Math.atan(-x / (y * Math.sin(roll) + z * Math.cos(roll)));
             var r = 0;
@@ -279,7 +229,6 @@ var pxsim;
         input.setAccelerometerRange = setAccelerometerRange;
     })(input = pxsim.input || (pxsim.input = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     /**
       * Co-ordinate systems that can be used.
@@ -311,13 +260,19 @@ var pxsim;
       * x  +--------------------+  y-->
       *
       */
+    var MicroBitCoordinateSystem;
     (function (MicroBitCoordinateSystem) {
         MicroBitCoordinateSystem[MicroBitCoordinateSystem["RAW"] = 0] = "RAW";
         MicroBitCoordinateSystem[MicroBitCoordinateSystem["SIMPLE_CARTESIAN"] = 1] = "SIMPLE_CARTESIAN";
         MicroBitCoordinateSystem[MicroBitCoordinateSystem["NORTH_EAST_DOWN"] = 2] = "NORTH_EAST_DOWN";
-    })(pxsim.MicroBitCoordinateSystem || (pxsim.MicroBitCoordinateSystem = {}));
-    var MicroBitCoordinateSystem = pxsim.MicroBitCoordinateSystem;
-    var Accelerometer = (function () {
+    })(MicroBitCoordinateSystem = pxsim.MicroBitCoordinateSystem || (pxsim.MicroBitCoordinateSystem = {}));
+    var AccelerometerFlag;
+    (function (AccelerometerFlag) {
+        AccelerometerFlag[AccelerometerFlag["X"] = 1] = "X";
+        AccelerometerFlag[AccelerometerFlag["Y"] = 2] = "Y";
+        AccelerometerFlag[AccelerometerFlag["Z"] = 4] = "Z";
+    })(AccelerometerFlag = pxsim.AccelerometerFlag || (pxsim.AccelerometerFlag = {}));
+    var Accelerometer = /** @class */ (function () {
         function Accelerometer(runtime) {
             this.runtime = runtime;
             this.sigma = 0; // the number of ticks that the instantaneous gesture has been stable.
@@ -327,17 +282,20 @@ var pxsim;
             this.shake = { x: false, y: false, z: false, count: 0, shaken: 0, timer: 0 }; // State information needed to detect shake events.
             this.isActive = false;
             this.sampleRange = 2;
+            this.flags = 0;
             this.id = 4 /* MICROBIT_ID_ACCELEROMETER */;
         }
         Accelerometer.prototype.setSampleRange = function (range) {
             this.activate();
             this.sampleRange = Math.max(1, Math.min(8, range));
         };
-        Accelerometer.prototype.activate = function () {
+        Accelerometer.prototype.activate = function (flags) {
             if (!this.isActive) {
                 this.isActive = true;
                 this.runtime.queueDisplayUpdate();
             }
+            if (flags)
+                this.flags |= flags;
         };
         /**
          * Reads the acceleration data from the accelerometer, and stores it in our buffer.
@@ -394,17 +352,16 @@ var pxsim;
                 }
             }
             if (this.shake.shaken)
-                return 12 /* MICROBIT_ACCELEROMETER_EVT_SHAKE */;
+                return 11 /* MICROBIT_ACCELEROMETER_EVT_SHAKE */;
             var sq = function (n) { return n * n; };
             if (force < sq(400 /* MICROBIT_ACCELEROMETER_FREEFALL_TOLERANCE */))
                 return 7 /* MICROBIT_ACCELEROMETER_EVT_FREEFALL */;
-            // TODO: fix this
-            //if (force > sq(DAL.MICROBIT_ACCELEROMETER_3G_TOLERANCE))
-            //    return DAL.MICROBIT_ACCELEROMETER_EVT_3G;
+            if (force > sq(3072 /* MICROBIT_ACCELEROMETER_3G_TOLERANCE */))
+                return 8 /* MICROBIT_ACCELEROMETER_EVT_3G */;
             if (force > sq(6144 /* MICROBIT_ACCELEROMETER_6G_TOLERANCE */))
-                return 10 /* MICROBIT_ACCELEROMETER_EVT_6G */;
+                return 9 /* MICROBIT_ACCELEROMETER_EVT_6G */;
             if (force > sq(8192 /* MICROBIT_ACCELEROMETER_8G_TOLERANCE */))
-                return 11 /* MICROBIT_ACCELEROMETER_EVT_8G */;
+                return 10 /* MICROBIT_ACCELEROMETER_EVT_8G */;
             // Determine our posture.
             if (this.getX() < (-1000 + 200 /* MICROBIT_ACCELEROMETER_TILT_TOLERANCE */))
                 return 3 /* MICROBIT_ACCELEROMETER_EVT_TILT_LEFT */;
@@ -415,28 +372,33 @@ var pxsim;
             if (this.getY() > (1000 - 200 /* MICROBIT_ACCELEROMETER_TILT_TOLERANCE */))
                 return 1 /* MICROBIT_ACCELEROMETER_EVT_TILT_UP */;
             if (this.getZ() < (-1000 + 200 /* MICROBIT_ACCELEROMETER_TILT_TOLERANCE */))
-                return 6 /* MICROBIT_ACCELEROMETER_EVT_FACE_DOWN */;
-            if (this.getZ() > (1000 - 200 /* MICROBIT_ACCELEROMETER_TILT_TOLERANCE */))
                 return 5 /* MICROBIT_ACCELEROMETER_EVT_FACE_UP */;
+            if (this.getZ() > (1000 - 200 /* MICROBIT_ACCELEROMETER_TILT_TOLERANCE */))
+                return 6 /* MICROBIT_ACCELEROMETER_EVT_FACE_DOWN */;
             return 0;
         };
         Accelerometer.prototype.updateGesture = function () {
             // Determine what it looks like we're doing based on the latest sample...
             var g = this.instantaneousPosture();
             // Perform some low pass filtering to reduce jitter from any detected effects
-            if (g == this.currentGesture) {
-                if (this.sigma < 5 /* MICROBIT_ACCELEROMETER_GESTURE_DAMPING */)
-                    this.sigma++;
-            }
-            else {
+            if (g != this.currentGesture) {
                 this.currentGesture = g;
                 this.sigma = 0;
             }
-            // If we've reached threshold, update our record and raise the relevant event...
-            if (this.currentGesture != this.lastGesture && this.sigma >= 5 /* MICROBIT_ACCELEROMETER_GESTURE_DAMPING */) {
-                this.lastGesture = this.currentGesture;
-                pxsim.board().bus.queue(27 /* MICROBIT_ID_GESTURE */, this.lastGesture);
+            else if (this.sigma < 5 /* MICROBIT_ACCELEROMETER_GESTURE_DAMPING */) {
+                ++this.sigma;
             }
+            if (this.currentGesture !== this.lastGesture && this.sigma >= 5 /* MICROBIT_ACCELEROMETER_GESTURE_DAMPING */) {
+                this.enqueueCurrentGesture();
+            }
+        };
+        Accelerometer.prototype.forceGesture = function (gesture) {
+            this.currentGesture = gesture;
+            this.enqueueCurrentGesture();
+        };
+        Accelerometer.prototype.enqueueCurrentGesture = function () {
+            this.lastGesture = this.currentGesture;
+            pxsim.board().bus.queue(27 /* MICROBIT_ID_GESTURE */, this.lastGesture);
         };
         /**
           * Reads the X axis value of the latest update from the accelerometer.
@@ -543,6 +505,9 @@ var pxsim;
             this.recalculatePitchRoll();
             return this.roll;
         };
+        Accelerometer.prototype.getGesture = function () {
+            return this.lastGesture;
+        };
         /**
          * Recalculate roll and pitch values for the current sample.
          * We only do this at most once per sample, as the necessary trigonemteric functions are rather
@@ -558,11 +523,14 @@ var pxsim;
         return Accelerometer;
     }());
     pxsim.Accelerometer = Accelerometer;
-    var AccelerometerState = (function () {
+    var AccelerometerState = /** @class */ (function () {
         function AccelerometerState(runtime) {
             this.useShake = false;
             this.accelerometer = new Accelerometer(runtime);
         }
+        AccelerometerState.prototype.shake = function () {
+            this.accelerometer.forceGesture(11 /* MICROBIT_ACCELEROMETER_EVT_SHAKE */); // SHAKE == 11
+        };
         return AccelerometerState;
     }());
     pxsim.AccelerometerState = AccelerometerState;
@@ -597,6 +565,149 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
+    var visuals;
+    (function (visuals) {
+        function mkBtnSvg(xy) {
+            var _a = ["sim-button", "sim-button-outer"], innerCls = _a[0], outerCls = _a[1];
+            var tabSize = visuals.PIN_DIST / 2.5;
+            var pegR = visuals.PIN_DIST / 5;
+            var btnR = visuals.PIN_DIST * .8;
+            var pegMargin = visuals.PIN_DIST / 8;
+            var plateR = visuals.PIN_DIST / 12;
+            var pegOffset = pegMargin + pegR;
+            var x = xy[0], y = xy[1];
+            var left = x - tabSize / 2;
+            var top = y - tabSize / 2;
+            var plateH = 3 * visuals.PIN_DIST - tabSize;
+            var plateW = 2 * visuals.PIN_DIST + tabSize;
+            var plateL = left;
+            var plateT = top + tabSize;
+            var btnCX = plateL + plateW / 2;
+            var btnCY = plateT + plateH / 2;
+            var btng = pxsim.svg.elt("g");
+            //tabs
+            var mkTab = function (x, y) {
+                pxsim.svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize });
+            };
+            mkTab(left, top);
+            mkTab(left + 2 * visuals.PIN_DIST, top);
+            mkTab(left, top + 3 * visuals.PIN_DIST);
+            mkTab(left + 2 * visuals.PIN_DIST, top + 3 * visuals.PIN_DIST);
+            //plate
+            pxsim.svg.child(btng, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
+            //pegs
+            var mkPeg = function (x, y) {
+                pxsim.svg.child(btng, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
+            };
+            mkPeg(plateL + pegOffset, plateT + pegOffset);
+            mkPeg(plateL + plateW - pegOffset, plateT + pegOffset);
+            mkPeg(plateL + pegOffset, plateT + plateH - pegOffset);
+            mkPeg(plateL + plateW - pegOffset, plateT + plateH - pegOffset);
+            //inner btn
+            var innerBtn = pxsim.svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
+            //return
+            return { el: btng, y: top, x: left, w: plateW, h: plateH + 2 * tabSize };
+        }
+        visuals.mkBtnSvg = mkBtnSvg;
+        visuals.BUTTON_PAIR_STYLE = "\n            .sim-button {\n                pointer-events: none;\n                fill: #000;\n            }\n            .sim-button-outer:active ~ .sim-button,\n            .sim-button-virtual:active {\n                fill: #FFA500;\n            }\n            .sim-button-outer {\n                cursor: pointer;\n                fill: #979797;\n            }\n            .sim-button-outer:hover {\n                stroke:gray;\n                stroke-width: " + visuals.PIN_DIST / 5 + "px;\n            }\n            .sim-button-nut {\n                fill:#000;\n                pointer-events:none;\n            }\n            .sim-button-nut:hover {\n                stroke:" + visuals.PIN_DIST / 15 + "px solid #704A4A;\n            }\n            .sim-button-tab {\n                fill:#FFF;\n                pointer-events:none;\n            }\n            .sim-button-virtual {\n                cursor: pointer;\n                fill: rgba(255, 255, 255, 0.6);\n                stroke: rgba(255, 255, 255, 1);\n                stroke-width: " + visuals.PIN_DIST / 5 + "px;\n            }\n            .sim-button-virtual:hover {\n                stroke: rgba(128, 128, 128, 1);\n            }\n            .sim-text-virtual {\n                fill: #000;\n                pointer-events:none;\n            }\n            ";
+        var ButtonPairView = /** @class */ (function () {
+            function ButtonPairView() {
+                this.style = visuals.BUTTON_PAIR_STYLE;
+            }
+            ButtonPairView.prototype.init = function (bus, state) {
+                this.state = state;
+                this.bus = bus;
+                this.defs = [];
+                this.element = this.mkBtns();
+                this.updateState();
+                this.attachEvents();
+            };
+            ButtonPairView.prototype.moveToCoord = function (xy) {
+                var btnWidth = visuals.PIN_DIST * 3;
+                var x = xy[0], y = xy[1];
+                visuals.translateEl(this.aBtn, [x, y]);
+                visuals.translateEl(this.bBtn, [x + btnWidth, y]);
+                visuals.translateEl(this.abBtn, [x + visuals.PIN_DIST * 1.5, y + visuals.PIN_DIST * 4]);
+            };
+            ButtonPairView.prototype.updateState = function () {
+                var stateBtns = [this.state.aBtn, this.state.bBtn, this.state.abBtn];
+                var svgBtns = [this.aBtn, this.bBtn, this.abBtn];
+                if (this.state.usesButtonAB && this.abBtn.style.visibility != "visible") {
+                    this.abBtn.style.visibility = "visible";
+                }
+            };
+            ButtonPairView.prototype.updateTheme = function () { };
+            ButtonPairView.prototype.mkBtns = function () {
+                this.aBtn = mkBtnSvg([0, 0]).el;
+                this.bBtn = mkBtnSvg([0, 0]).el;
+                var mkVirtualBtn = function () {
+                    var numPins = 2;
+                    var w = visuals.PIN_DIST * 2.8;
+                    var offset = (w - (numPins * visuals.PIN_DIST)) / 2;
+                    var corner = visuals.PIN_DIST / 2;
+                    var cx = 0 - offset + w / 2;
+                    var cy = cx;
+                    var txtSize = visuals.PIN_DIST * 1.3;
+                    var x = -offset;
+                    var y = -offset;
+                    var txtXOff = visuals.PIN_DIST / 7;
+                    var txtYOff = visuals.PIN_DIST / 10;
+                    var btng = pxsim.svg.elt("g");
+                    var btn = pxsim.svg.child(btng, "rect", { class: "sim-button-virtual", x: x, y: y, rx: corner, ry: corner, width: w, height: w });
+                    var btnTxt = visuals.mkTxt(cx + txtXOff, cy + txtYOff, txtSize, 0, "A+B");
+                    pxsim.U.addClass(btnTxt, "sim-text");
+                    pxsim.U.addClass(btnTxt, "sim-text-virtual");
+                    btng.appendChild(btnTxt);
+                    return btng;
+                };
+                this.abBtn = mkVirtualBtn();
+                this.abBtn.style.visibility = "hidden";
+                var el = pxsim.svg.elt("g");
+                pxsim.U.addClass(el, "sim-buttonpair");
+                el.appendChild(this.aBtn);
+                el.appendChild(this.bBtn);
+                el.appendChild(this.abBtn);
+                return el;
+            };
+            ButtonPairView.prototype.attachEvents = function () {
+                var _this = this;
+                var btnStates = [this.state.aBtn, this.state.bBtn];
+                var btnSvgs = [this.aBtn, this.bBtn];
+                btnSvgs.forEach(function (btn, index) {
+                    pxsim.pointerEvents.down.forEach(function (evid) { return btn.addEventListener(evid, function (ev) {
+                        btnStates[index].pressed = true;
+                    }); });
+                    btn.addEventListener(pxsim.pointerEvents.leave, function (ev) {
+                        btnStates[index].pressed = false;
+                    });
+                    btn.addEventListener(pxsim.pointerEvents.up, function (ev) {
+                        btnStates[index].pressed = false;
+                        _this.bus.queue(btnStates[index].id, _this.state.props.BUTTON_EVT_UP);
+                        _this.bus.queue(btnStates[index].id, _this.state.props.BUTTON_EVT_CLICK);
+                    });
+                });
+                var updateBtns = function (s) {
+                    btnStates.forEach(function (b) { return b.pressed = s; });
+                };
+                pxsim.pointerEvents.down.forEach(function (evid) { return _this.abBtn.addEventListener(evid, function (ev) {
+                    updateBtns(true);
+                }); });
+                this.abBtn.addEventListener(pxsim.pointerEvents.leave, function (ev) {
+                    updateBtns(false);
+                });
+                this.abBtn.addEventListener(pxsim.pointerEvents.up, function (ev) {
+                    updateBtns(false);
+                    _this.bus.queue(_this.state.abBtn.id, _this.state.props.BUTTON_EVT_UP);
+                    _this.bus.queue(_this.state.abBtn.id, _this.state.props.BUTTON_EVT_CLICK);
+                });
+            };
+            return ButtonPairView;
+        }());
+        visuals.ButtonPairView = ButtonPairView;
+    })(visuals = pxsim.visuals || (pxsim.visuals = {}));
+})(pxsim || (pxsim = {}));
+var pxsim;
+(function (pxsim) {
     var input;
     (function (input) {
         function compassHeading() {
@@ -624,6 +735,7 @@ var pxsim;
             if (!pin)
                 return;
             pin.isTouched();
+            pxsim.runtime.queueDisplayUpdate();
             pxsim.pxtcore.registerWithDal(pin.id, 3 /* MICROBIT_BUTTON_EVT_CLICK */, handler);
         }
         input.onPinPressed = onPinPressed;
@@ -632,6 +744,7 @@ var pxsim;
             if (!pin)
                 return;
             pin.isTouched();
+            pxsim.runtime.queueDisplayUpdate();
             pxsim.pxtcore.registerWithDal(pin.id, 2 /* MICROBIT_BUTTON_EVT_UP */, handler);
         }
         input.onPinReleased = onPinReleased;
@@ -644,21 +757,19 @@ var pxsim;
         input.pinIsPressed = pinIsPressed;
     })(input = pxsim.input || (pxsim.input = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     function getPin(id) {
         return pxsim.board().edgeConnectorState.getPin(id);
     }
     pxsim.getPin = getPin;
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var pins;
     (function (pins_1) {
         function digitalReadPin(pinId) {
             var pin = pxsim.getPin(pinId);
             if (!pin)
-                return;
+                return -1;
             pin.mode = pxsim.PinFlags.Digital | pxsim.PinFlags.Input;
             return pin.value > 100 ? 1 : 0;
         }
@@ -682,7 +793,7 @@ var pxsim;
         function analogReadPin(pinId) {
             var pin = pxsim.getPin(pinId);
             if (!pin)
-                return;
+                return -1;
             pin.mode = pxsim.PinFlags.Analog | pxsim.PinFlags.Input;
             return pin.value || 0;
         }
@@ -710,7 +821,7 @@ var pxsim;
             if (!pin)
                 return;
             analogSetPeriod(pinId, 20000);
-            pin.servoAngle = Math.max(0, Math.min(180, value));
+            pin.servoAngle = value;
         }
         pins_1.servoWritePin = servoWritePin;
         function servoSetPulse(pinId, micros) {
@@ -762,6 +873,84 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
+    var PinFlags;
+    (function (PinFlags) {
+        PinFlags[PinFlags["Unused"] = 0] = "Unused";
+        PinFlags[PinFlags["Digital"] = 1] = "Digital";
+        PinFlags[PinFlags["Analog"] = 2] = "Analog";
+        PinFlags[PinFlags["Input"] = 4] = "Input";
+        PinFlags[PinFlags["Output"] = 8] = "Output";
+        PinFlags[PinFlags["Touch"] = 16] = "Touch";
+    })(PinFlags = pxsim.PinFlags || (pxsim.PinFlags = {}));
+    var Pin = /** @class */ (function () {
+        function Pin(id) {
+            this.id = id;
+            this.touched = false;
+            this.value = 0;
+            this.period = 0;
+            this.servoAngle = 0;
+            this.mode = PinFlags.Unused;
+            this.pitch = false;
+            this.pull = 0; // PullDown
+        }
+        Pin.prototype.digitalReadPin = function () {
+            this.mode = PinFlags.Digital | PinFlags.Input;
+            return this.value > 100 ? 1 : 0;
+        };
+        Pin.prototype.digitalWritePin = function (value) {
+            this.mode = PinFlags.Digital | PinFlags.Output;
+            this.value = value > 0 ? 200 : 0;
+            pxsim.runtime.queueDisplayUpdate();
+        };
+        Pin.prototype.setPull = function (pull) {
+            this.pull = pull;
+        };
+        Pin.prototype.analogReadPin = function () {
+            this.mode = PinFlags.Analog | PinFlags.Input;
+            return this.value || 0;
+        };
+        Pin.prototype.analogWritePin = function (value) {
+            value = value >> 0;
+            this.mode = PinFlags.Analog | PinFlags.Output;
+            this.value = Math.max(0, Math.min(1023, value));
+            pxsim.runtime.queueDisplayUpdate();
+        };
+        Pin.prototype.analogSetPeriod = function (micros) {
+            micros = micros >> 0;
+            this.mode = PinFlags.Analog | PinFlags.Output;
+            this.period = micros;
+            pxsim.runtime.queueDisplayUpdate();
+        };
+        Pin.prototype.servoWritePin = function (value) {
+            value = value >> 0;
+            this.analogSetPeriod(20000);
+            this.servoAngle = Math.max(0, Math.min(180, value));
+            pxsim.runtime.queueDisplayUpdate();
+        };
+        Pin.prototype.servoSetPulse = function (pinId, micros) {
+            // TODO
+        };
+        Pin.prototype.isTouched = function () {
+            this.mode = PinFlags.Touch | PinFlags.Analog | PinFlags.Input;
+            return this.touched;
+        };
+        return Pin;
+    }());
+    pxsim.Pin = Pin;
+    var EdgeConnectorState = /** @class */ (function () {
+        function EdgeConnectorState(props) {
+            this.props = props;
+            this.pins = props.pins.map(function (id) { return id != undefined ? new Pin(id) : null; });
+        }
+        EdgeConnectorState.prototype.getPin = function (id) {
+            return this.pins.filter(function (p) { return p && p.id == id; })[0] || null;
+        };
+        return EdgeConnectorState;
+    }());
+    pxsim.EdgeConnectorState = EdgeConnectorState;
+})(pxsim || (pxsim = {}));
+var pxsim;
+(function (pxsim) {
     var files;
     (function (files) {
         function appendLine(filename, text) {
@@ -784,16 +973,23 @@ var pxsim;
             b.fileSystem.remove(filename);
         }
         files.remove = remove;
+        function readToSerial(filename) {
+            var b = pxsim.board();
+            var f = b.fileSystem.files[filename];
+            if (f)
+                b.serialState.writeSerial(f);
+        }
+        files.readToSerial = readToSerial;
     })(files = pxsim.files || (pxsim.files = {}));
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
+    var DisplayMode;
     (function (DisplayMode) {
         DisplayMode[DisplayMode["bw"] = 0] = "bw";
         DisplayMode[DisplayMode["greyscale"] = 1] = "greyscale";
-    })(pxsim.DisplayMode || (pxsim.DisplayMode = {}));
-    var DisplayMode = pxsim.DisplayMode;
-    var LedMatrixState = (function () {
+    })(DisplayMode = pxsim.DisplayMode || (pxsim.DisplayMode = {}));
+    var LedMatrixState = /** @class */ (function () {
         function LedMatrixState(runtime) {
             this.image = createInternalImage(5);
             this.brigthness = 255;
@@ -804,27 +1000,35 @@ var pxsim;
         return LedMatrixState;
     }());
     pxsim.LedMatrixState = LedMatrixState;
-    var Image = (function (_super) {
+    var Image = /** @class */ (function (_super) {
         __extends(Image, _super);
         function Image(width, data) {
-            _super.call(this);
-            this.width = width;
-            this.data = data;
+            var _this = _super.call(this) || this;
+            _this.width = width;
+            _this.data = data;
+            return _this;
         }
         Image.prototype.print = function () {
-            console.log("Image id:" + this.id + " refs:" + this.refcnt + " size:" + this.width + "x" + Image.height);
+            console.debug("Image id:" + this.id + " size:" + this.width + "x" + Image.height);
         };
         Image.prototype.get = function (x, y) {
+            x = x >> 0;
+            y = y >> 0;
             if (x < 0 || x >= this.width || y < 0 || y >= 5)
                 return 0;
             return this.data[y * this.width + x];
         };
         Image.prototype.set = function (x, y, v) {
+            x = x >> 0;
+            y = y >> 0;
             if (x < 0 || x >= this.width || y < 0 || y >= 5)
                 return;
             this.data[y * this.width + x] = Math.max(0, Math.min(255, v));
         };
         Image.prototype.copyTo = function (xSrcIndex, length, target, xTargetIndex) {
+            xSrcIndex = xSrcIndex >> 0;
+            length = length >> 0;
+            xTargetIndex = xTargetIndex >> 0;
             for (var x = 0; x < length; x++) {
                 for (var y = 0; y < 5; y++) {
                     var value = this.get(xSrcIndex + x, y);
@@ -833,11 +1037,13 @@ var pxsim;
             }
         };
         Image.prototype.shiftLeft = function (cols) {
+            cols = cols >> 0;
             for (var x = 0; x < this.width; ++x)
                 for (var y = 0; y < 5; ++y)
                     this.set(x, y, x < this.width - cols ? this.get(x + cols, y) : 0);
         };
         Image.prototype.shiftRight = function (cols) {
+            cols = cols >> 0;
             for (var x = this.width - 1; x >= 0; --x)
                 for (var y = 0; y < 5; ++y)
                     this.set(x, y, x >= cols ? this.get(x - cols, y) : 0);
@@ -851,12 +1057,13 @@ var pxsim;
     }(pxsim.RefObject));
     pxsim.Image = Image;
     function createInternalImage(width) {
+        width = width >> 0;
         var img = createImage(width);
-        pxsim.noLeakTracking(img);
         return img;
     }
     pxsim.createInternalImage = createInternalImage;
     function createImage(width) {
+        width = width >> 0;
         return new Image(width, new Array(width * 5));
     }
     pxsim.createImage = createImage;
@@ -903,7 +1110,6 @@ var pxsim;
     }
     pxsim.createFont = createFont;
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var images;
     (function (images) {
@@ -917,21 +1123,41 @@ var pxsim;
         images.createBigImage = createBigImage;
     })(images = pxsim.images || (pxsim.images = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var ImageMethods;
     (function (ImageMethods) {
         function showImage(leds, offset, interval) {
             pxsim.pxtrt.nullCheck(leds);
-            leds.copyTo(offset, 5, pxsim.board().ledMatrixState.image, 0);
-            pxsim.runtime.queueDisplayUpdate();
-            pxsim.basic.pause(interval);
+            offset = offset >> 0;
+            interval = interval >> 0;
+            var cb = pxsim.getResume();
+            var first = true;
+            leds = clampPixelBrightness(leds);
+            pxsim.board().ledMatrixState.animationQ.enqueue({
+                interval: interval,
+                frame: function () {
+                    if (first) {
+                        leds.copyTo(offset, 5, pxsim.board().ledMatrixState.image, 0);
+                        first = false;
+                        return true;
+                    }
+                    return false;
+                },
+                whenDone: cb
+            });
         }
         ImageMethods.showImage = showImage;
         function plotImage(leds, offset) {
             pxsim.pxtrt.nullCheck(leds);
-            leds.copyTo(offset, 5, pxsim.board().ledMatrixState.image, 0);
-            pxsim.runtime.queueDisplayUpdate();
+            offset = offset >> 0;
+            leds = clampPixelBrightness(leds);
+            pxsim.board().ledMatrixState.animationQ.enqueue({
+                interval: 0,
+                frame: function () {
+                    leds.copyTo(offset, 5, pxsim.board().ledMatrixState.image, 0);
+                    return false;
+                }
+            });
         }
         ImageMethods.plotImage = plotImage;
         function height(leds) {
@@ -979,11 +1205,14 @@ var pxsim;
         ImageMethods.pixelBrightness = pixelBrightness;
         function scrollImage(leds, stride, interval) {
             pxsim.pxtrt.nullCheck(leds);
+            stride = stride >> 0;
+            interval = interval >> 0;
             if (stride == 0)
                 stride = 1;
             var cb = pxsim.getResume();
             var off = stride > 0 ? 0 : leds.width - 1;
             var display = pxsim.board().ledMatrixState.image;
+            leds = clampPixelBrightness(leds);
             pxsim.board().ledMatrixState.animationQ.enqueue({
                 interval: interval,
                 frame: function () {
@@ -1006,15 +1235,30 @@ var pxsim;
             });
         }
         ImageMethods.scrollImage = scrollImage;
+        function clampPixelBrightness(img) {
+            var res = img;
+            if (pxsim.led.displayMode() === pxsim.DisplayMode.greyscale && pxsim.led.brightness() < 0xff) {
+                res = new pxsim.Image(img.width, img.data);
+                var b = pxsim.led.brightness();
+                for (var x = 0; x < res.width; ++x) {
+                    for (var y = 0; y < 5; ++y) {
+                        if (pixelBrightness(res, x, y) > b) {
+                            setPixelBrightness(res, x, y, b);
+                        }
+                    }
+                }
+            }
+            return res;
+        }
     })(ImageMethods = pxsim.ImageMethods || (pxsim.ImageMethods = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var basic;
     (function (basic) {
         function showNumber(x, interval) {
-            if (interval < 0)
-                return;
+            interval = interval >> 0;
+            if (interval <= 0)
+                interval = 1;
             var leds = pxsim.createImageFromString(x.toString());
             if (x < 0 || x >= 10)
                 pxsim.ImageMethods.scrollImage(leds, 1, interval);
@@ -1023,22 +1267,23 @@ var pxsim;
         }
         basic.showNumber = showNumber;
         function showString(s, interval) {
-            if (interval < 0)
-                return;
+            interval = interval >> 0;
+            if (interval <= 0)
+                interval = 1;
             if (s.length == 0) {
                 clearScreen();
                 basic.pause(interval * 5);
             }
+            else if (s.length > 1) {
+                pxsim.ImageMethods.scrollImage(pxsim.createImageFromString(s + " "), 1, interval);
+            }
             else {
-                if (s.length == 1)
-                    showLeds(pxsim.createImageFromString(s), 0);
-                else
-                    pxsim.ImageMethods.scrollImage(pxsim.createImageFromString(s + " "), 1, interval);
+                showLeds(pxsim.createImageFromString(s), interval * 5);
             }
         }
         basic.showString = showString;
-        function showLeds(leds, delay) {
-            showAnimation(leds, delay);
+        function showLeds(leds, interval) {
+            showAnimation(leds, interval);
         }
         basic.showLeds = showLeds;
         function clearScreen() {
@@ -1056,15 +1301,24 @@ var pxsim;
         basic.plotLeds = plotLeds;
     })(basic = pxsim.basic || (pxsim.basic = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var led;
     (function (led) {
         function plot(x, y) {
-            pxsim.board().ledMatrixState.image.set(x, y, 255);
+            pxsim.board().ledMatrixState.image.set(x, y, 0xff);
             pxsim.runtime.queueDisplayUpdate();
         }
         led.plot = plot;
+        function plotBrightness(x, y, brightness) {
+            var state = pxsim.board().ledMatrixState;
+            brightness = brightness >> 0;
+            brightness = Math.max(0, Math.min(led.brightness(), brightness));
+            if (brightness != 0 && brightness != 0xff && state.displayMode != pxsim.DisplayMode.greyscale)
+                state.displayMode = pxsim.DisplayMode.greyscale;
+            state.image.set(x, y, brightness);
+            pxsim.runtime.queueDisplayUpdate();
+        }
+        led.plotBrightness = plotBrightness;
         function unplot(x, y) {
             pxsim.board().ledMatrixState.image.set(x, y, 0);
             pxsim.runtime.queueDisplayUpdate();
@@ -1079,7 +1333,8 @@ var pxsim;
         }
         led.brightness = brightness;
         function setBrightness(value) {
-            pxsim.board().ledMatrixState.brigthness = value;
+            value = value >> 0;
+            pxsim.board().ledMatrixState.brigthness = Math.max(0, Math.min(255, value));
             pxsim.runtime.queueDisplayUpdate();
         }
         led.setBrightness = setBrightness;
@@ -1093,6 +1348,10 @@ var pxsim;
             pxsim.runtime.queueDisplayUpdate();
         }
         led.setDisplayMode = setDisplayMode;
+        function displayMode() {
+            return pxsim.board().ledMatrixState.displayMode;
+        }
+        led.displayMode = displayMode;
         function screenshot() {
             var img = pxsim.createImage(5);
             pxsim.board().ledMatrixState.image.copyTo(0, 5, img, 0);
@@ -1123,9 +1382,82 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
+    var visuals;
+    (function (visuals) {
+        function createMicroServoElement() {
+            return pxsim.svg.parseString("\n        <svg xmlns=\"http://www.w3.org/2000/svg\" id=\"svg2\" width=\"112.188\" height=\"299.674\">\n          <g id=\"layer1\" stroke-linecap=\"round\" stroke-linejoin=\"round\" transform=\"scale(0.8)\">\n            <path id=\"path8212\" fill=\"#0061ff\" stroke-width=\"6.6\" d=\"M.378 44.61v255.064h112.188V44.61H.378z\"/>\n            <path id=\"crankbase\" fill=\"#00f\" stroke-width=\"6.6\" d=\"M56.57 88.047C25.328 88.047 0 113.373 0 144.615c.02 22.352 11.807 42.596 32.238 51.66.03 3.318.095 5.24.088 7.938 0 13.947 11.307 25.254 25.254 25.254 13.947 0 25.254-11.307 25.254-25.254-.006-2.986-.415-5.442-.32-8.746 19.487-9.45 30.606-29.195 30.625-50.852 0-31.24-25.33-56.568-56.57-56.568z\"/>\n            <path id=\"lowertip\" fill=\"#00a2ff\" stroke-width=\"2\" d=\"M.476 260.78v38.894h53.82v-10.486a6.82 6.566 0 0 1-4.545-6.182 6.82 6.566 0 0 1 6.82-6.566 6.82 6.566 0 0 1 6.82 6.566 6.82 6.566 0 0 1-4.545 6.182v10.486h53.82V260.78H.475z\"/>\n            <path id=\"uppertip\" fill=\"#00a2ff\" stroke-width=\"2\" d=\"M112.566 83.503V44.61h-53.82v10.487a6.82 6.566 0 0 1 4.544 6.18 6.82 6.566 0 0 1-6.818 6.568 6.82 6.566 0 0 1-6.82-6.567 6.82 6.566 0 0 1 4.546-6.18V44.61H.378v38.893h112.188z\"/>\n            <path id=\"VCC\" fill=\"red\" stroke-width=\"2\" d=\"M53.72 21.93h5.504v22.627H53.72z\"/>\n            <path id=\"LOGIC\" fill=\"#fc0\" stroke-width=\"2\" d=\"M47.3 21.93h5.503v22.627H47.3z\"/>\n            <path id=\"GND\" fill=\"#a02c2c\" stroke-width=\"2\" d=\"M60.14 21.93h5.505v22.627H60.14z\"/>\n            <path id=\"connector\" fill=\"#111\" stroke-width=\"2\" d=\"M45.064 0a1.488 1.488 0 0 0-1.488 1.488v24.5a1.488 1.488 0 0 0 1.488 1.487h22.71a1.488 1.488 0 0 0 1.49-1.488v-24.5A1.488 1.488 0 0 0 67.774 0h-22.71z\"/>\n            <g id=\"crank\" transform=\"translate(0 -752.688)\">\n              <path id=\"arm\" fill=\"#ececec\" stroke=\"#000\" stroke-width=\"1.372\" d=\"M47.767 880.88c-4.447 1.162-8.412 8.278-8.412 18.492s3.77 18.312 8.412 18.494c8.024.314 78.496 5.06 78.51-16.952.012-22.013-74.377-21.117-78.51-20.035z\"/>\n              <circle id=\"path8216\" cx=\"56.661\" cy=\"899.475\" r=\"8.972\" fill=\"gray\" stroke-width=\"2\"/>\n            </g>\n          </g>\n        </svg>\n                    ").firstElementChild;
+        }
+        function mkMicroServoPart(xy) {
+            if (xy === void 0) { xy = [0, 0]; }
+            return { el: createMicroServoElement(), x: xy[0], y: xy[1], w: 112.188, h: 299.674 };
+        }
+        visuals.mkMicroServoPart = mkMicroServoPart;
+        var MicroServoView = /** @class */ (function () {
+            function MicroServoView() {
+                this.style = "";
+                this.overElement = undefined;
+                this.defs = [];
+                this.currentAngle = 0;
+                this.targetAngle = 0;
+                this.lastAngleTime = 0;
+            }
+            MicroServoView.prototype.init = function (bus, state, svgEl, otherParams) {
+                this.state = state;
+                this.pin = this.state.props.servos[pxsim.readPin(otherParams["name"] || otherParams["pin"])];
+                this.bus = bus;
+                this.defs = [];
+                this.initDom();
+                this.updateState();
+            };
+            MicroServoView.prototype.initDom = function () {
+                this.element = createMicroServoElement();
+                this.crankEl = this.element.querySelector("#crank");
+                this.crankTransform = this.crankEl.getAttribute("transform");
+            };
+            MicroServoView.prototype.moveToCoord = function (xy) {
+                var x = xy[0], y = xy[1];
+                visuals.translateEl(this.element, [x, y]);
+            };
+            MicroServoView.prototype.updateState = function () {
+                this.targetAngle = 180.0 - this.state.getPin(this.pin).servoAngle;
+                if (this.targetAngle != this.currentAngle) {
+                    var now = pxsim.U.now();
+                    var cx = 56.661;
+                    var cy = 899.475;
+                    var speed = 300; // 0.1s/60 degree
+                    var dt = Math.min(now - this.lastAngleTime, 50) / 1000;
+                    var delta = this.targetAngle - this.currentAngle;
+                    this.currentAngle += Math.min(Math.abs(delta), speed * dt) * (delta > 0 ? 1 : -1);
+                    this.crankEl.setAttribute("transform", this.crankTransform
+                        + (" rotate(" + this.currentAngle + ", " + cx + ", " + cy + ")"));
+                    this.lastAngleTime = now;
+                    setTimeout(function () { return pxsim.runtime.updateDisplay(); }, 20);
+                }
+            };
+            MicroServoView.prototype.updateTheme = function () {
+            };
+            return MicroServoView;
+        }());
+        visuals.MicroServoView = MicroServoView;
+    })(visuals = pxsim.visuals || (pxsim.visuals = {}));
+})(pxsim || (pxsim = {}));
+var pxsim;
+(function (pxsim) {
+    var control;
+    (function (control) {
+        function __midiSend(data) {
+            var b = pxsim.board();
+            pxsim.AudioContextManager.sendMidiMessage(data);
+        }
+        control.__midiSend = __midiSend;
+    })(control = pxsim.control || (pxsim.control = {}));
+})(pxsim || (pxsim = {}));
+var pxsim;
+(function (pxsim) {
     /**
      * Error codes used in the micro:bit runtime.
     */
+    var PanicCode;
     (function (PanicCode) {
         // PANIC Codes. These are not return codes, but are terminal conditions.
         // These induce a panic operation, where all code stops executing, and a panic state is
@@ -1136,8 +1468,7 @@ var pxsim;
         PanicCode[PanicCode["MICROBIT_HEAP_ERROR"] = 30] = "MICROBIT_HEAP_ERROR";
         // Dereference of a NULL pointer through the ManagedType class,
         PanicCode[PanicCode["MICROBIT_NULL_DEREFERENCE"] = 40] = "MICROBIT_NULL_DEREFERENCE";
-    })(pxsim.PanicCode || (pxsim.PanicCode = {}));
-    var PanicCode = pxsim.PanicCode;
+    })(PanicCode = pxsim.PanicCode || (pxsim.PanicCode = {}));
     ;
     function panic(code) {
         console.log("PANIC:", code);
@@ -1145,7 +1476,6 @@ var pxsim;
     }
     pxsim.panic = panic;
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var basic;
     (function (basic) {
@@ -1153,13 +1483,17 @@ var pxsim;
         basic.forever = pxsim.thread.forever;
     })(basic = pxsim.basic || (pxsim.basic = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var control;
     (function (control) {
         control.inBackground = pxsim.thread.runInBackground;
+        function createBuffer(sz) {
+            return pxsim.BufferMethods.createBuffer(sz);
+        }
+        control.createBuffer = createBuffer;
         function reset() {
-            pxsim.U.userError("reset not implemented in simulator yet");
+            var cb = pxsim.getResume();
+            pxsim.runtime.restart();
         }
         control.reset = reset;
         function waitMicros(micros) {
@@ -1181,6 +1515,13 @@ var pxsim;
         }
         control.deviceSerialNumber = deviceSerialNumber;
         function onEvent(id, evid, handler) {
+            if (id == 26 /* MICROBIT_ID_BUTTON_AB */) {
+                var b = pxsim.board().buttonPairState;
+                if (!b.usesButtonAB) {
+                    b.usesButtonAB = true;
+                    pxsim.runtime.queueDisplayUpdate();
+                }
+            }
             pxsim.pxtcore.registerWithDal(id, evid, handler);
         }
         control.onEvent = onEvent;
@@ -1189,9 +1530,16 @@ var pxsim;
             pxsim.board().bus.queue(id, evid);
         }
         control.raiseEvent = raiseEvent;
+        function eventTimestamp() {
+            return pxsim.board().bus.getLastEventTime();
+        }
+        control.eventTimestamp = eventTimestamp;
+        function eventValue() {
+            return pxsim.board().bus.getLastEventValue();
+        }
+        control.eventValue = eventValue;
     })(control = pxsim.control || (pxsim.control = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var pxtcore;
     (function (pxtcore) {
@@ -1201,7 +1549,6 @@ var pxsim;
         pxtcore.registerWithDal = registerWithDal;
     })(pxtcore = pxsim.pxtcore || (pxsim.pxtcore = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var input;
     (function (input) {
@@ -1209,12 +1556,16 @@ var pxsim;
             return pxsim.runtime.runningTime();
         }
         input.runningTime = runningTime;
-        function calibrate() {
+        function runningTimeMicros() {
+            return pxsim.runtime.runningTimeUs();
         }
-        input.calibrate = calibrate;
+        input.runningTimeMicros = runningTimeMicros;
+        function calibrateCompass() {
+            // device calibrates...
+        }
+        input.calibrateCompass = calibrateCompass;
     })(input = pxsim.input || (pxsim.input = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var pins;
     (function (pins) {
@@ -1241,6 +1592,18 @@ var pxsim;
             return 0;
         }
         pins.spiWrite = spiWrite;
+        function spiFrequency(f) {
+            // TODO
+        }
+        pins.spiFrequency = spiFrequency;
+        function spiFormat(bits, mode) {
+            // TODO
+        }
+        pins.spiFormat = spiFormat;
+        function spiPins(mosi, miso, sck) {
+            // TODO
+        }
+        pins.spiPins = spiPins;
         function i2cReadBuffer(address, size, repeat) {
             // fake reading zeros
             return createBuffer(size);
@@ -1260,7 +1623,6 @@ var pxsim;
         pins.setEvents = setEvents;
     })(pins = pxsim.pins || (pxsim.pins = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var devices;
     (function (devices) {
@@ -1291,7 +1653,6 @@ var pxsim;
         devices.onGamepadButton = onGamepadButton;
     })(devices = pxsim.devices || (pxsim.devices = {}));
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var bluetooth;
     (function (bluetooth) {
@@ -1323,15 +1684,27 @@ var pxsim;
             // TODO
         }
         bluetooth.startUartService = startUartService;
-        function uartWrite(s) {
-            // TODO
+        function uartWriteString(s) {
+            pxsim.serial.writeString(s);
         }
-        bluetooth.uartWrite = uartWrite;
+        bluetooth.uartWriteString = uartWriteString;
+        function uartWriteBuffer(b) {
+            pxsim.serial.writeBuffer(b);
+        }
+        bluetooth.uartWriteBuffer = uartWriteBuffer;
+        function uartReadBuffer() {
+            return pxsim.pins.createBuffer(0);
+        }
+        bluetooth.uartReadBuffer = uartReadBuffer;
         function uartReadUntil(del) {
-            // TODO
-            return "";
+            return pxsim.serial.readUntil(del);
         }
         bluetooth.uartReadUntil = uartReadUntil;
+        function onUartDataReceived(delimiters, handler) {
+            var b = pxsim.board();
+            b.bus.listen(1200 /* MICROBIT_ID_BLE_UART */, 1 /* MICROBIT_UART_S_EVT_DELIM_MATCH */, handler);
+        }
+        bluetooth.onUartDataReceived = onUartDataReceived;
         function onBluetoothConnected(a) {
             // TODO
         }
@@ -1340,22 +1713,29 @@ var pxsim;
             // TODO
         }
         bluetooth.onBluetoothDisconnected = onBluetoothDisconnected;
+        function advertiseUrl(url, power, connectable) { }
+        bluetooth.advertiseUrl = advertiseUrl;
+        function advertiseUidBuffer(nsAndInstance, power, connectable) { }
+        bluetooth.advertiseUidBuffer = advertiseUidBuffer;
+        function stopAdvertising() { }
+        bluetooth.stopAdvertising = stopAdvertising;
+        function setTransmitPower(power) { }
+        bluetooth.setTransmitPower = setTransmitPower;
     })(bluetooth = pxsim.bluetooth || (pxsim.bluetooth = {}));
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    var SpeakerState = (function () {
+    var SpeakerState = /** @class */ (function () {
         function SpeakerState() {
         }
         return SpeakerState;
     }());
     pxsim.SpeakerState = SpeakerState;
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var music;
     (function (music) {
-        function playTone(frequency, ms) {
+        function speakerPlayTone(frequency, ms) {
             var b = pxsim.board();
             b.speakerState.frequency = frequency;
             b.speakerState.ms = ms;
@@ -1374,7 +1754,7 @@ var pxsim;
                 }, ms);
             }
         }
-        music.playTone = playTone;
+        music.speakerPlayTone = speakerPlayTone;
     })(music = pxsim.music || (pxsim.music = {}));
 })(pxsim || (pxsim = {}));
 var pxsim;
@@ -1385,7 +1765,7 @@ var pxsim;
             var np = b.neopixelState;
             if (np) {
                 var buf = buffer.data;
-                np.updateBuffer(buf, pin);
+                np.updateBuffer(buf, pin); // TODO this is wrong
                 pxsim.runtime.queueDisplayUpdate();
             }
         }
@@ -1394,7 +1774,7 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    var RadioDatagram = (function () {
+    var RadioDatagram = /** @class */ (function () {
         function RadioDatagram(runtime) {
             this.runtime = runtime;
             this.datagram = [];
@@ -1407,11 +1787,13 @@ var pxsim;
             pxsim.runtime.board.bus.queue(29 /* MICROBIT_ID_RADIO */, 1 /* MICROBIT_RADIO_EVT_DATAGRAM */);
         };
         RadioDatagram.prototype.send = function (payload) {
+            var b = pxsim.board();
             pxsim.Runtime.postMessage({
                 type: "radiopacket",
-                rssi: 0,
-                serial: pxsim.board().radioState.bus.transmitSerialNumber ? pxsim.board().radioState.bus.serial : 0,
-                time: 0,
+                broadcast: true,
+                rssi: -42,
+                serial: b.radioState.transmitSerialNumber ? pxsim.control.deviceSerialNumber() : 0,
+                time: new Date().getTime(),
                 payload: payload
             });
         };
@@ -1426,170 +1808,98 @@ var pxsim;
                 rssi: -1,
                 serial: 0,
                 time: 0,
-                payload: { type: -1 }
+                payload: { type: -1, groupId: 0, bufferData: new Uint8Array(0) }
             };
         };
         return RadioDatagram;
     }());
     pxsim.RadioDatagram = RadioDatagram;
-    var RadioBus = (function () {
-        function RadioBus(runtime) {
-            this.runtime = runtime;
-            // uint8_t radioDefaultGroup = MICROBIT_RADIO_DEFAULT_GROUP;
-            this.groupId = 0; // todo
+    var RadioState = /** @class */ (function () {
+        function RadioState(runtime) {
             this.power = 0;
-            this.serial = 0;
             this.transmitSerialNumber = false;
             this.datagram = new RadioDatagram(runtime);
-            this.serial = Math.floor(Math.random() * Math.pow(2, 32)) - Math.pow(2, 31); // 32 bit signed integer
+            this.power = 6; // default value
+            this.groupId = 0;
+            this.band = 7; // https://github.com/lancaster-university/microbit-dal/blob/master/inc/core/MicroBitConfig.h#L320
         }
-        RadioBus.prototype.setGroup = function (id) {
+        RadioState.prototype.setGroup = function (id) {
             this.groupId = id & 0xff; // byte only
         };
-        RadioBus.prototype.setTransmitPower = function (power) {
+        RadioState.prototype.setTransmitPower = function (power) {
+            power = power | 0;
             this.power = Math.max(0, Math.min(7, power));
         };
-        RadioBus.prototype.setTransmitSerialNumber = function (sn) {
+        RadioState.prototype.setTransmitSerialNumber = function (sn) {
             this.transmitSerialNumber = !!sn;
         };
-        RadioBus.prototype.broadcast = function (msg) {
+        RadioState.prototype.setFrequencyBand = function (band) {
+            band = band | 0;
+            if (band < 0 || band > 83)
+                return;
+            this.band = band;
+        };
+        RadioState.prototype.raiseEvent = function (id, eventid) {
             pxsim.Runtime.postMessage({
                 type: "eventbus",
-                id: 2000 /* MES_BROADCAST_GENERAL_ID */,
-                eventid: msg,
+                broadcast: true,
+                id: id,
+                eventid: eventid,
                 power: this.power,
                 group: this.groupId
             });
         };
-        return RadioBus;
-    }());
-    pxsim.RadioBus = RadioBus;
-    var RadioState = (function () {
-        function RadioState(runtime) {
-            this.bus = new RadioBus(runtime);
-        }
-        RadioState.prototype.recievePacket = function (packet) {
-            this.bus.datagram.queue(packet);
+        RadioState.prototype.receivePacket = function (packet) {
+            if (this.groupId == packet.payload.groupId)
+                this.datagram.queue(packet);
         };
         return RadioState;
     }());
     pxsim.RadioState = RadioState;
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var radio;
     (function (radio) {
-        var PacketPayloadType;
-        (function (PacketPayloadType) {
-            PacketPayloadType[PacketPayloadType["NUMBER"] = 0] = "NUMBER";
-            PacketPayloadType[PacketPayloadType["VALUE"] = 1] = "VALUE";
-            PacketPayloadType[PacketPayloadType["STRING"] = 2] = "STRING";
-        })(PacketPayloadType || (PacketPayloadType = {}));
-        function broadcastMessage(msg) {
-            pxsim.board().radioState.bus.broadcast(msg);
+        function raiseEvent(id, eventid) {
+            pxsim.board().radioState.raiseEvent(id, eventid);
         }
-        radio.broadcastMessage = broadcastMessage;
-        function onBroadcastMessageReceived(msg, handler) {
-            pxsim.pxtcore.registerWithDal(2000 /* MES_BROADCAST_GENERAL_ID */, msg, handler);
-        }
-        radio.onBroadcastMessageReceived = onBroadcastMessageReceived;
+        radio.raiseEvent = raiseEvent;
         function setGroup(id) {
-            pxsim.board().radioState.bus.setGroup(id);
+            pxsim.board().radioState.setGroup(id);
         }
         radio.setGroup = setGroup;
         function setTransmitPower(power) {
-            pxsim.board().radioState.bus.setTransmitPower(power);
+            pxsim.board().radioState.setTransmitPower(power);
         }
         radio.setTransmitPower = setTransmitPower;
-        function setTransmitSerialNumber(transmit) {
-            pxsim.board().radioState.bus.setTransmitSerialNumber(transmit);
+        function setFrequencyBand(band) {
+            pxsim.board().radioState.setFrequencyBand(band);
         }
-        radio.setTransmitSerialNumber = setTransmitSerialNumber;
-        function sendNumber(value) {
-            pxsim.board().radioState.bus.datagram.send({
-                type: PacketPayloadType.NUMBER,
-                numberData: value
+        radio.setFrequencyBand = setFrequencyBand;
+        function sendRawPacket(buf) {
+            var cb = pxsim.getResume();
+            pxsim.board().radioState.datagram.send({
+                type: 0,
+                groupId: pxsim.board().radioState.groupId,
+                bufferData: buf.data
             });
+            setTimeout(cb, 1);
         }
-        radio.sendNumber = sendNumber;
-        function sendString(msg) {
-            msg = msg.substr(0, 19);
-            pxsim.board().radioState.bus.datagram.send({
-                type: PacketPayloadType.STRING,
-                stringData: msg
-            });
+        radio.sendRawPacket = sendRawPacket;
+        function readRawPacket() {
+            var packet = pxsim.board().radioState.datagram.recv();
+            return new pxsim.RefBuffer(packet.payload.bufferData);
         }
-        radio.sendString = sendString;
-        function writeValueToSerial() {
-            var b = pxsim.board();
-            writePacketToSerial(b, b.radioState.bus.datagram.recv());
-        }
-        radio.writeValueToSerial = writeValueToSerial;
-        function writeReceivedPacketToSerial() {
-            var b = pxsim.board();
-            writePacketToSerial(b, b.radioState.bus.datagram.lastReceived);
-        }
-        radio.writeReceivedPacketToSerial = writeReceivedPacketToSerial;
-        function sendValue(name, value) {
-            name = name.substr(0, 12);
-            var msg = [];
-            msg.push();
-            pxsim.board().radioState.bus.datagram.send({
-                type: PacketPayloadType.VALUE,
-                stringData: name,
-                numberData: value
-            });
-        }
-        radio.sendValue = sendValue;
-        function receiveNumber() {
-            var packet = pxsim.board().radioState.bus.datagram.recv();
-            return receivedNumber();
-        }
-        radio.receiveNumber = receiveNumber;
-        function receiveString() {
-            var packet = pxsim.board().radioState.bus.datagram.recv();
-            return receivedString();
-        }
-        radio.receiveString = receiveString;
+        radio.readRawPacket = readRawPacket;
         function receivedSignalStrength() {
-            return pxsim.board().radioState.bus.datagram.lastReceived.rssi;
+            return pxsim.board().radioState.datagram.lastReceived.rssi;
         }
         radio.receivedSignalStrength = receivedSignalStrength;
         function onDataReceived(handler) {
             pxsim.pxtcore.registerWithDal(29 /* MICROBIT_ID_RADIO */, 1 /* MICROBIT_RADIO_EVT_DATAGRAM */, handler);
-            radio.receiveNumber();
+            readRawPacket();
         }
         radio.onDataReceived = onDataReceived;
-        function receivedNumber() {
-            return pxsim.board().radioState.bus.datagram.lastReceived.payload.numberData || 0;
-        }
-        radio.receivedNumber = receivedNumber;
-        function receivedSerial() {
-            return pxsim.board().radioState.bus.datagram.lastReceived.serial;
-        }
-        radio.receivedSerial = receivedSerial;
-        function receivedString() {
-            return pxsim.board().radioState.bus.datagram.lastReceived.payload.stringData || "";
-        }
-        radio.receivedString = receivedString;
-        function receivedTime() {
-            return pxsim.board().radioState.bus.datagram.lastReceived.time;
-        }
-        radio.receivedTime = receivedTime;
-        function writePacketToSerial(b, p) {
-            switch (p.payload.type) {
-                case PacketPayloadType.NUMBER:
-                    b.writeSerial("{\"t\":" + p.time + ",\"s\":" + p.serial + ",\"v\":" + p.payload.numberData + "}\r\n");
-                    break;
-                case PacketPayloadType.VALUE:
-                    b.writeSerial("{\"t\":" + p.time + ",\"s\":" + p.serial + ",\"n\":\"" + p.payload.stringData + "\",\"v\":" + p.payload.numberData + "}\r\n");
-                    break;
-                case PacketPayloadType.STRING:
-                    b.writeSerial("{\"t\":" + p.time + ",\"s\":" + p.serial + ",\"n\":\"" + p.payload.stringData + "\"}\r\n");
-                    break;
-                default:
-            }
-        }
     })(radio = pxsim.radio || (pxsim.radio = {}));
 })(pxsim || (pxsim = {}));
 var pxsim;
@@ -1605,12 +1915,13 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    var SerialState = (function () {
+    var SERIAL_BUFFER_LENGTH = 16;
+    var SerialState = /** @class */ (function () {
         function SerialState() {
             this.serialIn = [];
             this.serialOutBuffer = "";
         }
-        SerialState.prototype.recieveData = function (data) {
+        SerialState.prototype.receiveData = function (data) {
             this.serialIn.push();
         };
         SerialState.prototype.readSerial = function () {
@@ -1618,25 +1929,30 @@ var pxsim;
             return v;
         };
         SerialState.prototype.writeSerial = function (s) {
-            for (var i = 0; i < s.length; ++i) {
-                var c = s[i];
-                this.serialOutBuffer += c;
-                if (c == "\n") {
-                    pxsim.Runtime.postMessage({
-                        type: "serial",
-                        data: this.serialOutBuffer,
-                        id: pxsim.runtime.id
-                    });
-                    this.serialOutBuffer = "";
-                    break;
-                }
+            this.serialOutBuffer += s;
+            if (/\n/.test(this.serialOutBuffer) || this.serialOutBuffer.length > SERIAL_BUFFER_LENGTH) {
+                pxsim.Runtime.postMessage({
+                    type: 'serial',
+                    data: this.serialOutBuffer,
+                    id: pxsim.runtime.id,
+                    sim: true
+                });
+                this.serialOutBuffer = '';
             }
         };
         return SerialState;
     }());
     pxsim.SerialState = SerialState;
 })(pxsim || (pxsim = {}));
-var pxsim;
+(function (pxsim) {
+    var control;
+    (function (control) {
+        function __log(s) {
+            pxsim.board().writeSerial(s + "\r\n");
+        }
+        control.__log = __log;
+    })(control = pxsim.control || (pxsim.control = {}));
+})(pxsim || (pxsim = {}));
 (function (pxsim) {
     var serial;
     (function (serial) {
@@ -1644,6 +1960,10 @@ var pxsim;
             pxsim.board().writeSerial(s);
         }
         serial.writeString = writeString;
+        function writeBuffer(buf) {
+            // TODO
+        }
+        serial.writeBuffer = writeBuffer;
         function readUntil(del) {
             return readString();
         }
@@ -1661,6 +1981,24 @@ var pxsim;
             // TODO?
         }
         serial.redirect = redirect;
+        function redirectToUSB() {
+            // TODO
+        }
+        serial.redirectToUSB = redirectToUSB;
+        function setRxBufferSize(size) {
+            // TODO
+        }
+        serial.setRxBufferSize = setRxBufferSize;
+        function setTxBufferSize(size) {
+            // TODO
+        }
+        serial.setTxBufferSize = setTxBufferSize;
+        function readBuffer(length) {
+            if (length <= 0)
+                length = 64;
+            return pxsim.pins.createBuffer(length);
+        }
+        serial.readBuffer = readBuffer;
     })(serial = pxsim.serial || (pxsim.serial = {}));
 })(pxsim || (pxsim = {}));
 var pxsim;
@@ -1681,7 +2019,7 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 var pxsim;
 (function (pxsim) {
-    var ThermometerState = (function () {
+    var ThermometerState = /** @class */ (function () {
         function ThermometerState() {
             this.usesTemperature = false;
             this.temperature = 21;
@@ -1690,7 +2028,6 @@ var pxsim;
     }());
     pxsim.ThermometerState = ThermometerState;
 })(pxsim || (pxsim = {}));
-var pxsim;
 (function (pxsim) {
     var input;
     (function (input) {
@@ -1719,7 +2056,6 @@ var pxsim;
         };
     })(visuals = pxsim.visuals || (pxsim.visuals = {}));
 })(pxsim || (pxsim = {}));
-/// <reference path="../../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 var pxsim;
 (function (pxsim) {
@@ -1768,7 +2104,7 @@ var pxsim;
             ledOff: "#DDD",
         };
         visuals.LED_MATRIX_STYLE = "\n            .sim-led-back:hover {\n                stroke:#a0a0a0;\n                stroke-width:3px;\n            }\n            .sim-led:hover {\n                stroke:#ff7f7f;\n                stroke-width:3px;\n            }\n            ";
-        var LedMatrixView = (function () {
+        var LedMatrixView = /** @class */ (function () {
             function LedMatrixView() {
                 this.DRAW_SIZE = 8;
                 this.ACTIVE_SIZE = 5;
@@ -1876,7 +2212,7 @@ var pxsim;
             return visuals.themes[Math.floor(Math.random() * visuals.themes.length)];
         }
         visuals.randomTheme = randomTheme;
-        var MicrobitBoardSvg = (function () {
+        var MicrobitBoardSvg = /** @class */ (function () {
             function MicrobitBoardSvg(props) {
                 var _this = this;
                 this.props = props;
@@ -2083,7 +2419,7 @@ var pxsim;
                 this.lastAntennaFlash = 0;
                 this.buildDom();
                 if (props && props.wireframe)
-                    pxsim.svg.addClass(this.element, "sim-wireframe");
+                    pxsim.U.addClass(this.element, "sim-wireframe");
                 if (props && props.theme)
                     this.updateTheme();
                 if (props && props.runtime) {
@@ -2153,9 +2489,19 @@ var pxsim;
                 else {
                     var bw_1 = state.ledMatrixState.displayMode == pxsim.DisplayMode.bw;
                     var img_1 = state.ledMatrixState.image;
+                    var br_1 = state.ledMatrixState.brigthness != undefined ? state.ledMatrixState.brigthness : 255;
                     this.leds.forEach(function (led, i) {
                         var sel = led;
-                        sel.style.opacity = ((bw_1 ? img_1.data[i] > 0 ? 255 : 0 : img_1.data[i]) / 255.0) + "";
+                        var imgbr = bw_1 ? (img_1.data[i] > 0 ? br_1 : 0) : img_1.data[i];
+                        // correct brightness
+                        var opacity = imgbr > 0 ? imgbr / 255 * 155 + 100 : 0;
+                        var transfrom = imgbr > 0 ? imgbr / 255 * 0.4 + 0.6 : 0;
+                        sel.style.opacity = (opacity / 255) + "";
+                        if (transfrom > 0) {
+                            sel.style.transformBox = 'fill-box';
+                            sel.style.transformOrigin = '50% 50%';
+                            sel.style.transform = "scale(" + transfrom + ")";
+                        }
                     });
                 }
                 this.updatePins();
@@ -2168,9 +2514,9 @@ var pxsim;
                 this.updateRgbLed();
                 this.updateSpeaker();
                 if (!pxsim.runtime || pxsim.runtime.dead)
-                    pxsim.svg.addClass(this.element, "grayscale");
+                    pxsim.U.addClass(this.element, "grayscale");
                 else
-                    pxsim.svg.removeClass(this.element, "grayscale");
+                    pxsim.U.removeClass(this.element, "grayscale");
             };
             MicrobitBoardSvg.prototype.updateRgbLed = function () {
                 var state = this.board;
@@ -2444,7 +2790,7 @@ var pxsim;
                     var p = _this.element.getElementById(n);
                     if (!p)
                         console.log("missing " + n);
-                    pxsim.svg.addClass(p, "sim-pin");
+                    pxsim.U.addClass(p, "sim-pin");
                     return p;
                 });
                 this.pins.forEach(function (p, i) { return pxsim.svg.hydrate(p, { title: pinTitles[i] }); });
@@ -2458,9 +2804,9 @@ var pxsim;
                 // BTN A, B
                 var btnids = ["BTN_A", "BTN_B"];
                 this.buttonsOuter = btnids.map(function (n) { return _this.element.getElementById(n + "_BOX"); });
-                this.buttonsOuter.forEach(function (b) { return pxsim.svg.addClass(b, "sim-button-outer"); });
+                this.buttonsOuter.forEach(function (b) { return pxsim.U.addClass(b, "sim-button-outer"); });
                 this.buttons = btnids.map(function (n) { return _this.element.getElementById(n); });
-                this.buttons.forEach(function (b) { return pxsim.svg.addClass(b, "sim-button"); });
+                this.buttons.forEach(function (b) { return pxsim.U.addClass(b, "sim-button"); });
                 // BTN A+B
                 var outerBtn = function (left, top) {
                     var button = _this.mkBtn(left, top);
@@ -2571,7 +2917,7 @@ var pxsim;
                         var state = _this.board;
                         var pin = state.edgeConnectorState.pins[index];
                         var svgpin = _this.pins[index];
-                        pxsim.svg.addClass(svgpin, "touched");
+                        pxsim.U.addClass(svgpin, "touched");
                         if (pin.mode & pxsim.PinFlags.Input) {
                             var cursor = pxsim.svg.cursorPoint(pt, _this.element, ev);
                             var v = (400 - cursor.y) / 40 * 1023;
@@ -2584,17 +2930,18 @@ var pxsim;
                         var state = _this.board;
                         var pin = state.edgeConnectorState.pins[index];
                         var svgpin = _this.pins[index];
-                        pxsim.svg.removeClass(svgpin, "touched");
+                        pxsim.U.removeClass(svgpin, "touched");
                         _this.updatePin(pin, index);
                         return false;
                     });
                 });
                 this.pins.slice(0, 3).forEach(function (btn, index) {
-                    btn.addEventListener(pxsim.pointerEvents.down, function (ev) {
+                    pxsim.pointerEvents.down.forEach(function (evid) { return btn.addEventListener(evid, function (ev) {
                         var state = _this.board;
                         state.edgeConnectorState.pins[index].touched = true;
                         _this.updatePin(state.edgeConnectorState.pins[index], index);
-                    });
+                        _this.board.bus.queue(state.edgeConnectorState.pins[index].id, 1 /* MICROBIT_BUTTON_EVT_DOWN */);
+                    }); });
                     btn.addEventListener(pxsim.pointerEvents.leave, function (ev) {
                         var state = _this.board;
                         state.edgeConnectorState.pins[index].touched = false;
@@ -2611,11 +2958,12 @@ var pxsim;
                 var bpState = this.board.buttonPairState;
                 var stateButtons = [bpState.aBtn, bpState.bBtn, bpState.abBtn];
                 this.buttonsOuter.slice(0, 2).forEach(function (btn, index) {
-                    btn.addEventListener(pxsim.pointerEvents.down, function (ev) {
+                    pxsim.pointerEvents.down.forEach(function (evid) { return btn.addEventListener(evid, function (ev) {
                         var state = _this.board;
                         stateButtons[index].pressed = true;
                         pxsim.svg.fill(_this.buttons[index], _this.props.theme.buttonDown);
-                    });
+                        _this.board.bus.queue(stateButtons[index].id, 1 /* MICROBIT_BUTTON_EVT_DOWN */);
+                    }); });
                     btn.addEventListener(pxsim.pointerEvents.leave, function (ev) {
                         var state = _this.board;
                         stateButtons[index].pressed = false;
@@ -2629,7 +2977,7 @@ var pxsim;
                         _this.board.bus.queue(stateButtons[index].id, 3 /* MICROBIT_BUTTON_EVT_CLICK */);
                     });
                 });
-                this.buttonsOuter[2].addEventListener(pxsim.pointerEvents.down, function (ev) {
+                pxsim.pointerEvents.down.forEach(function (evid) { return _this.buttonsOuter[2].addEventListener(evid, function (ev) {
                     var state = _this.board;
                     stateButtons[0].pressed = true;
                     stateButtons[1].pressed = true;
@@ -2637,7 +2985,8 @@ var pxsim;
                     pxsim.svg.fill(_this.buttons[0], _this.props.theme.buttonDown);
                     pxsim.svg.fill(_this.buttons[1], _this.props.theme.buttonDown);
                     pxsim.svg.fill(_this.buttons[2], _this.props.theme.buttonDown);
-                });
+                    _this.board.bus.queue(stateButtons[2].id, 1 /* MICROBIT_BUTTON_EVT_DOWN */);
+                }); });
                 this.buttonsOuter[2].addEventListener(pxsim.pointerEvents.leave, function (ev) {
                     var state = _this.board;
                     stateButtons[0].pressed = false;
@@ -2666,7 +3015,6 @@ var pxsim;
 })(pxsim || (pxsim = {}));
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../libs/core/dal.d.ts"/>
-/// <reference path="../../libs/core/shims.d.ts"/>
 /// <reference path="../../libs/core/enums.d.ts"/>
 var pxsim;
 (function (pxsim) {
@@ -2702,7 +3050,7 @@ var pxsim;
             return { el: img, x: l, y: t, w: w, h: h };
         }
         visuals.mkNeoPixelPart = mkNeoPixelPart;
-        var NeoPixel = (function () {
+        var NeoPixel = /** @class */ (function () {
             function NeoPixel(xy) {
                 if (xy === void 0) { xy = [0, 0]; }
                 var el = pxsim.svg.elt("rect");
@@ -2724,7 +3072,7 @@ var pxsim;
             return NeoPixel;
         }());
         visuals.NeoPixel = NeoPixel;
-        var NeoPixelCanvas = (function () {
+        var NeoPixelCanvas = /** @class */ (function () {
             function NeoPixelCanvas(pin) {
                 this.pixels = [];
                 this.pin = pin;
@@ -2760,7 +3108,7 @@ var pxsim;
                     pixel.setRgb(color);
                 }
                 //show the canvas if it's hidden
-                pxsim.svg.removeClass(this.background, "hidden");
+                pxsim.U.removeClass(this.background, "hidden");
                 //resize if necessary
                 var _a = [this.pixels[0], this.pixels[this.pixels.length - 1]], first = _a[0], last = _a[1];
                 var yDiff = last.cy - first.cy;
@@ -2798,9 +3146,9 @@ var pxsim;
             };
             return modeMap[modeStr] || pxsim.NeoPixelMode.RGB;
         }
-        var NeoPixelView = (function () {
+        var NeoPixelView = /** @class */ (function () {
             function NeoPixelView() {
-                this.style = "\n            .sim-neopixel-canvas {\n            }\n            .sim-neopixel-canvas-parent:hover {\n                transform-origin: center;\n                transform: scale(4) translateY(-60px);\n            }\n            .sim-neopixel-canvas .hidden {\n                visibility:hidden;\n            }\n            .sim-neopixel-background {\n                fill: rgba(255,255,255,0.9);\n            }\n            .sim-neopixel-strip {\n            }\n        ";
+                this.style = "\n            .sim-neopixel-canvas {\n            }\n            .sim-neopixel-canvas-parent:hover {\n                transform-origin: center;\n                transform: scale(4) translateY(-60px);\n                -moz-transform: scale(4) translateY(-220px);\n            }\n            .sim-neopixel-canvas .hidden {\n                visibility:hidden;\n            }\n            .sim-neopixel-background {\n                fill: rgba(255,255,255,0.9);\n            }\n            .sim-neopixel-strip {\n            }\n        ";
             }
             NeoPixelView.prototype.init = function (bus, state, svgEl, otherParams) {
                 pxsim.U.assert(!!otherParams["mode"], "NeoPixels assumes a RGB vs RGBW mode is passed to it");
