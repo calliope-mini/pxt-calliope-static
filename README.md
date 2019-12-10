@@ -11,8 +11,8 @@ git clone https://github.com/calliope-mini/pxt-calliope-static
 ```
 Install a simple web server and run it.
 ```
-npm install -g http-server
-http-server -c-1 pxt-calliope-static/release
+npm install -g serve
+serve pxt-calliope-static/release
 ```
-Open Editor: [`http://127.0.0.1:8080`](http://127.0.0.1:8080).
+Open Editor: [`http://127.0.0.1:5000`](http://127.0.0.1:5000).
 
