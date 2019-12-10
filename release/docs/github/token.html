@@ -341,24 +341,26 @@
 					</button>
 					
     <div class="ui text">
-        <h1 id="github-token">GitHub Token</h1><p>You will need a token to create repositories or commit changes.</p>
+        <h1 id="github-token">GitHub Token</h1><p>You can use a <strong>GitHub developer token</strong> to sign in with GitHub if you do not want to use the <strong>Microsoft MakeCode with GitHub</strong> app. The token is valid for access to repositories in all organizations.</p>
+<h2 id="what-is-a-token-">What is a token?</h2><p>A token is a special number assigned to you to authorize your access to GitHub.</p>
 
     <div class="ui info message">
         <div class="content">
-            <p>Treat tokens like passwords!</p>
+            <h4 id="tokens-are-secret">Tokens are secret</h4><p>Treat tokens like passwords!</p>
 
         </div>
     </div>
+<p>You can read a more <a target="_blank" rel="nofollow noopener" href="https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line">detailed</a> description about GitHub access tokens.</p>
 <h2 id="how-to-get-a-github-developer-token">How to get a GitHub developer token</h2><ol>
 <li>Navigate to <a target="_blank" rel="nofollow noopener" href="https://github.com/settings/tokens/new">https://github.com/settings/tokens/new</a>.</li>
 <li>Put name that clearly explains why you need this token.</li>
-<li>Select <strong>public_repo</strong> scope, depending which repos you want to edit from here.</li>
+<li>Select <strong>repo</strong> scope, depending which repos you want to edit from here.</li>
 <li>Click <strong>generate token</strong>, copy it, and paste it in the MakeCode dialog.</li>
 </ol>
 
     <div class="ui info message">
         <div class="content">
-            <p>For <strong>private repositories</strong>, select the <code>repo</code> scope.</p>
+            <h4 id="public-scope">Public scope</h4><p>For <strong>public only repositories</strong>, select the <code>public_repo</code> scope.</p>
 
         </div>
     </div>

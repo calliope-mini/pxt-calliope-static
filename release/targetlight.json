@@ -277,8 +277,8 @@
     },
     "disableDocsUpload": true,
     "versions": {
-        "target": "2.1.34",
-        "pxt": "5.30.6"
+        "target": "2.1.36",
+        "pxt": "5.30.17"
     },
     "blocksprj": {
         "id": "blocksprj",

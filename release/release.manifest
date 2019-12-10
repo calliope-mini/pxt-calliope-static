@@ -61,7 +61,7 @@ CACHE:
 /worker.js
 /monacoworker.js
 
-# ver Mon Dec 02 2019 15:27:07 GMT+0100 (GMT+01:00)
+# ver Tue Dec 10 2019 11:51:35 GMT+0100 (GMT+01:00)
 
 # target
 /docs\static\Calliopeminieditor.svg
@@ -72,7 +72,7 @@ CACHE:
 /docs\static\icons\apple-touch-icon.png
 /docs\static\Microsoft-logo_rgb_c-gray-square.png
 /docs\static\Microsoft-logo_rgb_c-white.png
-/docs\static\hero.png
+/docs\static\hero.jpg
 
 /target.js
   
